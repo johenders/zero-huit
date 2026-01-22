@@ -71,13 +71,15 @@ export default async function Portfolio() {
       .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false }),
     supabase.from("taxonomies").select("id,kind,label"),
-    fetchAllVideoTaxonomies().then((data) => ({ data })).catch((error) => ({ error })),
+    fetchAllVideoTaxonomies()
+      .then((data) => ({ data, error: null as unknown }))
+      .catch((error) => ({ data: null, error })),
   ]);
 
-  const videoTaxonomies = videoTaxonomiesResult?.data as
+  const videoTaxonomies = videoTaxonomiesResult.data as
     | { video_id: string; taxonomy_id: string }[]
-    | undefined;
-  const videoTaxonomiesError = videoTaxonomiesResult?.error as { message?: string } | undefined;
+    | null;
+  const videoTaxonomiesError = videoTaxonomiesResult.error as { message?: string } | null;
 
   const anyError = videosError ?? taxonomiesError ?? videoTaxonomiesError;
   if (anyError) {

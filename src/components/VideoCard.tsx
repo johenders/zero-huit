@@ -30,24 +30,27 @@ export function VideoCard({
 
   useEffect(() => {
     if (!prewarmPreview || hasPreview) return;
-    const idle =
-      "requestIdleCallback" in window
-        ? (cb: () => void) => {
-            (window as typeof window & {
-              requestIdleCallback?: (callback: () => void, opts?: { timeout: number }) => void;
-            }).requestIdleCallback?.(cb, { timeout: 1200 });
-          }
-        : (cb: () => void) => window.setTimeout(cb, 400);
-    const cancel =
-      "cancelIdleCallback" in window
-        ? (id: number) => {
-            (window as typeof window & { cancelIdleCallback?: (handle: number) => void })
-              .cancelIdleCallback?.(id);
-          }
-        : (id: number) => window.clearTimeout(id);
+    const root = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    type TimeoutHandle = ReturnType<typeof setTimeout>;
+    const idle = (cb: () => void) => {
+      if (typeof root.requestIdleCallback === "function") {
+        return root.requestIdleCallback(cb, { timeout: 1200 });
+      }
+      return root.setTimeout(cb, 400);
+    };
+    const cancel = (id: number | TimeoutHandle) => {
+      if (typeof id === "number" && typeof root.cancelIdleCallback === "function") {
+        root.cancelIdleCallback(id);
+        return;
+      }
+      root.clearTimeout(id as TimeoutHandle);
+    };
 
     const handle = idle(() => setHasPreview(true));
-    return () => cancel(handle as number);
+    return () => cancel(handle);
   }, [hasPreview, prewarmPreview]);
 
   return (

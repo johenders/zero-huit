@@ -307,6 +307,7 @@ export async function POST(request: Request) {
         if (!rawVideo) return false;
         const vMin = rawVideo.budget_min ?? rawVideo.budget_max ?? budgetRange.min;
         const vMax = rawVideo.budget_max ?? rawVideo.budget_min ?? budgetRange.max;
+        if (typeof vMin !== "number" || typeof vMax !== "number") return false;
         const maxValue = budgetRange.max ?? Number.POSITIVE_INFINITY;
         const budgetOk = vMax >= budgetRange.min && vMin <= maxValue;
         if (!budgetOk) return false;
@@ -373,6 +374,7 @@ export async function POST(request: Request) {
           ? (() => {
               const vMin = rawVideo.budget_min ?? rawVideo.budget_max ?? budgetRange.min;
               const vMax = rawVideo.budget_max ?? rawVideo.budget_min ?? budgetRange.max;
+              if (typeof vMin !== "number" || typeof vMax !== "number") return false;
               const maxValue = budgetRange.max ?? Number.POSITIVE_INFINITY;
               return vMax >= budgetRange.min && vMin <= maxValue;
             })()

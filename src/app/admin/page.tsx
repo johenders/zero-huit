@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { budgetLevels, formatCad } from "@/lib/budget";
+import { budgetLevels, formatCad, type BudgetLevel } from "@/lib/budget";
 import { cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
@@ -203,7 +203,7 @@ function parseBudgetRange(raw: string | null | undefined) {
 
 function coerceBudgetLevel(value: number | null) {
   if (!value || !Number.isFinite(value)) return null;
-  let closest = budgetLevels[0];
+  let closest: BudgetLevel = budgetLevels[0];
   let bestDelta = Math.abs(value - closest);
   for (const level of budgetLevels) {
     const delta = Math.abs(value - level);
@@ -1950,6 +1950,7 @@ function EditVideoModal({
 
   async function requestAiKeywords() {
     if (aiStatus === "loading") return;
+    if (!video) return;
     if (isPendingVideoUid(video.cloudflare_uid)) {
       setAiStatus("error");
       setAiMessage("La vidéo doit être uploadée avant l'analyse.");
@@ -2054,6 +2055,7 @@ function EditVideoModal({
 
   async function save() {
     if (!supabase) return;
+    if (!video) return;
     setStatus("saving");
     setMessage(null);
     const cleanTitle = title.trim();

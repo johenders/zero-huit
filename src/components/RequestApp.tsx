@@ -1340,8 +1340,12 @@ export function RequestApp() {
                     );
                   }
 
-                  const quantity = deliverables[option.id];
-                  const formats = deliverableFormatsByKey[option.id] ?? [];
+                  const deliverableKey = option.id as Exclude<
+                    DeliverableKey,
+                    "incertain"
+                  >;
+                  const quantity = deliverables[deliverableKey];
+                  const formats = deliverableFormatsByKey[deliverableKey] ?? [];
                   const selected = quantity > 0;
                   const formatButton = (value: DeliverableFormat, label: string) => (
                     <button
@@ -1349,7 +1353,10 @@ export function RequestApp() {
                       onClick={() =>
                         setDeliverableFormatsByKey((prev) => ({
                           ...prev,
-                          [option.id]: toggleArrayValue(prev[option.id] ?? [], value),
+                          [deliverableKey]: toggleArrayValue(
+                            prev[deliverableKey] ?? [],
+                            value,
+                          ),
                         }))
                       }
                       className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] transition ${
@@ -1386,7 +1393,10 @@ export function RequestApp() {
                             onClick={() =>
                               setDeliverables((prev) => ({
                                 ...prev,
-                                [option.id]: Math.max(0, prev[option.id] - 1),
+                                [deliverableKey]: Math.max(
+                                  0,
+                                  prev[deliverableKey] - 1,
+                                ),
                               }))
                             }
                             className="h-9 w-9 rounded-full border border-white/10 text-xl text-zinc-200 hover:bg-white/10"
@@ -1402,7 +1412,7 @@ export function RequestApp() {
                             onClick={() => {
                               setDeliverables((prev) => ({
                                 ...prev,
-                                [option.id]: prev[option.id] + 1,
+                                [deliverableKey]: prev[deliverableKey] + 1,
                               }));
                               setDeliverableUnknown(false);
                             }}
@@ -1902,7 +1912,7 @@ export function RequestApp() {
                   }}
                   className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
                 >
-                  {submissionStatus === "sent" ? "Soumission envoyée" : "Envoyer la soumission"}
+                  Envoyer la soumission
                 </button>
                 <p className="text-sm text-zinc-400">
                 Vérifie tes choix avant d&apos;envoyer la soumission.

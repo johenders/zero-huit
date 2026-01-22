@@ -5,7 +5,7 @@ import { cloudflareIframeSrc } from "@/lib/cloudflare";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
 
 type Props = {
-  video: Video;
+  video: Video | null;
   open: boolean;
   onClose: () => void;
 };

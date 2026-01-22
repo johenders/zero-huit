@@ -623,8 +623,8 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
   );
 
   useEffect(() => {
-    if (!activeBudgetHandle) return;
     function handlePointerMove(event: PointerEvent) {
+      if (!activeBudgetHandle) return;
       updateBudgetFromPointer(event.clientX, activeBudgetHandle);
     }
     function handlePointerUp() {
@@ -639,8 +639,8 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
   }, [activeBudgetHandle, updateBudgetFromPointer]);
 
   useEffect(() => {
-    if (!activeDurationHandle) return;
     function handlePointerMove(event: PointerEvent) {
+      if (!activeDurationHandle) return;
       updateDurationFromPointer(event.clientX, activeDurationHandle);
     }
     function handlePointerUp() {
@@ -704,7 +704,6 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.user) {
         setProjects([]);
-        setProjectVideos([]);
         return;
       }
       const projectsResult = await supabase
@@ -929,7 +928,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
     const userId = sessionData.session.user.id;
 
     const video = videoById.get(videoId) ?? null;
-    if (video) openFavoritePopover(video, anchorRect);
+    if (video) openFavoritePopover(video, anchorRect ?? undefined);
   }
 
 
