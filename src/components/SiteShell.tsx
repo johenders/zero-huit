@@ -13,9 +13,13 @@ export function SiteShell({ children }: Props) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isRequest = pathname.startsWith("/request");
+  const hideShell =
+    pathname === "/login" ||
+    pathname.startsWith("/auth/callback") ||
+    pathname.startsWith("/debug");
   const headerOffset = 120;
 
-  if (isRequest) return <>{children}</>;
+  if (isRequest || hideShell) return <>{children}</>;
 
   return (
     <>
