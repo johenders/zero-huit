@@ -66,7 +66,12 @@ export function LoginClient() {
     setStatus("sending");
     setMessage(null);
 
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.NEXT_PUBLIC_VERCEL_URL
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : window.location.origin);
+    const redirectTo = `${baseUrl}/auth/callback?next=${encodeURIComponent(
       redirectTarget,
     )}`;
     const { error } = await supabase.auth.signInWithOtp({
