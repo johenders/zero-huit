@@ -83,7 +83,10 @@ function formatDuration(seconds: number | null) {
 }
 
 function buildAiFrameTimes(baseSeconds: number | null) {
-  const base = Number.isFinite(baseSeconds) ? Math.max(1, Math.floor(baseSeconds)) : 1;
+  const base =
+    typeof baseSeconds === "number" && Number.isFinite(baseSeconds)
+      ? Math.max(1, Math.floor(baseSeconds))
+      : 1;
   const candidates = [base, base + 3, base + 6, base + 9, base + 12];
   const unique = new Set<number>();
   const times: number[] = [];
