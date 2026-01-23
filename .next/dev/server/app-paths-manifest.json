@@ -1,9 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/contact/page": "app/contact/page.js",
-  "/articles/combien-coute-une-production-video/page": "app/articles/combien-coute-une-production-video/page.js",
-  "/articles/comment-bien-realiser-une-video-corporative/page": "app/articles/comment-bien-realiser-une-video-corporative/page.js",
-  "/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux/page": "app/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux/page.js",
-  "/articles/production-video-montreal/page": "app/articles/production-video-montreal/page.js",
-  "/services/page": "app/services/page.js"
-}
