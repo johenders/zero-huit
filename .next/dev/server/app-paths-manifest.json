@@ -1,6 +1,7 @@
 {
-  "/portfolio/page": "app/portfolio/page.js",
+  "/api/cloudflare/delete-video/route": "app/api/cloudflare/delete-video/route.js",
   "/page": "app/page.js",
+  "/portfolio/page": "app/portfolio/page.js",
   "/landing/page": "app/landing/page.js",
   "/services/page": "app/services/page.js",
   "/admin/portfolio/page": "app/admin/portfolio/page.js"

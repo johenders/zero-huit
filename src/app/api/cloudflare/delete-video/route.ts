@@ -66,20 +66,33 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    if (!response.ok) {
-      const text = await response.text();
+    const rawText = await response.text();
+    let json: { success?: boolean; errors?: unknown[] } | null = null;
+    try {
+      json = rawText ? (JSON.parse(rawText) as { success?: boolean; errors?: unknown[] }) : null;
+    } catch {
+      json = null;
+    }
+
+    const errors = json?.errors ?? [];
+    const hasNotFound =
+      response.status === 404 ||
+      (Array.isArray(errors) &&
+        errors.some((err) => {
+          if (!err || typeof err !== "object") return false;
+          if (!("code" in err)) return false;
+          const code = (err as { code?: string | number }).code;
+          return String(code) === "10003";
+        }));
+
+    if (!response.ok && !hasNotFound) {
       return NextResponse.json(
-        { error: "Cloudflare error", details: text },
+        { error: "Cloudflare error", details: rawText },
         { status: 502 },
       );
     }
 
-    const json = (await response.json()) as {
-      success: boolean;
-      errors?: unknown[];
-    };
-
-    if (!json.success) {
+    if (json && json.success === false && !hasNotFound) {
       return NextResponse.json(
         { error: "Cloudflare error", details: json.errors ?? json },
         { status: 502 },
