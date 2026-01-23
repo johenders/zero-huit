@@ -1260,8 +1260,21 @@ export default function AdminPortfolioPage() {
           }}
           onDelete={async () => {
             if (!editingVideo) return;
+            const index = videos.findIndex((v) => v.id === editingVideo.id);
+            const candidate =
+              index >= 0
+                ? videos[index + 1] ?? videos[index - 1] ?? null
+                : null;
             const deleted = await deleteVideo(editingVideo);
-            if (deleted) setEditingVideo(null);
+            if (!deleted) return;
+            if (candidate) {
+              setEditingVideo({
+                ...candidate,
+                taxonomies: candidate.taxonomies.filter((t) => allTaxonomyIds.has(t.id)),
+              });
+            } else {
+              setEditingVideo(null);
+            }
           }}
           onNavigate={(offset) => {
             if (!editingVideo) return;
