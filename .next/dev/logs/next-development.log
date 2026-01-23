@@ -1,5 +1,446 @@
-[00:00:00.976] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.046] Server  LOG      ✓ Ready in 846ms
-[00:00:04.399] Server  ERROR    ⨯ Error: Missing env: NEXT_PUBLIC_SUPABASE_URL
-[00:00:05.011] Server  ERROR    ⨯ Error: Missing env: NEXT_PUBLIC_SUPABASE_URL
-[00:00:08.185] Browser ERROR   uncaughtError: Error: Missing env: NEXT_PUBLIC_SUPABASE_URL
+[00:00:01.115] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.187] Server  LOG      ✓ Ready in 971ms
+[00:00:05.725] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:17.977] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:18.101] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:05:23.614] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:23.736] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:07:39.237] Browser ERROR   uncaughtError: ReferenceError: cloudflareIframeSrc is not defined
+[00:07:43.313] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:07:43.877] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:44.002] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:12:28.998] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:12:29.131] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <LoadingBoundary name="portfolio/" loading={null}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+              <SegmentViewNode type="page" pagePath="admin/port...">
+                <SegmentTrieNode>
+                <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                  <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                    <div className="grid w-ful...">
+                      <section className="rounded-2x...">
+                        <h2>
+                        <div className="mt-4 grid ...">
+                          <div className="space-y-3">
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+-                               data-np-intersection-state="visible"
+                              >
+                            <div>
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value={1}
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            ...
+                          ...
+                      ...
+              ...
+            ...
+
+[00:13:26.588] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:13:26.736] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <LoadingBoundary name="portfolio/" loading={null}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+              <SegmentViewNode type="page" pagePath="admin/port...">
+                <SegmentTrieNode>
+                <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                  <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                    <div className="grid w-ful...">
+                      <section className="rounded-2x...">
+                        <h2>
+                        <div className="mt-4 grid ...">
+                          <div className="space-y-3">
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+-                               data-np-intersection-state="visible"
+                              >
+                            <div>
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value={1}
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            ...
+                          ...
+                      ...
+              ...
+            ...
+
+[00:15:48.797] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:15:48.798] Browser ERROR   uncaughtError: ReferenceError: cloudflareIframeSrc is not defined
+[00:15:50.213] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:15:50.213] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <LoadingBoundary name="portfolio/" loading={null}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+              <SegmentViewNode type="page" pagePath="admin/port...">
+                <SegmentTrieNode>
+                <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                  <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                    <div className="grid w-ful...">
+                      <section className="rounded-2x...">
+                        <h2>
+                        <div className="mt-4 grid ...">
+                          <div className="space-y-3">
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+-                               data-np-intersection-state="visible"
+                              >
+                            <div>
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value={1}
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            <label className="block">
+                              <div>
+                              <input
+                                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zin..."
+                                value=""
+                                onChange={function onChange}
+                                type="number"
+                                min={0}
+-                               data-np-intersection-state="visible"
+                              >
+                            ...
+                          ...
+                      ...
+              ...
+            ...
+
+[00:15:55.262] Browser ERROR   uncaughtError: ReferenceError: cloudflareIframeSrc is not defined
+[00:16:00.382] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:16:00.382] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:17:02.807] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:02.807] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:17:44.776] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:17:44.776] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary name="portfolio/" loading={null}>
+              <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/admin/por..." tree={[...]} params={{}} cacheNode={{lazyData:null, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="admin/port...">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function AdminPortfolioPage} serverProvidedParams={{...}}>
+                          <AdminPortfolioPage params={Promise} searchParams={Promise}>
+                            <div
+                              className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2"
+-                             data-np-autofill-form-type="other"
+-                             data-np-checked="1"
+-                             data-np-watching="1"
+                            >
+                      ...
+                    ...
+          ...
+
+[00:30:38.981] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:32:59.965] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:32:59.966] Browser ERROR   uncaughtError: ReferenceError: sortedVideos is not defined
+[00:33:00.224] Server  ERROR    ⨯ ReferenceError: sortedVideos is not defined
+[00:33:00.790] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:33:00.968] Browser ERROR   uncaughtError: ReferenceError: sortedVideos is not defined
+[00:33:08.085] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:33:08.367] Server  ERROR    ⨯ ReferenceError: sortedVideos is not defined
+[00:33:08.617] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:33:08.771] Browser ERROR   uncaughtError: ReferenceError: sortedVideos is not defined
+[00:33:29.417] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:33:29.995] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:35:39.939] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:35:39.939] Browser ERROR   uncaughtError: ReferenceError: filteredVideos is not defined
+[00:35:40.257] Server  ERROR    ⨯ ReferenceError: filteredVideos is not defined
+[00:35:40.538] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:35:40.692] Browser ERROR   uncaughtError: ReferenceError: filteredVideos is not defined
+[00:35:48.549] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:35:48.767] Server  ERROR    ⨯ ReferenceError: filteredVideos is not defined
+[00:35:49.006] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:35:49.163] Browser ERROR   uncaughtError: ReferenceError: filteredVideos is not defined
+[00:35:59.838] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:36:00.033] Server  ERROR    ⨯ ReferenceError: filteredVideos is not defined
+[00:36:00.271] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:36:00.418] Browser ERROR   uncaughtError: ReferenceError: filteredVideos is not defined
+[00:36:05.058] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:36:05.537] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

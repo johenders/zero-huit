@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { budgetLevels, formatCad } from "@/lib/budget";
-import { cloudflareThumbnailSrc } from "@/lib/cloudflare";
+import {
+  cloudflareDownloadSrc,
+  cloudflareIframeSrcNoAutoplay,
+  cloudflareThumbnailSrc,
+} from "@/lib/cloudflare";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
 import { useAdminState } from "@/app/admin/_hooks/useAdminState";
@@ -153,12 +157,16 @@ export default function AdminPortfolioPage() {
   >("idle");
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
 
   const [rowUploads, setRowUploads] = useState<Record<string, RowUploadState>>({});
   const [bulkUploads, setBulkUploads] = useState<BulkUploadItem[]>([]);
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
   const [bulkDropActive, setBulkDropActive] = useState(false);
   const bulkInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortKey, setSortKey] = useState<"title" | "budget">("title");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [durationRefreshState, setDurationRefreshState] = useState<
     "idle" | "loading" | "error"
   >("idle");
@@ -181,6 +189,23 @@ export default function AdminPortfolioPage() {
     }
     return groups;
   }, [taxonomies]);
+
+  function toggleSort(nextKey: typeof sortKey) {
+    setSortKey((current) => {
+      if (current !== nextKey) {
+        setSortDirection("asc");
+        setCurrentPage(1);
+        return nextKey;
+      }
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setCurrentPage(1);
+      return current;
+    });
+  }
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const refreshTaxonomies = useCallback(async () => {
     if (!supabase) return;
@@ -221,18 +246,27 @@ export default function AdminPortfolioPage() {
     setVideosMessage(null);
     const from = (currentPage - 1) * pageSize;
     const to = from + pageSize - 1;
+    const orderColumn = sortKey === "budget" ? "budget_min" : "title";
+    const rawSearch = searchQuery.trim();
+    const safeSearch = rawSearch.replaceAll("%", "\\%").replaceAll(",", "\\,");
+    let videosQuery = supabase
+      .from("videos")
+      .select(
+        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
+        { count: "exact" },
+      )
+      .order(orderColumn, { ascending: sortDirection === "asc" })
+      .order("created_at", { ascending: false });
+    if (rawSearch) {
+      videosQuery = videosQuery.or(
+        `title.ilike.%${safeSearch}%,cloudflare_uid.ilike.%${safeSearch}%`,
+      );
+    }
     const [
       { data: rawVideos, error: videosError, count: videosCount },
       { data: rawTaxonomies, error: taxonomiesError },
     ] = await Promise.all([
-      supabase
-        .from("videos")
-        .select(
-          "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
-          { count: "exact" },
-        )
-        .order("created_at", { ascending: false })
-        .range(from, to),
+      videosQuery.range(from, to),
       supabase.from("taxonomies").select("id,kind,label"),
     ]);
 
@@ -282,7 +316,7 @@ export default function AdminPortfolioPage() {
     );
 
     setVideos(hydratedVideos);
-  }, [supabase, currentPage, pageSize]);
+  }, [supabase, currentPage, pageSize, searchQuery, sortDirection, sortKey]);
 
   const refreshMissingDurations = useCallback(async () => {
     if (!supabase) return;
@@ -686,8 +720,18 @@ export default function AdminPortfolioPage() {
   return (
     <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
       <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur lg:col-span-2">
-        <h2 className="text-sm font-semibold">Uploader une vidéo</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">Uploader une vidéo</h2>
+          <button
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10"
+            type="button"
+            onClick={() => setShowUploader((prev) => !prev)}
+          >
+            {showUploader ? "Masquer" : "Afficher"}
+          </button>
+        </div>
+        {showUploader ? (
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="space-y-3">
             <label className="block">
               <div className="text-sm font-medium">Titre</div>
@@ -854,13 +898,20 @@ export default function AdminPortfolioPage() {
               <code>{cloudflareThumbnailSrc("CLOUDFLARE_UID", thumbSeconds)}</code>
             </div>
           </div>
-        </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur lg:col-span-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Vidéos</h2>
           <div className="flex flex-wrap items-center gap-2">
+            <input
+              className="w-full min-w-[220px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-auto"
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
             <button
               className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
               type="button"
@@ -869,6 +920,7 @@ export default function AdminPortfolioPage() {
             >
               {durationRefreshState === "loading" ? "Durées…" : "Récupérer durées"}
             </button>
+            <div className="text-xs text-zinc-500">Résultats: {totalVideos}</div>
             <div className="text-xs text-zinc-400">{totalPagesText}</div>
             <button
               className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
@@ -1014,8 +1066,26 @@ export default function AdminPortfolioPage() {
               <thead className="bg-black/30">
                 <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-wide text-zinc-400">
                   <th className="px-3 py-2">Thumbnail</th>
-                  <th className="px-3 py-2">Titre</th>
-                  <th className="px-3 py-2">Budget</th>
+                  <th className="px-3 py-2">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 hover:text-white"
+                      onClick={() => toggleSort("title")}
+                    >
+                      Titre
+                      {sortKey === "title" ? (sortDirection === "asc" ? "↑" : "↓") : null}
+                    </button>
+                  </th>
+                  <th className="px-3 py-2">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 hover:text-white"
+                      onClick={() => toggleSort("budget")}
+                    >
+                      Budget
+                      {sortKey === "budget" ? (sortDirection === "asc" ? "↑" : "↓") : null}
+                    </button>
+                  </th>
                   <th className="px-3 py-2">Durée</th>
                   <th className="px-3 py-2">Favoris</th>
                   <th className="px-3 py-2">Type</th>
@@ -1228,6 +1298,11 @@ function EditVideoModal({
     "idle",
   );
   const [aiApplyMessage, setAiApplyMessage] = useState<string | null>(null);
+  const [taxonomyMessage, setTaxonomyMessage] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playerTime, setPlayerTime] = useState<number>(0);
+  const [useIframePlayer, setUseIframePlayer] = useState(false);
+  const [thumbChoices, setThumbChoices] = useState<number[]>([]);
 
   const availableKeywordLabels = useMemo(
     () => groupedTaxonomies.keyword.map((t) => t.label),
@@ -1241,6 +1316,36 @@ function EditVideoModal({
     }
     return map;
   }, [groupedTaxonomies.keyword]);
+
+  function buildRandomThumbTimes(duration: number, count = 8) {
+    const safeDuration = Math.max(1, Math.floor(duration));
+    const segment = safeDuration / count;
+    const times = new Set<number>();
+    for (let i = 0; i < count; i += 1) {
+      const start = Math.max(0, Math.floor(i * segment));
+      const end = Math.min(safeDuration, Math.floor((i + 1) * segment));
+      const range = Math.max(1, end - start);
+      const random = start + Math.floor(Math.random() * range);
+      times.add(Math.min(safeDuration, Math.max(0, random)));
+    }
+    return Array.from(times).sort((a, b) => a - b);
+  }
+
+  function refreshThumbChoices() {
+    if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
+    setThumbChoices(buildRandomThumbTimes(durationSeconds, 8));
+  }
+
+  useEffect(() => {
+    setPlayerTime(0);
+    setUseIframePlayer(false);
+    setThumbChoices([]);
+  }, [video?.cloudflare_uid]);
+
+  useEffect(() => {
+    if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
+    refreshThumbChoices();
+  }, [durationSeconds]);
 
   if (!open || !video) return null;
 
@@ -1349,6 +1454,31 @@ function EditVideoModal({
     }
   }
 
+  async function addTaxonomy(kind: TaxonomyKind) {
+    if (!supabase) return;
+    const label = prompt("Nouveau libellé :", "")?.trim();
+    if (!label) return;
+    setTaxonomyMessage(null);
+    try {
+      const { data: inserted, error } = await supabase
+        .from("taxonomies")
+        .upsert({ kind, label }, { onConflict: "kind,label" })
+        .select("id,kind,label")
+        .single();
+      if (error) throw error;
+      if (inserted?.id) {
+        setSelectedTaxonomyIds((prev) => {
+          const next = new Set(prev);
+          next.add(inserted.id);
+          return next;
+        });
+      }
+      await refreshTaxonomies();
+    } catch (e) {
+      setTaxonomyMessage(e instanceof Error ? e.message : "Erreur ajout taxonomie.");
+    }
+  }
+
   async function save() {
     if (!supabase) return;
     if (!video) return;
@@ -1431,10 +1561,16 @@ function EditVideoModal({
     }
   }
 
+  function applyPlayerTime() {
+    const current = videoRef.current?.currentTime;
+    if (!Number.isFinite(current)) return;
+    setThumbSeconds(Math.max(0, Math.floor(current ?? 0)));
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-6">
-        <div className="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-zinc-950 p-6 shadow-2xl shadow-black/40">
+        <div className="mx-auto w-[95vw] max-w-none rounded-2xl border border-white/10 bg-zinc-950 p-6 shadow-2xl shadow-black/40">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2 className="truncate text-lg font-semibold">Modifier</h2>
@@ -1509,7 +1645,7 @@ function EditVideoModal({
                   min={0}
                 />
               </label>
-              <label className="block">
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                 <div className="flex items-center justify-between gap-2 text-sm font-medium text-zinc-200">
                   <span>Durée (secondes)</span>
                   <button
@@ -1521,20 +1657,64 @@ function EditVideoModal({
                     {durationFetchStatus === "loading" ? "Lecture…" : "Récupérer"}
                   </button>
                 </div>
-                <input
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100"
-                  value={durationSeconds ?? ""}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    setDurationSeconds(raw === "" ? null : Number(raw));
-                  }}
-                  type="number"
-                  min={0}
-                />
+                <div className="mt-1 text-sm text-zinc-100">
+                  {Number.isFinite(durationSeconds) ? durationSeconds : "—"}
+                </div>
                 {durationFetchMessage ? (
                   <div className="mt-1 text-xs text-red-400">{durationFetchMessage}</div>
                 ) : null}
-              </label>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Lecteur
+                  </div>
+                  <button
+                    className="rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/20 disabled:opacity-50"
+                    type="button"
+                    onClick={applyPlayerTime}
+                    disabled={isPendingVideoUid(video.cloudflare_uid) || useIframePlayer}
+                  >
+                    Utiliser le temps du player
+                  </button>
+                </div>
+                <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                  {isPendingVideoUid(video.cloudflare_uid) ? (
+                    <div className="flex aspect-video w-full items-center justify-center text-xs uppercase tracking-wide text-zinc-500">
+                      En attente d&apos;upload
+                    </div>
+                  ) : useIframePlayer ? (
+                    <iframe
+                      className="aspect-video w-full"
+                      src={cloudflareIframeSrcNoAutoplay(video.cloudflare_uid)}
+                      allow="accelerometer; encrypted-media; picture-in-picture;"
+                      allowFullScreen
+                      title={video.title}
+                    />
+                  ) : (
+                    <video
+                      ref={videoRef}
+                      className="aspect-video w-full bg-black"
+                      controls
+                      preload="metadata"
+                      poster={cloudflareThumbnailSrc(video.cloudflare_uid, thumbSeconds, 1920)}
+                      src={cloudflareDownloadSrc(video.cloudflare_uid)}
+                      onTimeUpdate={(e) => {
+                        setPlayerTime(Math.floor(e.currentTarget.currentTime));
+                      }}
+                      onError={() => {
+                        setUseIframePlayer(true);
+                      }}
+                    />
+                  )}
+                </div>
+                {!useIframePlayer ? (
+                  <div className="mt-2 text-xs text-zinc-400">
+                    Temps courant: {playerTime}s
+                  </div>
+                ) : null}
+              </div>
 
               {message ? <div className="text-sm text-red-400">{message}</div> : null}
 
@@ -1563,12 +1743,25 @@ function EditVideoModal({
                 </button>
               </div>
               {aiMessage ? <div className="mt-2 text-xs text-red-400">{aiMessage}</div> : null}
+              {taxonomyMessage ? (
+                <div className="mt-1 text-xs text-red-400">{taxonomyMessage}</div>
+              ) : null}
               <div className="mt-3 space-y-3">
                 {taxonomyGroups.map((group) => {
                   const options = mergeTaxonomiesByKinds(groupedTaxonomies, group.kinds);
                   return (
                     <div key={group.kind}>
-                      <div className="text-sm font-semibold">{group.label}</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-semibold">{group.label}</div>
+                        <button
+                          className="rounded-md border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-semibold text-zinc-200 hover:bg-white/20 disabled:opacity-50"
+                          type="button"
+                          onClick={() => void addTaxonomy(group.kind)}
+                          disabled={!supabase}
+                        >
+                          Ajouter
+                        </button>
+                      </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {options.length === 0 ? (
                           <div className="text-sm text-zinc-400">À venir</div>
@@ -1617,15 +1810,60 @@ function EditVideoModal({
                     En attente d&apos;upload
                   </div>
                 ) : (
-                  <Image
-                    className="aspect-video w-full object-cover"
-                    src={cloudflareThumbnailSrc(video.cloudflare_uid, thumbSeconds)}
-                    alt=""
-                    width={640}
-                    height={360}
-                  />
+                    <Image
+                      className="aspect-video w-full object-cover"
+                      src={cloudflareThumbnailSrc(video.cloudflare_uid, thumbSeconds, 1920)}
+                      alt=""
+                      width={1920}
+                      height={1080}
+                    />
                 )}
               </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="text-xs text-zinc-400">
+                  {durationSeconds
+                    ? "Choisis un thumbnail parmi les suggestions."
+                    : "Renseigne la durée pour générer des suggestions."}
+                </div>
+                <button
+                  className="rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/20 disabled:opacity-50"
+                  type="button"
+                  onClick={refreshThumbChoices}
+                  disabled={!durationSeconds || isPendingVideoUid(video.cloudflare_uid)}
+                >
+                  Nouvelles suggestions
+                </button>
+              </div>
+              {thumbChoices.length > 0 ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {thumbChoices.map((time) => {
+                    const selected = Math.floor(thumbSeconds) === time;
+                    return (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setThumbSeconds(time)}
+                        className={`overflow-hidden rounded-xl border text-left ${
+                          selected
+                            ? "border-emerald-400/60 bg-emerald-500/10"
+                            : "border-white/10 bg-black/30 hover:border-white/30"
+                        }`}
+                      >
+                        <Image
+                          className="aspect-video w-full object-cover"
+                          src={cloudflareThumbnailSrc(video.cloudflare_uid, time, 1920)}
+                          alt=""
+                          width={640}
+                          height={360}
+                        />
+                        <div className="px-2 py-1 text-center text-[10px] text-zinc-400">
+                          {time}s
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1659,10 +1897,10 @@ function EditVideoModal({
                   >
                     <Image
                       className="aspect-video w-full object-cover"
-                      src={cloudflareThumbnailSrc(video.cloudflare_uid, time)}
+                      src={cloudflareThumbnailSrc(video.cloudflare_uid, time, 1920)}
                       alt=""
-                      width={240}
-                      height={135}
+                      width={640}
+                      height={360}
                     />
                     <div className="px-2 py-1 text-center text-[10px] text-zinc-400">
                       {time}s

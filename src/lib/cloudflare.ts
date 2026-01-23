@@ -7,6 +7,18 @@ export function cloudflareIframeSrc(uid: string) {
   return `https://iframe.videodelivery.net/${encodeURIComponent(uid)}?${params.toString()}`;
 }
 
+export function cloudflareIframeSrcNoAutoplay(uid: string) {
+  const params = new URLSearchParams({
+    autoplay: "0",
+    controls: "1",
+    muted: "false",
+    loop: "false",
+    preload: "metadata",
+    quality: "1080",
+  });
+  return `https://iframe.videodelivery.net/${encodeURIComponent(uid)}?${params.toString()}`;
+}
+
 export function cloudflarePreviewIframeSrc(uid: string, startSeconds?: number | null) {
   const params = new URLSearchParams({
     autoplay: "true",
@@ -37,4 +49,8 @@ export function cloudflareThumbnailSrc(
   }
   const query = params.toString();
   return query ? `${base}?${query}` : base;
+}
+
+export function cloudflareDownloadSrc(uid: string) {
+  return `https://videodelivery.net/${encodeURIComponent(uid)}/downloads/default.mp4`;
 }
