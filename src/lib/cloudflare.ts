@@ -1,6 +1,8 @@
 export function cloudflareIframeSrc(uid: string) {
   const params = new URLSearchParams({
-    autoplay: "true",
+    autoplay: "0",
+    controls: "1",
+    muted: "0",
     preload: "true",
     quality: "1080",
   });
@@ -11,8 +13,8 @@ export function cloudflareIframeSrcNoAutoplay(uid: string) {
   const params = new URLSearchParams({
     autoplay: "0",
     controls: "1",
-    muted: "false",
-    loop: "false",
+    muted: "0",
+    loop: "0",
     preload: "metadata",
     quality: "1080",
   });
@@ -22,7 +24,7 @@ export function cloudflareIframeSrcNoAutoplay(uid: string) {
 export function cloudflarePreviewIframeSrc(uid: string, startSeconds?: number | null) {
   const params = new URLSearchParams({
     autoplay: "true",
-    muted: "true",
+    muted: "false",
     loop: "true",
     controls: "false",
     preload: "true",

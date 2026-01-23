@@ -1795,11 +1795,23 @@ function EditVideoModal({
                       ref={videoRef}
                       className="aspect-video w-full bg-black"
                       controls
+                      autoPlay={false}
+                      muted={false}
+                      playsInline
                       preload="metadata"
                       poster={cloudflareThumbnailSrc(video.cloudflare_uid, thumbSeconds, 1920)}
                       src={cloudflareDownloadSrc(video.cloudflare_uid)}
                       onTimeUpdate={(e) => {
                         setPlayerTime(Math.floor(e.currentTarget.currentTime));
+                      }}
+                      onLoadedMetadata={(e) => {
+                        e.currentTarget.muted = false;
+                        e.currentTarget.autoplay = false;
+                        e.currentTarget.pause();
+                      }}
+                      onPlay={(e) => {
+                        e.currentTarget.muted = false;
+                        e.currentTarget.volume = 1;
                       }}
                       onError={() => {
                         setUseIframePlayer(true);

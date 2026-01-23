@@ -104,15 +104,35 @@ export function SiteFooter() {
             </ul>
           </div>
           <div>
-            <div className="text-base font-semibold">Bureau</div>
-            <div className="mt-4 space-y-2 text-sm text-white/80">
-              <div>74 rue St-Laurent</div>
-              <div>Beauharnois</div>
-              <div>Qu&#233;bec, J6N 1V6</div>
-              <Link href="/contact" className="inline-block text-white hover:text-white/80">
-                Voir la map
-              </Link>
-            </div>
+            <div className="text-base font-semibold">Articles</div>
+            <ul className="mt-4 space-y-2 text-sm text-white/80">
+              <li>
+                <Link href="/articles/combien-coute-une-production-video" className="hover:text-white">
+                  Combien coûte une production vidéo
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/articles/comment-bien-realiser-une-video-corporative"
+                  className="hover:text-white"
+                >
+                  Comment bien réaliser une vidéo corporative
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux"
+                  className="hover:text-white"
+                >
+                  Se démarquer sur les réseaux sociaux avec la vidéo
+                </Link>
+              </li>
+              <li>
+                <Link href="/articles/production-video-montreal" className="hover:text-white">
+                  Production vidéo Montréal : choisir le bon partenaire
+                </Link>
+              </li>
+            </ul>
           </div>
           <div>
             <div className="text-base font-semibold">Contact</div>
@@ -123,6 +143,12 @@ export function SiteFooter() {
               <a href="tel:+14503951777" className="block hover:text-white">
                 450-395-1777
               </a>
+              <div>74 rue St-Laurent</div>
+              <div>Beauharnois</div>
+              <div>Qu&#233;bec, J6N 1V6</div>
+              <Link href="/contact" className="inline-block text-white hover:text-white/80">
+                Voir la map
+              </Link>
             </div>
           </div>
         </div>

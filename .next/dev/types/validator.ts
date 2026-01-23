@@ -92,6 +92,42 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/articles/combien-coute-une-production-video/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/articles/combien-coute-une-production-video">> = Specific
+  const handler = {} as typeof import("../../../src/app/articles/combien-coute-une-production-video/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/articles/comment-bien-realiser-une-video-corporative/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/articles/comment-bien-realiser-une-video-corporative">> = Specific
+  const handler = {} as typeof import("../../../src/app/articles/comment-bien-realiser-une-video-corporative/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux">> = Specific
+  const handler = {} as typeof import("../../../src/app/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/articles/production-video-montreal/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/articles/production-video-montreal">> = Specific
+  const handler = {} as typeof import("../../../src/app/articles/production-video-montreal/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/contact/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/contact">> = Specific

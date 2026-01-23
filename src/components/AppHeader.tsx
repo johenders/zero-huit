@@ -3,6 +3,7 @@
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 type Props = {
   sessionEmail: string | null;
@@ -30,6 +31,7 @@ export function AppHeader({
   headerClassName,
 }: Props) {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const headerPosition = position === "absolute" ? "absolute left-0 right-0" : "sticky";
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -38,7 +40,7 @@ export function AppHeader({
 
   return (
     <header
-      className={`top-0 z-10 bg-transparent ${headerPosition}${
+      className={`top-0 z-40 bg-transparent ${headerPosition}${
         headerClassName ? ` ${headerClassName}` : ""
       }`}
     >
@@ -81,37 +83,76 @@ export function AppHeader({
               Contact
             </Link>
           </nav>
-          <nav className="flex items-center gap-2 sm:hidden">
-            <Link href="/" className={navItemClass(isActive("/"))}>
-              Accueil
-            </Link>
-            <Link href="/about" className={navItemClass(isActive("/about"))}>
-              &#192; propos
-            </Link>
-            <Link href="/services" className={navItemClass(isActive("/services"))}>
-              Services
-            </Link>
-            <Link href="/portfolio" className={navItemClass(isActive("/portfolio"))}>
-              Projets
-            </Link>
-            <Link href="/contact" className={navItemClass(isActive("/contact"))}>
-              Contact
-            </Link>
-          </nav>
+          <button
+            type="button"
+            aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 sm:hidden"
+          >
+            <span className="sr-only">Menu</span>
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="h-0.5 w-5 rounded-full bg-white" />
+              <span className="h-0.5 w-4 rounded-full bg-white" />
+              <span className="h-0.5 w-5 rounded-full bg-white" />
+            </div>
+          </button>
           <Link
             href="/request"
             className="hidden items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 sm:flex"
           >
             Demande de soumission
           </Link>
-          <Link
-            href="/request"
-            className="flex items-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 sm:hidden"
-          >
-            Soumission
-          </Link>
         </div>
       </div>
+      {isMobileMenuOpen ? (
+        <div className="absolute left-0 right-0 top-full z-50 border-t border-white/10 bg-zinc-950/95 px-4 py-4 shadow-lg shadow-black/40 backdrop-blur sm:hidden">
+          <nav className="flex flex-col items-stretch gap-2">
+            <Link
+              href="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`${navItemClass(isActive("/"))} w-full justify-center`}
+            >
+              Accueil
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`${navItemClass(isActive("/about"))} w-full justify-center`}
+            >
+              &#192; propos
+            </Link>
+            <Link
+              href="/services"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`${navItemClass(isActive("/services"))} w-full justify-center`}
+            >
+              Services
+            </Link>
+            <Link
+              href="/portfolio"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`${navItemClass(isActive("/portfolio"))} w-full justify-center`}
+            >
+              Projets
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`${navItemClass(isActive("/contact"))} w-full justify-center`}
+            >
+              Contact
+            </Link>
+            <Link
+              href="/request"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="mt-2 flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
+            >
+              Demande de soumission
+            </Link>
+          </nav>
+        </div>
+      ) : null}
     </header>
   );
 }
