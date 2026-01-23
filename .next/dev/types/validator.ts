@@ -209,6 +209,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/api/cloudflare/delete-video/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cloudflare/delete-video">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/cloudflare/delete-video/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/api/cloudflare/direct-upload/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/cloudflare/direct-upload">> = Specific
