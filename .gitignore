@@ -1,2 +1,13 @@
 node_modules/
 .env.local
+# Next.js / build artifacts
+.next/
+# Debug traces / logs
+trace
+*.log
+
+# Vercel
+.vercel/
+
+# macOS
+.DS_Store

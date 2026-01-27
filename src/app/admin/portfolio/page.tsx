@@ -1255,7 +1255,6 @@ export default function AdminPortfolioPage() {
           videos={videos}
           groupedTaxonomies={groupedTaxonomies}
           onSaved={async () => {
-            setEditingVideo(null);
             await refreshVideos();
           }}
           onDelete={async () => {
@@ -1350,7 +1349,7 @@ function EditVideoModal({
   const [selectedTaxonomyIds, setSelectedTaxonomyIds] = useState<Set<string>>(
     () => new Set(video?.taxonomies.map((t) => t.id) ?? []),
   );
-  const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "dirty" | "saving" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "error">("idle");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
@@ -1376,6 +1375,76 @@ function EditVideoModal({
   );
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < videos.length - 1;
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasMountedRef = useRef(false);
+  const isSavingRef = useRef(false);
+  const pendingAutosaveRef = useRef(false);
+  const lastRefreshAtRef = useRef(0);
+
+  type VideoSnapshot = {
+    title: string;
+    thumbnailTimeSeconds: number | null;
+    durationSeconds: number | null;
+    budgetMin: (typeof budgetLevels)[number];
+    budgetMax: (typeof budgetLevels)[number];
+    taxonomyIds: string[];
+  };
+
+  function normalizeSeconds(value: number | null | undefined): number | null {
+    if (!Number.isFinite(value)) return null;
+    return Math.max(0, Math.floor(value ?? 0));
+  }
+
+  function normalizeTaxonomyIds(value: Set<string>): string[] {
+    return Array.from(value).sort((a, b) => a.localeCompare(b));
+  }
+
+  function snapshotFromVideo(current: Video | null): VideoSnapshot {
+    return {
+      title: current?.title?.trim() ?? "",
+      thumbnailTimeSeconds: normalizeSeconds(current?.thumbnail_time_seconds ?? null),
+      durationSeconds: normalizeSeconds(current?.duration_seconds ?? null),
+      budgetMin: (current?.budget_min as (typeof budgetLevels)[number]) ?? budgetLevels[0],
+      budgetMax:
+        (current?.budget_max as (typeof budgetLevels)[number]) ??
+        budgetLevels[budgetLevels.length - 1],
+      taxonomyIds: (current?.taxonomies.map((t) => t.id) ?? []).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    };
+  }
+
+  function snapshotFromState(): VideoSnapshot {
+    return {
+      title: title.trim(),
+      thumbnailTimeSeconds: normalizeSeconds(thumbSeconds),
+      durationSeconds: normalizeSeconds(durationSeconds),
+      budgetMin: budgetLevels[budgetMinIndex],
+      budgetMax: budgetLevels[budgetMaxIndex],
+      taxonomyIds: normalizeTaxonomyIds(selectedTaxonomyIds),
+    };
+  }
+
+  function arraysEqual(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  function snapshotsEqual(a: VideoSnapshot, b: VideoSnapshot): boolean {
+    return (
+      a.title === b.title &&
+      a.thumbnailTimeSeconds === b.thumbnailTimeSeconds &&
+      a.durationSeconds === b.durationSeconds &&
+      a.budgetMin === b.budgetMin &&
+      a.budgetMax === b.budgetMax &&
+      arraysEqual(a.taxonomyIds, b.taxonomyIds)
+    );
+  }
+
+  const lastSavedSnapshotRef = useRef<VideoSnapshot>(snapshotFromVideo(video));
 
   const availableKeywordLabels = useMemo(
     () => groupedTaxonomies.keyword.map((t) => t.label),
@@ -1416,11 +1485,22 @@ function EditVideoModal({
   }, [video?.cloudflare_uid]);
 
   useEffect(() => {
+    lastSavedSnapshotRef.current = snapshotFromState();
+    hasMountedRef.current = false;
+    isSavingRef.current = false;
+    pendingAutosaveRef.current = false;
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    setStatus("idle");
+    setMessage(null);
+  }, [video?.id]);
+
+  useEffect(() => {
     if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
     refreshThumbChoices();
   }, [durationSeconds]);
-
-  if (!open || !video) return null;
 
   async function requestAiKeywords() {
     if (aiStatus === "loading") return;
@@ -1552,68 +1632,149 @@ function EditVideoModal({
     }
   }
 
-  async function save() {
-    if (!supabase) return;
-    if (!video) return;
-    setStatus("saving");
-    setMessage(null);
-    const cleanTitle = title.trim();
-    if (!cleanTitle) {
+  async function saveSnapshot(snapshot: VideoSnapshot): Promise<boolean> {
+    if (!supabase || !video) return false;
+    if (!snapshot.title) {
       setStatus("error");
       setMessage("Titre requis.");
-      return;
+      return false;
     }
 
-    const { error: updateError } = await supabase
-      .from("videos")
-      .update({
-        title: cleanTitle,
-        thumbnail_time_seconds: Number.isFinite(thumbSeconds)
-          ? Math.max(0, Math.floor(thumbSeconds))
-          : null,
-        duration_seconds: Number.isFinite(durationSeconds)
-          ? Math.max(0, Math.floor(durationSeconds ?? 0))
-          : null,
-        budget_min: budgetLevels[budgetMinIndex],
-        budget_max: budgetLevels[budgetMaxIndex],
-      })
-      .eq("id", video.id);
-
-    if (updateError) {
-      setStatus("error");
-      setMessage(updateError.message);
-      return;
+    if (isSavingRef.current) {
+      pendingAutosaveRef.current = true;
+      return false;
     }
 
-    const desired = Array.from(selectedTaxonomyIds);
-    const { error: deleteError } = await supabase
-      .from("video_taxonomies")
-      .delete()
-      .eq("video_id", video.id);
-    if (deleteError) {
-      setStatus("error");
-      setMessage(deleteError.message);
-      return;
-    }
+    isSavingRef.current = true;
+    setStatus("saving");
+    setMessage(null);
 
-    if (desired.length > 0) {
-      const rows = desired.map((taxonomyId) => ({
-        video_id: video.id,
-        taxonomy_id: taxonomyId,
-      }));
-      const { error: insertError } = await supabase
-        .from("video_taxonomies")
-        .insert(rows);
-      if (insertError) {
+    try {
+      const { error: updateError } = await supabase
+        .from("videos")
+        .update({
+          title: snapshot.title,
+          thumbnail_time_seconds: snapshot.thumbnailTimeSeconds,
+          duration_seconds: snapshot.durationSeconds,
+          budget_min: snapshot.budgetMin,
+          budget_max: snapshot.budgetMax,
+        })
+        .eq("id", video.id);
+
+      if (updateError) {
         setStatus("error");
-        setMessage(insertError.message);
-        return;
+        setMessage(updateError.message);
+        return false;
+      }
+
+      const taxonomyChanged = !arraysEqual(
+        snapshot.taxonomyIds,
+        lastSavedSnapshotRef.current.taxonomyIds,
+      );
+
+      if (taxonomyChanged) {
+        const { error: deleteError } = await supabase
+          .from("video_taxonomies")
+          .delete()
+          .eq("video_id", video.id);
+        if (deleteError) {
+          setStatus("error");
+          setMessage(deleteError.message);
+          return false;
+        }
+
+        if (snapshot.taxonomyIds.length > 0) {
+          const rows = snapshot.taxonomyIds.map((taxonomyId) => ({
+            video_id: video.id,
+            taxonomy_id: taxonomyId,
+          }));
+          const { error: insertError } = await supabase
+            .from("video_taxonomies")
+            .insert(rows);
+          if (insertError) {
+            setStatus("error");
+            setMessage(insertError.message);
+            return false;
+          }
+        }
+      }
+
+      lastSavedSnapshotRef.current = snapshot;
+      setStatus("idle");
+
+      const now = Date.now();
+      if (now - lastRefreshAtRef.current > 5000) {
+        lastRefreshAtRef.current = now;
+        void onSaved();
+      }
+
+      return true;
+    } finally {
+      isSavingRef.current = false;
+    }
+  }
+
+  async function runAutosave() {
+    if (!supabase || !video) return;
+    const snapshot = snapshotFromState();
+    if (snapshotsEqual(snapshot, lastSavedSnapshotRef.current)) {
+      setStatus("idle");
+      setMessage(null);
+      return;
+    }
+
+    const saved = await saveSnapshot(snapshot);
+    if (!saved) return;
+
+    if (pendingAutosaveRef.current) {
+      pendingAutosaveRef.current = false;
+      const nextSnapshot = snapshotFromState();
+      if (!snapshotsEqual(nextSnapshot, lastSavedSnapshotRef.current)) {
+        setStatus("dirty");
+        void runAutosave();
       }
     }
-
-    setStatus("idle");
-    await onSaved();
   }
+
+  useEffect(() => {
+    if (!supabase || !video) return;
+    const snapshot = snapshotFromState();
+
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      lastSavedSnapshotRef.current = snapshot;
+      return;
+    }
+
+    if (snapshotsEqual(snapshot, lastSavedSnapshotRef.current)) {
+      setStatus((prev) => (prev === "dirty" ? "idle" : prev));
+      return;
+    }
+
+    setStatus((prev) => (prev === "saving" ? prev : "dirty"));
+    setMessage(null);
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      void runAutosave();
+    }, 800);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [
+    supabase,
+    video,
+    title,
+    thumbSeconds,
+    durationSeconds,
+    budgetMinIndex,
+    budgetMaxIndex,
+    selectedTaxonomyIds,
+  ]);
 
   async function handleFetchDuration() {
     if (!video) return;
@@ -1639,6 +1800,8 @@ function EditVideoModal({
     if (!Number.isFinite(current)) return;
     setThumbSeconds(Math.max(0, Math.floor(current ?? 0)));
   }
+
+  if (!open || !video) return null;
 
   return (
     <>
@@ -1828,14 +1991,15 @@ function EditVideoModal({
 
               {message ? <div className="text-sm text-red-400">{message}</div> : null}
 
-              <button
-                className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                type="button"
-                onClick={() => void save()}
-                disabled={status === "saving" || !supabase}
-              >
-                {status === "saving" ? "Sauvegarde…" : "Sauvegarder"}
-              </button>
+              {status !== "error" ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
+                  {status === "saving"
+                    ? "Sauvegarde automatique…"
+                    : status === "dirty"
+                      ? "Modifications en attente…"
+                      : "Sauvegardé automatiquement."}
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
