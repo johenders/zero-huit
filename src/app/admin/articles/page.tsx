@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import type { Editor } from "@ckeditor/ckeditor5-core";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Article } from "@/lib/types";
 import { useAdminState } from "@/app/admin/_hooks/useAdminState";
@@ -55,6 +59,64 @@ const defaultInput = (): ArticleInput => ({
   isPublished: true,
 });
 
+type UploadAdapterOptions = {
+  loader: {
+    file: Promise<File>;
+  };
+  supabase: SupabaseClient | null;
+  onError: (message: string) => void;
+};
+
+class SupabaseUploadAdapter {
+  private loader: UploadAdapterOptions["loader"];
+  private supabase: SupabaseClient | null;
+  private onError: UploadAdapterOptions["onError"];
+
+  constructor({ loader, supabase, onError }: UploadAdapterOptions) {
+    this.loader = loader;
+    this.supabase = supabase;
+    this.onError = onError;
+  }
+
+  async upload() {
+    const file = await this.loader.file;
+    if (!file) {
+      const message = "Aucun fichier image \u00e0 importer.";
+      this.onError(message);
+      throw new Error(message);
+    }
+    if (!this.supabase) {
+      const message = "Supabase n'est pas disponible pour l'upload d'image.";
+      this.onError(message);
+      throw new Error(message);
+    }
+
+    const extension = file.name.split(".").pop() || "jpg";
+    const safeName = slugify(file.name.replace(/\.[^/.]+$/, ""));
+    const filePath = `articles/${Date.now()}-${safeName}.${extension}`;
+    const { error } = await this.supabase.storage.from("articles").upload(filePath, file, {
+      upsert: true,
+      contentType: file.type || "image/jpeg",
+    });
+    if (error) {
+      this.onError(error.message);
+      throw new Error(error.message);
+    }
+    const { data } = this.supabase.storage.from("articles").getPublicUrl(filePath);
+    if (!data.publicUrl) {
+      const message = "Impossible de g\u00e9n\u00e9rer l'URL publique de l'image.";
+      this.onError(message);
+      throw new Error(message);
+    }
+
+    return { default: data.publicUrl };
+  }
+
+  abort() {
+    // Uploads are handled by Supabase; no abort callback available.
+  }
+}
+
 export default function AdminArticlesPage() {
   const supabase = useSupabaseClient();
   const { isAdmin } = useAdminState(supabase);
@@ -68,14 +130,13 @@ export default function AdminArticlesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isNormalizing, setIsNormalizing] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
-  const contentRef = useRef<HTMLDivElement | null>(null);
   const [previewHtml, setPreviewHtml] = useState("");
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [libraryItems, setLibraryItems] = useState<
     { name: string; publicUrl: string }[]
   >([]);
   const [libraryFilter, setLibraryFilter] = useState("");
-  const selectionRef = useRef<Range | null>(null);
+  const editorRef = useRef<Editor | null>(null);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
 
   const sortedArticles = useMemo(
@@ -119,38 +180,9 @@ export default function AdminArticlesPage() {
   }, [coverFile]);
 
   useEffect(() => {
-    if (!contentRef.current) return;
-    if (contentRef.current.innerHTML !== form.content) {
-      contentRef.current.innerHTML = form.content || "";
-    }
     const sanitized = sanitizeHtml(form.content || "");
     setPreviewHtml(sanitized || form.content || "");
   }, [form.content]);
-
-  function saveSelection() {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0);
-    if (contentRef.current?.contains(range.startContainer)) {
-      selectionRef.current = range;
-    }
-  }
-
-  function restoreSelection() {
-    const selection = window.getSelection();
-    if (!selection) return;
-    selection.removeAllRanges();
-    if (selectionRef.current) {
-      selection.addRange(selectionRef.current);
-      return;
-    }
-    if (contentRef.current) {
-      const range = document.createRange();
-      range.selectNodeContents(contentRef.current);
-      range.collapse(false);
-      selection.addRange(range);
-    }
-  }
 
   async function uploadCoverImage(file: File, slug: string) {
     if (!supabase) return null;
@@ -194,16 +226,8 @@ export default function AdminArticlesPage() {
     setEditingArticleId(null);
     setSlugEdited(false);
     setPreviewHtml("");
-    if (contentRef.current) contentRef.current.innerHTML = "";
+    editorRef.current?.setData("");
   }
-
-  useEffect(() => {
-    if (editorMode !== "edit") return;
-    if (!contentRef.current) return;
-    if (contentRef.current.innerHTML !== form.content) {
-      contentRef.current.innerHTML = form.content || "";
-    }
-  }, [editorMode, form.content]);
 
   async function handleSaveArticle() {
     if (!supabase) return;
@@ -308,52 +332,70 @@ export default function AdminArticlesPage() {
     await refreshArticles();
   }
 
-  function handleEditorInput() {
-    const html = contentRef.current?.innerHTML ?? "";
-    setForm((prev) => ({ ...prev, content: html }));
-    const sanitized = sanitizeHtml(html);
-    setPreviewHtml(sanitized || html);
-  }
+  const uploadAdapterPlugin = useCallback(
+    (editor: Editor) => {
+      const fileRepository = editor.plugins.get("FileRepository") as {
+        createUploadAdapter: (loader: { file: Promise<File> }) => SupabaseUploadAdapter;
+      };
+      fileRepository.createUploadAdapter = (loader: { file: Promise<File> }) =>
+        new SupabaseUploadAdapter({
+          loader,
+          supabase,
+          onError: (message) => setStatusMessage(message),
+        });
+    },
+    [supabase],
+  );
 
-  function execFormatBlock(tag: "h1" | "h2" | "h3") {
-    contentRef.current?.focus();
-    restoreSelection();
-    const value = `<${tag}>`;
-    const ok = document.execCommand("formatBlock", false, value);
-    if (!ok) {
-      document.execCommand("formatBlock", false, tag.toUpperCase());
-    }
-    handleEditorInput();
-  }
+  const editorConfig = useMemo(
+    () => ({
+      toolbar: {
+        items: [
+          "heading",
+          "|",
+          "bold",
+          "italic",
+          "link",
+          "bulletedList",
+          "numberedList",
+          "|",
+          "imageUpload",
+          "|",
+          "undo",
+          "redo",
+        ],
+      },
+      heading: {
+        options: [
+          { model: "paragraph", title: "Paragraphe", class: "ck-heading_paragraph" },
+          { model: "heading1", view: "h1", title: "H1", class: "ck-heading_heading1" },
+          { model: "heading2", view: "h2", title: "H2", class: "ck-heading_heading2" },
+          { model: "heading3", view: "h3", title: "H3", class: "ck-heading_heading3" },
+        ],
+      },
+      image: {
+        toolbar: [
+          "imageTextAlternative",
+          "imageStyle:inline",
+          "imageStyle:block",
+          "imageStyle:side",
+          "|",
+          "resizeImage",
+        ],
+      },
+      extraPlugins: [uploadAdapterPlugin],
+    }),
+    [uploadAdapterPlugin],
+  );
 
-  function exec(command: string, value?: string) {
-    contentRef.current?.focus();
-    restoreSelection();
-    document.execCommand(command, false, value);
-    handleEditorInput();
-  }
-
-  function handleInsertImage() {
-    const url = window.prompt("URL de l'image");
-    if (!url) return;
-    exec("insertImage", url);
-  }
-
-  async function handleUploadInlineImage(file: File) {
-    if (!supabase) return;
-    const extension = file.name.split(".").pop() || "jpg";
-    const safeName = slugify(file.name.replace(/\.[^/.]+$/, ""));
-    const filePath = `articles/${Date.now()}-${safeName}.${extension}`;
-    const { error } = await supabase.storage.from("articles").upload(filePath, file, {
-      upsert: true,
-      contentType: file.type || "image/jpeg",
-    });
-    if (error) {
-      setStatusMessage(error.message);
+  function insertImageUrl(url: string) {
+    const editor = editorRef.current;
+    if (!editor) {
+      setStatusMessage("L'\u00e9diteur n'est pas pr\u00eat.");
       return;
     }
-    const { data } = supabase.storage.from("articles").getPublicUrl(filePath);
-    exec("insertImage", data.publicUrl);
+    editor.execute("insertImage", { source: url });
+    editor.editing.view.focus();
   }
 
   return (
@@ -473,10 +515,7 @@ export default function AdminArticlesPage() {
                       ? "border-emerald-400/50 bg-emerald-500/10 text-emerald-200"
                       : "border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10"
                   }`}
-                  onClick={() => {
-                    handleEditorInput();
-                    setEditorMode("preview");
-                  }}
+                  onClick={() => setEditorMode("preview")}
                 >
                   Prévisualiser
                 </button>
@@ -485,103 +524,48 @@ export default function AdminArticlesPage() {
             {editorMode === "edit" ? (
               <>
                 <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => execFormatBlock("h1")}
-                >
-                  H1
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => execFormatBlock("h2")}
-                >
-                  H2
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => execFormatBlock("h3")}
-                >
-                  H3
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => exec("bold")}
-                >
-                  Gras
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    const url = window.prompt("Lien (https://...)");
-                    if (url) exec("createLink", url);
-                  }}
-                >
-                  Lien
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => exec("unlink")}
-                >
-                  Supprimer lien
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => handleInsertImage()}
-                >
-                  Image URL
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    setShowImagePicker((prev) => !prev);
-                    if (!showImagePicker) void refreshLibrary();
-                  }}
-                >
-                  Sélecteur d'images
-                </button>
-                <label className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void handleUploadInlineImage(file);
-                      event.currentTarget.value = "";
+                  <button
+                    type="button"
+                    className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
+                    onClick={() => {
+                      const url = window.prompt("URL de l'image");
+                      if (url) insertImageUrl(url);
+                    }}
+                  >
+                    Image URL
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-200 hover:bg-white/10"
+                    onClick={() => {
+                      setShowImagePicker((prev) => !prev);
+                      if (!showImagePicker) void refreshLibrary();
+                    }}
+                  >
+                    Sélecteur d'images
+                  </button>
+                </div>
+                <div className="min-h-[220px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100">
+                  <CKEditor
+                    editor={ClassicEditor}
+                    data={form.content}
+                    config={editorConfig}
+                    onReady={(editor) => {
+                      editorRef.current = editor;
+                      if (form.content && editor.getData() !== form.content) {
+                        editor.setData(form.content);
+                      }
+                    }}
+                    onChange={(_event, editor) => {
+                      const html = editor.getData();
+                      setForm((prev) => ({ ...prev, content: html }));
+                      const sanitized = sanitizeHtml(html);
+                      setPreviewHtml(sanitized || html);
                     }}
                   />
-                  Upload image
-                </label>
                 </div>
-            <div
-              ref={contentRef}
-              className="min-h-[220px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100 focus:outline-none"
-              contentEditable
-              suppressContentEditableWarning
-              onInput={handleEditorInput}
-              onBlur={handleEditorInput}
-              onKeyUp={saveSelection}
-              onMouseUp={saveSelection}
-              data-placeholder="Texte complet de l'article."
-            />
                 <div className="text-[11px] text-zinc-500">
-                  Utilise les boutons ci-dessus ou colle directement du texte.
+                  Tu peux coller du texte, t\u00e9l\u00e9verser une image ou glisser-d\u00e9poser.
                 </div>
               </>
             ) : (
@@ -634,7 +618,7 @@ export default function AdminArticlesPage() {
                     type="button"
                     className="group overflow-hidden rounded-xl border border-white/10 bg-black/40 text-left"
                     onClick={() => {
-                      exec("insertImage", item.publicUrl);
+                      insertImageUrl(item.publicUrl);
                       setShowImagePicker(false);
                     }}
                   >
@@ -752,9 +736,7 @@ export default function AdminArticlesPage() {
                       setPreviewHtml(sanitizeHtml(article.content ?? ""));
                       setCoverFile(null);
                       setCoverPreview(null);
-                      if (contentRef.current) {
-                        contentRef.current.innerHTML = article.content ?? "";
-                      }
+                      editorRef.current?.setData(article.content ?? "");
                     }}
                   >
                     Modifier

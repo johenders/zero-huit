@@ -12,6 +12,8 @@
     "import:csv": "node scripts/import-csv.mjs"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "latest",
+    "@ckeditor/ckeditor5-react": "latest",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.88.0",
     "next": "16.0.10",
