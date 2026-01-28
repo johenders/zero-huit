@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import type { Editor } from "@ckeditor/ckeditor5-core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Article } from "@/lib/types";
@@ -136,7 +135,7 @@ export default function AdminArticlesPage() {
     { name: string; publicUrl: string }[]
   >([]);
   const [libraryFilter, setLibraryFilter] = useState("");
-  const editorRef = useRef<Editor | null>(null);
+  const editorRef = useRef<unknown | null>(null);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
 
   const sortedArticles = useMemo(
@@ -333,11 +332,11 @@ export default function AdminArticlesPage() {
   }
 
   const uploadAdapterPlugin = useCallback(
-    (editor: Editor) => {
+    (editor: any) => {
       const fileRepository = editor.plugins.get("FileRepository") as unknown as {
-        createUploadAdapter: (loader: { file: Promise<File> }) => SupabaseUploadAdapter;
+        createUploadAdapter: (loader: any) => SupabaseUploadAdapter;
       };
-      fileRepository.createUploadAdapter = (loader: { file: Promise<File> }) =>
+      fileRepository.createUploadAdapter = (loader: any) =>
         new SupabaseUploadAdapter({
           loader,
           supabase,
@@ -389,7 +388,7 @@ export default function AdminArticlesPage() {
   );
 
   function insertImageUrl(url: string) {
-    const editor = editorRef.current;
+    const editor = editorRef.current as any;
     if (!editor) {
       setStatusMessage("L'\u00e9diteur n'est pas pr\u00eat.");
       return;
@@ -547,7 +546,11 @@ export default function AdminArticlesPage() {
                 </div>
                 <div className="min-h-[220px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100">
                   <CKEditor
-                    editor={ClassicEditor}
+                    editor={
+                      ClassicEditor as unknown as {
+                        create: (...args: any[]) => Promise<any>;
+                      }
+                    }
                     data={form.content}
                     config={editorConfig}
                     onReady={(editor) => {
