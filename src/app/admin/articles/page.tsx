@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Article } from "@/lib/types";
@@ -64,6 +62,11 @@ type UploadAdapterOptions = {
   };
   supabase: SupabaseClient | null;
   onError: (message: string) => void;
+};
+
+type EditorModules = {
+  CKEditor: any;
+  ClassicEditor: any;
 };
 
 class SupabaseUploadAdapter {
@@ -137,6 +140,9 @@ export default function AdminArticlesPage() {
   const [libraryFilter, setLibraryFilter] = useState("");
   const editorRef = useRef<unknown | null>(null);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
+  const [editorModules, setEditorModules] = useState<EditorModules | null>(null);
+  const CKEditorComponent = editorModules?.CKEditor ?? null;
+  const ClassicEditorBuild = editorModules?.ClassicEditor ?? null;
 
   const sortedArticles = useMemo(
     () =>
@@ -165,6 +171,22 @@ export default function AdminArticlesPage() {
     if (!supabase) return;
     void refreshArticles();
   }, [supabase, refreshArticles]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadEditor() {
+      const [{ CKEditor }, ClassicEditor] = await Promise.all([
+        import("@ckeditor/ckeditor5-react"),
+        import("@ckeditor/ckeditor5-build-classic"),
+      ]);
+      if (!active) return;
+      setEditorModules({ CKEditor, ClassicEditor: ClassicEditor.default });
+    }
+    void loadEditor();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!coverFile) {
@@ -225,7 +247,7 @@ export default function AdminArticlesPage() {
     setEditingArticleId(null);
     setSlugEdited(false);
     setPreviewHtml("");
-    editorRef.current?.setData("");
+    (editorRef.current as any)?.setData("");
   }
 
   async function handleSaveArticle() {
@@ -545,27 +567,29 @@ export default function AdminArticlesPage() {
                   </button>
                 </div>
                 <div className="min-h-[220px] rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100">
-                  <CKEditor
-                    editor={
-                      ClassicEditor as unknown as {
-                        create: (...args: any[]) => Promise<any>;
-                      }
-                    }
-                    data={form.content}
-                    config={editorConfig}
-                    onReady={(editor) => {
-                      editorRef.current = editor;
-                      if (form.content && editor.getData() !== form.content) {
-                        editor.setData(form.content);
-                      }
-                    }}
-                    onChange={(_event, editor) => {
-                      const html = editor.getData();
-                      setForm((prev) => ({ ...prev, content: html }));
-                      const sanitized = sanitizeHtml(html);
-                      setPreviewHtml(sanitized || html);
-                    }}
-                  />
+                  {CKEditorComponent && ClassicEditorBuild ? (
+                    <CKEditorComponent
+                      editor={ClassicEditorBuild}
+                      data={form.content}
+                      config={editorConfig}
+                      onReady={(editor: any) => {
+                        editorRef.current = editor as any;
+                        if (form.content && editor.getData() !== form.content) {
+                          editor.setData(form.content);
+                        }
+                      }}
+                      onChange={(_event: any, editor: any) => {
+                        const html = editor.getData();
+                        setForm((prev) => ({ ...prev, content: html }));
+                        const sanitized = sanitizeHtml(html);
+                        setPreviewHtml(sanitized || html);
+                      }}
+                    />
+                  ) : (
+                    <div className="py-4 text-center text-xs text-zinc-400">
+                      Chargement de l\u2019\u00e9diteur...
+                    </div>
+                  )}
                 </div>
                 <div className="text-[11px] text-zinc-500">
                   Tu peux coller du texte, t\u00e9l\u00e9verser une image ou glisser-d\u00e9poser.
@@ -739,7 +763,7 @@ export default function AdminArticlesPage() {
                       setPreviewHtml(sanitizeHtml(article.content ?? ""));
                       setCoverFile(null);
                       setCoverPreview(null);
-                      editorRef.current?.setData(article.content ?? "");
+                      (editorRef.current as any)?.setData(article.content ?? "");
                     }}
                   >
                     Modifier

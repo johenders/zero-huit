@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
 import { SiteShell } from "@/components/SiteShell";
 import "./globals.css";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -53,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr-CA">
-      <body className={`${montserrat.className} antialiased`}>
+      <body className="antialiased">
         <SiteShell>{children}</SiteShell>
       </body>
     </html>
