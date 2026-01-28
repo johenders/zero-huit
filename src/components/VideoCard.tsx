@@ -21,6 +21,19 @@ export function VideoCard({
   const previewTime = video.thumbnail_time_seconds ?? undefined;
   const previewStart = video.thumbnail_time_seconds ?? 0;
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstObjective = video.taxonomies.find((t) => t.kind === "objectif");
+  const firstTone = video.taxonomies.find((t) => t.kind === "feel");
+  const firstKeyword = video.taxonomies.find((t) => t.kind === "keyword");
+  const hoverTags = [firstObjective, firstTone, firstKeyword].filter(Boolean);
+  const tagClassByKind: Record<string, string> = {
+    objectif: "border-blue-400/40 bg-blue-500/20 text-blue-100",
+    feel: "border-purple-400/40 bg-purple-500/20 text-purple-100",
+    keyword: "border-emerald-400/40 bg-emerald-500/20 text-emerald-100",
+  };
+
+  const getTagClasses = (kind: string) =>
+    tagClassByKind[kind] ??
+    "border-white/20 bg-black/60 text-white";
 
   useEffect(() => {
     return () => {
@@ -100,11 +113,29 @@ export function VideoCard({
             </div>
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-60 transition-opacity group-hover:opacity-90" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 text-left">
+          <div className="pointer-events-none absolute inset-x-0 top-0 p-3 text-left">
             <div className="translate-y-2 text-sm font-semibold text-white opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
-              {video.title}
+              <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">
+                {video.title}
+              </span>
             </div>
           </div>
+          {hoverTags.length > 0 ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+              <div className="flex justify-start gap-2">
+                {hoverTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`translate-y-2 rounded-full border px-2 py-0.5 text-[10px] font-semibold opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 ${getTagClasses(
+                      tag.kind,
+                    )}`}
+                  >
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </button>
     </div>

@@ -7,6 +7,7 @@ import { budgetLevels, formatCad } from "@/lib/budget";
 import { cloudflarePreviewIframeSrc } from "@/lib/cloudflare";
 import Link from "next/link";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
+import bg from "../../assets/bg/bg_services.jpg";
 import type {
   Project,
   ProjectDiffusion,
@@ -225,6 +226,30 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "error">("idle");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [aiSearchOpen, setAiSearchOpen] = useState(false);
+  const aiInputRef = useRef<HTMLInputElement | null>(null);
+
+  const filterLabelToneById: Record<string, string> = {
+    type: "text-indigo-200",
+    objectif: "text-blue-200",
+    feel: "text-purple-200",
+    keywords: "text-emerald-200",
+    budget: "text-rose-200",
+    duration: "text-yellow-200",
+  };
+
+  const optionToneByKind: Record<TaxonomyKind, string> = {
+    type: "border-indigo-400/40 bg-indigo-500/20 text-indigo-100",
+    objectif: "border-blue-400/40 bg-blue-500/20 text-blue-100",
+    keyword: "border-emerald-400/40 bg-emerald-500/20 text-emerald-100",
+    style: "border-rose-400/40 bg-rose-500/20 text-rose-100",
+    feel: "border-purple-400/40 bg-purple-500/20 text-purple-100",
+    parametre: "border-yellow-400/40 bg-yellow-500/20 text-yellow-100",
+  };
+
+  const getOptionTone = (kind: TaxonomyKind) =>
+    optionToneByKind[kind] ??
+    "border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10";
 
   const toggleTaxonomy = useCallback((item: Taxonomy) => {
     const { kind, id } = item;
@@ -371,6 +396,13 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
       setAiMessage(e instanceof Error ? e.message : "Erreur AI");
     }
   }
+
+  useEffect(() => {
+    if (!aiSearchOpen) return;
+    aiInputRef.current?.focus();
+  }, [aiSearchOpen]);
+
+  const headerOffset = 120;
 
   const rankedVideos = useMemo(() => {
     const fallbackPriority: Array<
@@ -934,91 +966,53 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
 
   return (
     <div className="min-h-screen text-zinc-100">
-      <section className="border-b border-white/10 bg-gradient-to-br from-zinc-950 via-zinc-950/80 to-emerald-950/20">
-        <div className="mx-auto flex min-h-[36vh] w-full max-w-4xl flex-col items-center justify-center gap-5 px-4 py-14 text-center lg:px-6">
-          <h1 className="text-center text-4xl font-semibold text-white sm:text-5xl">
-            Trouve des références{" "}
-            <span className="bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent">
-              vidéo
-            </span>{" "}
-            rapidement.
-          </h1>
-          <form
-            className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleAiFilter();
-            }}
-          >
-            <div className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-base text-zinc-100">
-              <svg
-                aria-hidden
-                className="h-5 w-5 text-zinc-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                className="w-full bg-transparent text-base text-zinc-100 outline-none placeholder:text-zinc-500"
-                placeholder="Décris ton projet pour trouver des références"
-                value={aiPrompt}
-                onChange={(event) => setAiPrompt(event.target.value)}
-              />
-            </div>
-            <button
-              className="rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
-              type="submit"
-              disabled={aiStatus === "loading"}
-            >
-              {aiStatus === "loading" ? (
-                "Recherche…"
-              ) : (
-                <span className="flex items-center gap-2">
-                  Rechercher
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                    AI
-                  </span>
-                </span>
-              )}
-            </button>
-            {aiPrompt ? (
-              <button
-                className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-semibold text-zinc-200 hover:bg-white/10"
-                type="button"
-                onClick={() => {
-                  setAiPrompt("");
-                  setAiStatus("idle");
-                  setAiMessage(null);
-                }}
-              >
-                Effacer
-              </button>
-            ) : null}
-          </form>
-          <div className="text-xs text-zinc-400">
-            Ex: Vidéo promo pour un resto | Captation d&apos;événement sportif | Capsule
-            RH pour une équipe tech
+      <section
+        className="relative min-h-[49vh] w-full overflow-hidden"
+        style={{ marginTop: `-${headerOffset}px`, paddingTop: `${headerOffset}px` }}
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-70"
+          style={{ backgroundImage: `url(${bg.src})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/55" />
+        <div className="relative mx-auto flex min-h-[49vh] max-w-7xl flex-col justify-center gap-10 px-6 py-20 lg:flex-row lg:items-center lg:gap-16">
+          <div className="max-w-2xl">
+            <span className="text-xs font-semibold tracking-[0.45em] text-zinc-300">
+              PORTFOLIO
+            </span>
+            <h1 className="mt-6 text-3xl font-semibold text-white sm:text-4xl lg:text-5xl">
+              Des références vidéo qui{" "}
+              <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
+                parlent
+              </span>
+              .
+            </h1>
           </div>
-          {aiMessage ? (
-            <div
-              className={`text-xs ${
-                aiStatus === "error" ? "text-red-400" : "text-zinc-300"
-              }`}
+          <div className="max-w-2xl text-sm leading-7 text-zinc-200 sm:text-base">
+            <p>
+              Explore nos projets par type, ton, style et budget. Puis utilise la
+              recherche AI pour appliquer rapidement les filtres qui correspondent à ton
+              besoin.
+            </p>
+            <Link
+              href="/services"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-emerald-300"
             >
-              {aiMessage}
-            </div>
-          ) : null}
+              Voir nos services <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
       <main className="mx-auto w-full max-w-none space-y-4 p-4 lg:p-6">
         <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur">
+          <div className="mb-0 pl-1 text-base font-semibold text-zinc-300">
+            Recherche par{" "}
+            <span className="bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent">
+              mots-clés
+            </span>
+            .
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             {filterFields.map((field) => {
               const selectedCount = field.kinds.reduce(
@@ -1026,6 +1020,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                 0,
               );
               const isActive = activeFilterPanel === field.id;
+              const labelTone = filterLabelToneById[field.id] ?? "";
               return (
                 <button
                   key={field.id}
@@ -1036,7 +1031,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                   }`}
                   aria-expanded={isActive}
                 >
-                  <span>{field.label}</span>
+                  <span className={labelTone}>{field.label}</span>
                   {selectedCount > 0 ? (
                     <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
                       {selectedCount}
@@ -1062,7 +1057,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               }`}
               aria-expanded={activeFilterPanel === "budget"}
             >
-              <span>Budget</span>
+              <span className={filterLabelToneById.budget}>Budget</span>
               {filters.budgetMinIndex !== 0 ||
               filters.budgetMaxIndex !== budgetLevels.length - 1 ? (
                 <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
@@ -1087,7 +1082,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               }`}
               aria-expanded={activeFilterPanel === "duration"}
             >
-              <span>Durée</span>
+              <span className={filterLabelToneById.duration}>Durée</span>
               {filters.durationMinIndex !== 0 ||
               filters.durationMaxIndex !== durationLevels.length - 1 ? (
                 <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
@@ -1103,12 +1098,103 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               </span>
             </button>
             <button
-              className="ml-auto px-1 py-1 text-sm font-medium text-zinc-300 hover:text-white"
+              className="px-1 pt-[5px] pb-[3px] text-xs font-semibold text-zinc-300 hover:text-white"
               type="button"
               onClick={() => setFilters(newDefaultFilters())}
             >
               Réinitialiser
             </button>
+            <span className="flex-1" aria-hidden />
+            <button
+              className={`relative -top-[8px] inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold leading-none transition self-center my-0 ${
+                aiSearchOpen
+                  ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100"
+                  : "border-white/15 bg-white/5 text-zinc-200 hover:bg-white/10"
+              }`}
+              type="button"
+              onClick={() => {
+                setActiveFilterPanel(null);
+                setAiSearchOpen((prev) => !prev);
+              }}
+              aria-expanded={aiSearchOpen}
+            >
+              Recherche
+              <span className="rounded-full bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
+                AI
+              </span>
+            </button>
+          </div>
+
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              aiSearchOpen ? "mt-4 max-h-48 opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className={aiSearchOpen ? "pointer-events-auto" : "pointer-events-none"}>
+              <form
+                className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void handleAiFilter();
+                }}
+              >
+                <div className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-base text-zinc-100">
+                  <svg
+                    aria-hidden
+                    className="h-5 w-5 text-zinc-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                  <input
+                    ref={aiInputRef}
+                    className="w-full bg-transparent text-base text-zinc-100 outline-none placeholder:text-zinc-500"
+                    placeholder="Décris ton projet pour trouver des références"
+                    value={aiPrompt}
+                    onChange={(event) => setAiPrompt(event.target.value)}
+                  />
+                </div>
+                <button
+                  className="rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  type="submit"
+                  disabled={aiStatus === "loading"}
+                >
+                  {aiStatus === "loading" ? "Recherche…" : "Appliquer"}
+                </button>
+                {aiPrompt ? (
+                  <button
+                    className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-semibold text-zinc-200 hover:bg-white/10"
+                    type="button"
+                    onClick={() => {
+                      setAiPrompt("");
+                      setAiStatus("idle");
+                      setAiMessage(null);
+                    }}
+                  >
+                    Effacer
+                  </button>
+                ) : null}
+              </form>
+              <div className="mt-2 text-xs text-zinc-400">
+                Ex: Vidéo promo pour un resto | Captation d&apos;événement sportif | Capsule
+                RH pour une équipe tech
+              </div>
+              {aiMessage ? (
+                <div
+                  className={`mt-2 text-xs ${
+                    aiStatus === "error" ? "text-red-400" : "text-zinc-300"
+                  }`}
+                >
+                  {aiMessage}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {filterFields.map((field) => {
@@ -1136,7 +1222,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                               onClick={() => toggleTaxonomy(option)}
                               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                                 selected
-                                  ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-100"
+                                  ? getOptionTone(option.kind)
                                   : "border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10"
                               }`}
                             >

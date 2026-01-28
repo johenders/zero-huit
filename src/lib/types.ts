@@ -52,3 +52,17 @@ export type Project = {
   timeline: string | null;
   created_at: string;
 };
+
+export type Article = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string | null;
+  cover_image_url: string | null;
+  author: string | null;
+  published_at: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+};
