@@ -370,6 +370,7 @@ export default function AdminArticlesPage() {
 
   const editorConfig = useMemo(
     () => ({
+      licenseKey: "GPL",
       toolbar: {
         items: [
           "heading",
