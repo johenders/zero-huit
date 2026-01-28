@@ -10,6 +10,8 @@ type DisplayArticle = {
   title: string;
   excerpt: string;
   author: string;
+  authorRole?: string | null;
+  authorAvatarUrl?: string | null;
   dateLabel: string;
   href: string;
   imageUrl?: string | null;
@@ -26,6 +28,14 @@ function formatDateLabel(value: string) {
   }).format(date);
 }
 
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "—";
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return `${first}${last}`.toUpperCase() || "—";
+}
+
 export default async function NouvellesPage() {
   let articles: DisplayArticle[] = [];
 
@@ -36,23 +46,58 @@ export default async function NouvellesPage() {
     const supabase = getSupabasePublicServerClient();
     const { data, error } = await supabase
       .from("articles")
-      .select("id,title,slug,excerpt,cover_image_url,author,published_at,is_published")
+      .select(
+        "id,title,slug,excerpt,cover_image_url,author,author_id,published_at,is_published",
+      )
       .eq("is_published", true)
       .order("published_at", { ascending: false });
 
     if (!error && (data ?? []).length > 0) {
-      articles = (data as Pick<
-        Article,
-        "id" | "title" | "slug" | "excerpt" | "cover_image_url" | "author" | "published_at"
-      >[]).map((article) => ({
+    const rows = data as (Pick<
+      Article,
+      "id" | "title" | "slug" | "excerpt" | "cover_image_url" | "author" | "published_at"
+    > & { author_id?: string | null })[];
+
+    const authorIds = Array.from(
+      new Set(rows.map((article) => article.author_id).filter(Boolean)) as Set<string>,
+    );
+    let authorById = new Map<
+      string,
+      { name: string; role_title: string | null; avatar_url: string | null }
+    >();
+    if (authorIds.length > 0) {
+      const { data: authorRows } = await supabase
+        .from("authors")
+        .select("id,name,role_title,avatar_url")
+        .in("id", authorIds);
+      authorById = new Map(
+        (authorRows ?? []).map((author) => [
+          author.id,
+          {
+            name: author.name,
+            role_title: author.role_title ?? null,
+            avatar_url: author.avatar_url ?? null,
+          },
+        ]),
+      );
+    }
+
+    articles = rows.map((article) => {
+      const authorProfile = article.author_id
+        ? authorById.get(article.author_id) ?? null
+        : null;
+      return {
         title: article.title,
         excerpt: article.excerpt ?? "",
-        author: article.author ?? "Z\u00e9ro huit",
+        author: authorProfile?.name ?? article.author ?? "Zéro huit",
+        authorRole: authorProfile?.role_title ?? null,
+        authorAvatarUrl: authorProfile?.avatar_url ?? null,
         dateLabel: formatDateLabel(article.published_at),
         href: `/nouvelles/${article.slug}`,
         imageUrl: article.cover_image_url,
-      }));
-    }
+      };
+    });
+  }
   }
 
   if (articles.length === 0) {
@@ -60,6 +105,8 @@ export default async function NouvellesPage() {
       title: article.title,
       excerpt: article.excerpt,
       author: article.author,
+      authorRole: null,
+      authorAvatarUrl: null,
       dateLabel: article.dateLabel,
       href: article.href,
       image: article.image,
@@ -67,16 +114,16 @@ export default async function NouvellesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f4ef] text-slate-900">
+    <div className="min-h-screen bg-[#fefefe] text-slate-900">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-10 pt-16">
         <span className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
           Nouvelles
         </span>
         <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">
-          Articles, id\u00e9es et strat\u00e9gies qui font avancer vos vid\u00e9os.
+          Articles, idées et stratégies qui font avancer vos vidéos.
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-slate-600">
-          D\u00e9couvrez nos analyses, inspirations et conseils pour vos projets corporatifs,
+          Découvrez nos analyses, inspirations et conseils pour vos projets corporatifs,
           RH et marketing.
         </p>
       </section>
@@ -110,13 +157,23 @@ export default async function NouvellesPage() {
               <div className="space-y-4 px-5 pb-6 pt-5">
                 <div className="text-xs text-slate-500">{article.dateLabel}</div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
-                    JB
-                  </span>
+                  {article.authorAvatarUrl ? (
+                    <img
+                      src={article.authorAvatarUrl}
+                      alt={article.author}
+                      className="h-6 w-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
+                      {getInitials(article.author)}
+                    </span>
+                  )}
                   <span>par {article.author}</span>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
-                <p className="text-sm leading-6 text-slate-600">{article.excerpt}</p>
+                <p className="line-clamp-4 text-sm leading-6 text-slate-600">
+                  {article.excerpt}
+                </p>
               </div>
             </Link>
           ))}

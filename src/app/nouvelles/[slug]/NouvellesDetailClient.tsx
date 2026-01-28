@@ -4,12 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
-import type { Article } from "@/lib/types";
+import type { Article, Author } from "@/lib/types";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+
+type ArticleWithAuthor = Article & {
+  authorProfile?: Author | null;
+};
 
 type ArticleState =
   | { status: "idle" | "loading" }
-  | { status: "ready"; article: Article }
+  | { status: "ready"; article: ArticleWithAuthor }
   | {
       status: "error";
       message: string;
@@ -38,6 +42,14 @@ function slugify(value: string | null | undefined) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .trim();
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "—";
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return `${first}${last}`.toUpperCase() || "—";
 }
 
 export default function NouvellesDetailClient() {
@@ -72,13 +84,13 @@ export default function NouvellesDetailClient() {
       const { data, error } = await supabase
         .from("articles")
         .select(
-          "id,title,slug,excerpt,content,cover_image_url,author,published_at,is_published,created_at,updated_at",
+          "id,title,slug,excerpt,content,cover_image_url,author,author_id,published_at,is_published,created_at,updated_at",
         )
         .eq("slug", slugParam)
         .eq("is_published", true)
         .maybeSingle();
 
-      let resolvedArticle = data as Article | null;
+      let resolvedArticle = data as (Article & { author_id?: string | null }) | null;
       let publishedSlugs: string[] = [];
       let normalizedSlugs: string[] = [];
       const normalizedParam = slugify(slugParam);
@@ -87,7 +99,7 @@ export default function NouvellesDetailClient() {
         const { data: fallbackRows } = await supabase
           .from("articles")
           .select(
-            "id,title,slug,excerpt,content,cover_image_url,author,published_at,is_published,created_at,updated_at",
+            "id,title,slug,excerpt,content,cover_image_url,author,author_id,published_at,is_published,created_at,updated_at",
           )
           .eq("is_published", true)
           .order("published_at", { ascending: false })
@@ -104,7 +116,19 @@ export default function NouvellesDetailClient() {
       if (!active) return;
 
       if (resolvedArticle) {
-        setState({ status: "ready", article: resolvedArticle });
+        let authorProfile: Author | null = null;
+        if (resolvedArticle.author_id) {
+          const { data: authorRow } = await supabase
+            .from("authors")
+            .select("id,name,role_title,avatar_url,created_at,updated_at")
+            .eq("id", resolvedArticle.author_id)
+            .maybeSingle();
+          authorProfile = (authorRow as Author | null) ?? null;
+        }
+        setState({
+          status: "ready",
+          article: { ...resolvedArticle, authorProfile },
+        });
         return;
       }
 
@@ -126,8 +150,14 @@ export default function NouvellesDetailClient() {
 
   if (state.status === "ready") {
     const { article } = state;
+    const rawContent = article.content ?? "";
+    const sanitizedContent = sanitizeHtml(rawContent);
+    const resolvedContent = sanitizedContent.trim() ? sanitizedContent : rawContent;
+    const authorName = article.authorProfile?.name ?? article.author ?? "Zéro huit";
+    const authorRole = article.authorProfile?.role_title ?? null;
+    const authorAvatar = article.authorProfile?.avatar_url ?? null;
     return (
-      <div className="min-h-screen bg-[#f6f4ef] text-slate-900">
+      <div className="min-h-screen bg-[#fefefe] text-slate-900">
         <section className="mx-auto w-full max-w-3xl px-6 pb-6 pt-16">
           <Link
             href="/nouvelles"
@@ -140,7 +170,20 @@ export default function NouvellesDetailClient() {
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span>{formatDateLabel(article.published_at)}</span>
-            <span>par {article.author ?? "Zéro huit"}</span>
+            <span className="flex items-center gap-2">
+              {authorAvatar ? (
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  className="h-6 w-6 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
+                  {getInitials(authorName)}
+                </span>
+              )}
+              par {authorName}
+            </span>
           </div>
         </section>
 
@@ -155,17 +198,31 @@ export default function NouvellesDetailClient() {
         ) : null}
 
         <section className="mx-auto w-full max-w-3xl px-6 pb-16 pt-10">
-          {article.excerpt ? (
-            <p className="text-base font-semibold leading-7 text-slate-700">
-              {article.excerpt}
-            </p>
-          ) : null}
           <div
-            className="prose max-w-none text-slate-700"
+            className="article-content max-w-none text-slate-700"
             dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(article.content ?? ""),
+              __html: resolvedContent,
             }}
           />
+          <div className="mt-10 flex items-center gap-4 border-t border-slate-200 pt-6">
+            {authorAvatar ? (
+              <img
+                src={authorAvatar}
+                alt={authorName}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">
+                {getInitials(authorName)}
+              </div>
+            )}
+            <div>
+              <div className="text-lg font-semibold text-slate-900">{authorName}</div>
+              <div className="text-sm text-slate-500">
+                {authorRole ?? "Auteur"}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     );
@@ -173,7 +230,7 @@ export default function NouvellesDetailClient() {
 
   const isLoading = state.status === "loading" || state.status === "idle";
   return (
-    <div className="min-h-screen bg-[#f6f4ef] text-slate-900">
+    <div className="min-h-screen bg-[#fefefe] text-slate-900">
       <section className="mx-auto w-full max-w-3xl px-6 pb-16 pt-16">
         <h1 className="text-2xl font-semibold">
           {isLoading ? "Chargement..." : "Article introuvable"}

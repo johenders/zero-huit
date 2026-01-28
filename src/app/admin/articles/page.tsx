@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
-import type { Article } from "@/lib/types";
+import type { Article, Author } from "@/lib/types";
 import { useAdminState } from "@/app/admin/_hooks/useAdminState";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
@@ -13,6 +13,7 @@ type ArticleInput = {
   excerpt: string;
   content: string;
   coverImageUrl: string;
+  authorId: string;
   author: string;
   publishedAt: string;
   isPublished: boolean;
@@ -51,7 +52,8 @@ const defaultInput = (): ArticleInput => ({
   excerpt: "",
   content: "",
   coverImageUrl: "",
-  author: "Jean-Benoit Monni\u00e8re",
+  authorId: "",
+  author: "",
   publishedAt: toDatetimeLocal(new Date().toISOString()),
   isPublished: true,
 });
@@ -83,7 +85,7 @@ class SupabaseUploadAdapter {
   async upload() {
     const file = await this.loader.file;
     if (!file) {
-      const message = "Aucun fichier image \u00e0 importer.";
+      const message = "Aucun fichier image à importer.";
       this.onError(message);
       throw new Error(message);
     }
@@ -106,7 +108,7 @@ class SupabaseUploadAdapter {
     }
     const { data } = this.supabase.storage.from("articles").getPublicUrl(filePath);
     if (!data.publicUrl) {
-      const message = "Impossible de g\u00e9n\u00e9rer l'URL publique de l'image.";
+      const message = "Impossible de générer l'URL publique de l'image.";
       this.onError(message);
       throw new Error(message);
     }
@@ -124,6 +126,7 @@ export default function AdminArticlesPage() {
   const { isAdmin } = useAdminState(supabase);
 
   const [articles, setArticles] = useState<Article[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [form, setForm] = useState<ArticleInput>(() => defaultInput());
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -152,12 +155,17 @@ export default function AdminArticlesPage() {
     [articles],
   );
 
+  const selectedAuthor = useMemo(
+    () => authors.find((author) => author.id === form.authorId) ?? null,
+    [authors, form.authorId],
+  );
+
   const refreshArticles = useCallback(async () => {
     if (!supabase) return;
     const { data, error } = await supabase
       .from("articles")
       .select(
-        "id,title,slug,excerpt,content,cover_image_url,author,published_at,is_published,created_at,updated_at",
+        "id,title,slug,excerpt,content,cover_image_url,author,author_id,published_at,is_published,created_at,updated_at",
       )
       .order("published_at", { ascending: false });
     if (error) {
@@ -167,10 +175,24 @@ export default function AdminArticlesPage() {
     setArticles((data ?? []) as Article[]);
   }, [supabase]);
 
+  const refreshAuthors = useCallback(async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("authors")
+      .select("id,name,role_title,avatar_url,created_at,updated_at")
+      .order("name");
+    if (error) {
+      setStatusMessage(error.message);
+      return;
+    }
+    setAuthors((data ?? []) as Author[]);
+  }, [supabase]);
+
   useEffect(() => {
     if (!supabase) return;
     void refreshArticles();
-  }, [supabase, refreshArticles]);
+    void refreshAuthors();
+  }, [supabase, refreshArticles, refreshAuthors]);
 
   useEffect(() => {
     let active = true;
@@ -202,7 +224,8 @@ export default function AdminArticlesPage() {
 
   useEffect(() => {
     const sanitized = sanitizeHtml(form.content || "");
-    setPreviewHtml(sanitized || form.content || "");
+    const raw = form.content || "";
+    setPreviewHtml(sanitized.trim() ? sanitized : raw);
   }, [form.content]);
 
   async function uploadCoverImage(file: File, slug: string) {
@@ -253,7 +276,7 @@ export default function AdminArticlesPage() {
   async function handleSaveArticle() {
     if (!supabase) return;
     if (!isAdmin) {
-      setStatusMessage("Acc\u00e8s refus\u00e9 (admin requis).");
+      setStatusMessage("Accès refusé (admin requis).");
       return;
     }
     setStatusMessage(null);
@@ -282,19 +305,21 @@ export default function AdminArticlesPage() {
       } catch (error) {
         setIsSaving(false);
         setStatusMessage(
-          error instanceof Error ? error.message : "Upload de l'image \u00e9chou\u00e9.",
+          error instanceof Error ? error.message : "Upload de l'image échoué.",
         );
         return;
       }
     }
 
+    const resolvedAuthor = selectedAuthor?.name ?? form.author.trim();
     const payload = {
       title,
       slug,
       excerpt: form.excerpt.trim() || null,
       content: form.content.trim() || null,
       cover_image_url: coverUrl,
-      author: form.author.trim() || null,
+      author_id: selectedAuthor?.id ?? (form.authorId || null),
+      author: resolvedAuthor || null,
       published_at: publishedAt,
       is_published: form.isPublished,
     };
@@ -316,7 +341,7 @@ export default function AdminArticlesPage() {
   async function handleNormalizeSlugs() {
     if (!supabase) return;
     if (!isAdmin) {
-      setStatusMessage("Acc\u00e8s refus\u00e9 (admin requis).");
+      setStatusMessage("Accès refusé (admin requis).");
       return;
     }
     setStatusMessage(null);
@@ -353,8 +378,8 @@ export default function AdminArticlesPage() {
     await refreshArticles();
   }
 
-  const uploadAdapterPlugin = useCallback(
-    (editor: any) => {
+  const uploadAdapterPlugin = useMemo(() => {
+    function UploadAdapterPlugin(editor: any) {
       const fileRepository = editor.plugins.get("FileRepository") as unknown as {
         createUploadAdapter: (loader: any) => SupabaseUploadAdapter;
       };
@@ -364,9 +389,9 @@ export default function AdminArticlesPage() {
           supabase,
           onError: (message) => setStatusMessage(message),
         });
-    },
-    [supabase],
-  );
+    }
+    return UploadAdapterPlugin;
+  }, [supabase]);
 
   const editorConfig = useMemo(
     () => ({
@@ -401,8 +426,6 @@ export default function AdminArticlesPage() {
           "imageStyle:inline",
           "imageStyle:block",
           "imageStyle:side",
-          "|",
-          "resizeImage",
         ],
       },
       extraPlugins: [uploadAdapterPlugin],
@@ -413,7 +436,7 @@ export default function AdminArticlesPage() {
   function insertImageUrl(url: string) {
     const editor = editorRef.current as any;
     if (!editor) {
-      setStatusMessage("L'\u00e9diteur n'est pas pr\u00eat.");
+      setStatusMessage("L'éditeur n'est pas prêt.");
       return;
     }
     editor.execute("insertImage", { source: url });
@@ -424,7 +447,7 @@ export default function AdminArticlesPage() {
     <div className="grid w-full grid-cols-1 gap-4" suppressHydrationWarning>
       {isAdmin === false ? (
         <div className="rounded-2xl border border-white/10 bg-zinc-950/40 p-4 text-sm text-zinc-400">
-          Connecte-toi avec un compte admin pour g\u00e9rer les articles.
+          Connecte-toi avec un compte admin pour gérer les articles.
         </div>
       ) : null}
 
@@ -446,7 +469,7 @@ export default function AdminArticlesPage() {
                   slug: slugEdited ? prev.slug : slugify(title),
                 }));
               }}
-              placeholder="Ex: La vid\u00e9o corporative qui convertit"
+              placeholder="Ex: La vidéo corporative qui convertit"
             />
           </label>
           <label className="flex flex-col gap-2 text-xs text-zinc-400">
@@ -463,14 +486,36 @@ export default function AdminArticlesPage() {
           </label>
           <label className="flex flex-col gap-2 text-xs text-zinc-400">
             Auteur
-            <input
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500"
-              value={form.author}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, author: event.target.value }))
-              }
-              placeholder="Ex: Jean-Benoit Monni\u00e8re"
-            />
+            <select
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100"
+              value={form.authorId}
+              onChange={(event) => {
+                const nextId = event.target.value;
+                const picked = authors.find((author) => author.id === nextId) ?? null;
+                setForm((prev) => ({
+                  ...prev,
+                  authorId: nextId,
+                  author: picked?.name ?? prev.author,
+                }));
+              }}
+            >
+              <option value="">Sélectionner un auteur</option>
+              {authors.map((author) => (
+                <option key={author.id} value={author.id}>
+                  {author.name}
+                </option>
+              ))}
+            </select>
+            {authors.length === 0 ? (
+              <span className="text-[11px] text-zinc-500">
+                Aucun auteur disponible. Créez-en dans Admin → Auteurs.
+              </span>
+            ) : null}
+            {selectedAuthor ? (
+              <span className="text-[11px] text-zinc-500">
+                {selectedAuthor.role_title ?? "Poste non défini"}
+              </span>
+            ) : null}
           </label>
           <label className="flex flex-col gap-2 text-xs text-zinc-400">
             Date de publication
@@ -499,7 +544,7 @@ export default function AdminArticlesPage() {
             {coverPreview ? (
               <img
                 src={coverPreview}
-                alt="Aper\u00e7u couverture"
+                alt="Aperçu couverture"
                 className="mt-2 h-40 w-full rounded-xl object-cover"
               />
             ) : null}
@@ -512,7 +557,7 @@ export default function AdminArticlesPage() {
               onChange={(event) =>
                 setForm((prev) => ({ ...prev, excerpt: event.target.value }))
               }
-              placeholder="Court r\u00e9sum\u00e9 affich\u00e9 sur la page Nouvelles."
+              placeholder="Court résumé affiché sur la page Nouvelles."
             />
           </label>
           <div className="flex flex-col gap-2 text-xs text-zinc-400 lg:col-span-2">
@@ -580,20 +625,20 @@ export default function AdminArticlesPage() {
                         }
                       }}
                       onChange={(_event: any, editor: any) => {
-                        const html = editor.getData();
-                        setForm((prev) => ({ ...prev, content: html }));
-                        const sanitized = sanitizeHtml(html);
-                        setPreviewHtml(sanitized || html);
-                      }}
+                      const html = editor.getData();
+                      setForm((prev) => ({ ...prev, content: html }));
+                      const sanitized = sanitizeHtml(html);
+                      setPreviewHtml(sanitized.trim() ? sanitized : html);
+                    }}
                     />
                   ) : (
                     <div className="py-4 text-center text-xs text-zinc-400">
-                      Chargement de l\u2019\u00e9diteur...
+                      Chargement de l\u2019éditeur...
                     </div>
                   )}
                 </div>
                 <div className="text-[11px] text-zinc-500">
-                  Tu peux coller du texte, t\u00e9l\u00e9verser une image ou glisser-d\u00e9poser.
+                  Tu peux coller du texte, téléverser une image ou glisser-déposer.
                 </div>
               </>
             ) : (
@@ -685,8 +730,8 @@ export default function AdminArticlesPage() {
             {isSaving
               ? "Enregistrement..."
               : editingArticleId
-                ? "Mettre \u00e0 jour"
-                : "Cr\u00e9er l'article"}
+                ? "Mettre à jour"
+                : "Créer l'article"}
           </button>
           {editingArticleId ? (
             <button
@@ -736,12 +781,12 @@ export default function AdminArticlesPage() {
                         : "bg-zinc-500/20 text-zinc-300"
                     }`}
                   >
-                    {article.is_published ? "Publi\u00e9" : "Brouillon"}
+                    {article.is_published ? "Publié" : "Brouillon"}
                   </span>
                 </div>
                 <div className="text-xs text-zinc-400">/{article.slug}</div>
                 <div className="text-xs text-zinc-400">
-                  Publi\u00e9 le {new Date(article.published_at).toLocaleDateString("fr-CA")}
+                  Publié le {new Date(article.published_at).toLocaleDateString("fr-CA")}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -757,11 +802,16 @@ export default function AdminArticlesPage() {
                         excerpt: article.excerpt ?? "",
                         content: article.content ?? "",
                         coverImageUrl: article.cover_image_url ?? "",
-                        author: article.author ?? "Jean-Benoit Monni\u00e8re",
+                        authorId: article.author_id ?? "",
+                        author: article.author ?? "",
                         publishedAt: toDatetimeLocal(article.published_at),
                         isPublished: article.is_published,
                       });
-                      setPreviewHtml(sanitizeHtml(article.content ?? ""));
+                      {
+                        const raw = article.content ?? "";
+                        const sanitized = sanitizeHtml(raw);
+                        setPreviewHtml(sanitized.trim() ? sanitized : raw);
+                      }
                       setCoverFile(null);
                       setCoverPreview(null);
                       (editorRef.current as any)?.setData(article.content ?? "");

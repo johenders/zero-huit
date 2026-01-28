@@ -13,18 +13,18 @@ import production from "../../../assets/services/production.jpg";
 import postProduction from "../../../assets/services/post_production.jpg";
 
 export const metadata: Metadata = {
-  title: "Landing \u2014 Z\u00e9ro huit",
+  title: "Landing \u2014 Zéro huit",
   description:
-    "Production vid\u00e9o haut de gamme sur la Rive-Sud. Demandez une soumission ou d\u00e9couvrez nos projets.",
+    "Production vidéo haut de gamme sur la Rive-Sud. Demandez une soumission ou découvrez nos projets.",
   openGraph: {
-    title: "Z\u00e9ro huit \u2014 Production vid\u00e9o sur la Rive-Sud",
+    title: "Zéro huit \u2014 Production vidéo sur la Rive-Sud",
     description:
-      "D\u00e9couvrez une \u00e9quipe lean et cr\u00e9ative. Demandez une soumission ou explorez notre portfolio.",
+      "Découvrez une équipe lean et créative. Demandez une soumission ou explorez notre portfolio.",
   },
   twitter: {
-    title: "Z\u00e9ro huit \u2014 Production vid\u00e9o sur la Rive-Sud",
+    title: "Zéro huit \u2014 Production vidéo sur la Rive-Sud",
     description:
-      "D\u00e9couvrez une \u00e9quipe lean et cr\u00e9ative. Demandez une soumission ou explorez notre portfolio.",
+      "Découvrez une équipe lean et créative. Demandez une soumission ou explorez notre portfolio.",
   },
 };
 
@@ -32,53 +32,53 @@ export const dynamic = "force-dynamic";
 
 const proofPoints = [
   {
-    title: "Direction cr\u00e9ative",
-    description: "Une narration claire, un style visuel assum\u00e9 et une ex\u00e9cution soign\u00e9e.",
+    title: "Direction créative",
+    description: "Une narration claire, un style visuel assumé et une exécution soignée.",
   },
   {
-    title: "\u00c9quipe lean",
+    title: "Équipe lean",
     description: "Les bons talents, au bon moment, pour un projet fluide et efficace.",
   },
   {
     title: "Production locale",
-    description: "Bas\u00e9s sur la Rive-Sud, avec une logistique simple et des tournages rapides.",
+    description: "Basés sur la Rive-Sud, avec une logistique simple et des tournages rapides.",
   },
 ];
 
 const processSteps = [
   {
     step: "01",
-    title: "Brief & strat\u00e9gie",
+    title: "Brief & stratégie",
     description:
-      "On cerne vos objectifs, vos publics et la promesse \u00e0 raconter pour d\u00e9finir le concept.",
+      "On cerne vos objectifs, vos publics et la promesse à raconter pour définir le concept.",
   },
   {
     step: "02",
     title: "Tournage & direction",
     description:
-      "On met en place une \u00e9quipe agile et une direction artistique align\u00e9e sur votre marque.",
+      "On met en place une équipe agile et une direction artistique alignée sur votre marque.",
   },
   {
     step: "03",
     title: "Post-production",
     description:
-      "Montage, motion design, colorisation et livrables pr\u00eats \u00e0 performer partout.",
+      "Montage, motion design, colorisation et livrables prêts à performer partout.",
   },
 ];
 
 const portfolioItems = [
   {
-    title: "Publicit\u00e9 & marque",
+    title: "Publicité & marque",
     subtitle: "Campagnes percutantes",
     image: production,
   },
   {
-    title: "Vid\u00e9o corporative",
-    subtitle: "Cr\u00e9dibilit\u00e9 et confiance",
+    title: "Vidéo corporative",
+    subtitle: "Crédibilité et confiance",
     image: postProduction,
   },
   {
-    title: "\u00c9v\u00e9nement & captation",
+    title: "Événement & captation",
     subtitle: "Moments qui vivent longtemps",
     image: batisse,
   },
@@ -222,8 +222,8 @@ export default async function LandingPage() {
             </p>
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
               {[
-                "Concepts valid\u00e9s rapidement",
-                "\u00c9quipe de tournage agile",
+                "Concepts validés rapidement",
+                "Équipe de tournage agile",
                 "Direction artistique experte",
                 "Livrables multi-formats",
               ].map((item) => (
@@ -237,7 +237,7 @@ export default async function LandingPage() {
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40">
             <Image
               src={batisse}
-              alt="Tournage Z\u00e9ro huit"
+              alt="Tournage Zéro huit"
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />

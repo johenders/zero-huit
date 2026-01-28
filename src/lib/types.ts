@@ -60,9 +60,19 @@ export type Article = {
   excerpt: string | null;
   content: string | null;
   cover_image_url: string | null;
+  author_id?: string | null;
   author: string | null;
   published_at: string;
   is_published: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Author = {
+  id: string;
+  name: string;
+  role_title: string | null;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
 };

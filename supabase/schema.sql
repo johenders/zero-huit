@@ -122,6 +122,19 @@ create table if not exists public.articles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.authors (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  role_title text,
+  avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(name)
+);
+
+alter table if exists public.articles
+  add column if not exists author_id uuid references public.authors (id) on delete set null;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -155,6 +168,11 @@ for each row execute procedure public.set_updated_at();
 drop trigger if exists articles_set_updated_at on public.articles;
 create trigger articles_set_updated_at
 before update on public.articles
+for each row execute procedure public.set_updated_at();
+
+drop trigger if exists authors_set_updated_at on public.authors;
+create trigger authors_set_updated_at
+before update on public.authors
 for each row execute procedure public.set_updated_at();
 
 create or replace function public.handle_new_user()

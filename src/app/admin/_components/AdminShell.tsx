@@ -9,6 +9,7 @@ const navItems = [
   { href: "/admin/portfolio", label: "Portfolio" },
   { href: "/admin/reglages-references", label: "Réglages références" },
   { href: "/admin/taxonomies", label: "Taxonomies" },
+  { href: "/admin/auteurs", label: "Auteurs" },
   { href: "/admin/articles", label: "Articles" },
   { href: "/admin/images", label: "Images" },
 ];

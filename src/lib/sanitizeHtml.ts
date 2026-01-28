@@ -12,6 +12,9 @@ export function sanitizeHtml(html: string) {
     "EM",
     "A",
     "IMG",
+    "FIGURE",
+    "FIGCAPTION",
+    "SPAN",
     "UL",
     "OL",
     "LI",
@@ -21,7 +24,9 @@ export function sanitizeHtml(html: string) {
 
   const allowedAttrs: Record<string, string[]> = {
     A: ["href", "target", "rel"],
-    IMG: ["src", "alt"],
+    IMG: ["src", "alt", "width", "height"],
+    FIGURE: ["class"],
+    SPAN: ["class"],
   };
 
   try {

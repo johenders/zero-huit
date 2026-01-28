@@ -30,6 +30,8 @@ type DisplayArticle = {
   title: string;
   excerpt: string;
   author: string;
+  authorRole?: string | null;
+  authorAvatarUrl?: string | null;
   dateLabel: string;
   href: string;
   imageUrl?: string | null;
@@ -44,6 +46,14 @@ function formatDateLabel(value: string) {
     month: "long",
     year: "numeric",
   }).format(date);
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "—";
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+  return `${first}${last}`.toUpperCase() || "—";
 }
 
 export default async function Home() {
@@ -71,7 +81,9 @@ export default async function Home() {
       supabase.from("taxonomies").select("id,kind,label"),
       supabase
         .from("articles")
-        .select("id,title,slug,excerpt,cover_image_url,author,published_at,is_published")
+        .select(
+          "id,title,slug,excerpt,cover_image_url,author,author_id,published_at,is_published",
+        )
         .eq("is_published", true)
         .order("published_at", { ascending: false })
         .limit(3),
@@ -115,17 +127,49 @@ export default async function Home() {
     }
 
     if (!articlesError && (articles ?? []).length > 0) {
-      latestArticles = (articles as Pick<
+      const rows = articles as (Pick<
         Article,
         "id" | "title" | "slug" | "excerpt" | "cover_image_url" | "author" | "published_at"
-      >[]).map((article) => ({
-        title: article.title,
-        excerpt: article.excerpt ?? "",
-        author: article.author ?? "Z\u00e9ro huit",
-        dateLabel: formatDateLabel(article.published_at),
-        href: `/nouvelles/${article.slug}`,
-        imageUrl: article.cover_image_url,
-      }));
+      > & { author_id?: string | null })[];
+      const authorIds = Array.from(
+        new Set(rows.map((article) => article.author_id).filter(Boolean)) as Set<string>,
+      );
+      let authorById = new Map<
+        string,
+        { name: string; role_title: string | null; avatar_url: string | null }
+      >();
+      if (authorIds.length > 0) {
+        const { data: authorRows } = await supabase
+          .from("authors")
+          .select("id,name,role_title,avatar_url")
+          .in("id", authorIds);
+        authorById = new Map(
+          (authorRows ?? []).map((author) => [
+            author.id,
+            {
+              name: author.name,
+              role_title: author.role_title ?? null,
+              avatar_url: author.avatar_url ?? null,
+            },
+          ]),
+        );
+      }
+
+      latestArticles = rows.map((article) => {
+        const authorProfile = article.author_id
+          ? authorById.get(article.author_id) ?? null
+          : null;
+        return {
+          title: article.title,
+          excerpt: article.excerpt ?? "",
+          author: authorProfile?.name ?? article.author ?? "Zéro huit",
+          authorRole: authorProfile?.role_title ?? null,
+          authorAvatarUrl: authorProfile?.avatar_url ?? null,
+          dateLabel: formatDateLabel(article.published_at),
+          href: `/nouvelles/${article.slug}`,
+          imageUrl: article.cover_image_url,
+        };
+      });
     }
   }
 
@@ -134,6 +178,8 @@ export default async function Home() {
       title: article.title,
       excerpt: article.excerpt,
       author: article.author,
+      authorRole: null,
+      authorAvatarUrl: null,
       dateLabel: article.dateLabel,
       href: article.href,
       image: article.image,
@@ -145,7 +191,7 @@ export default async function Home() {
       <HomeHero />
       <HomeFeaturedSection featuredVideos={featuredVideos} />
       <HomeClientsSection />
-      <section className="bg-[#f6f4ef] py-20 text-slate-900">
+      <section className="bg-[#fefefe] py-20 text-slate-900">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -156,8 +202,8 @@ export default async function Home() {
                 Les derniers articles du blog.
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-                Conseils strat\u00e9giques, tendances et retours d'exp\u00e9rience pour am\u00e9liorer
-                vos vid\u00e9os corporatives.
+                Conseils stratégiques, tendances et retours d'expérience pour améliorer
+                vos vidéos corporatives.
               </p>
             </div>
             <Link
@@ -196,13 +242,23 @@ export default async function Home() {
                 <div className="space-y-4 px-5 pb-6 pt-5">
                   <div className="text-xs text-slate-500">{article.dateLabel}</div>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
-                      JB
-                    </span>
+                    {article.authorAvatarUrl ? (
+                      <img
+                        src={article.authorAvatarUrl}
+                        alt={article.author}
+                        className="h-6 w-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
+                        {getInitials(article.author)}
+                      </span>
+                    )}
                     <span>par {article.author}</span>
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
-                  <p className="text-sm leading-6 text-slate-600">{article.excerpt}</p>
+                  <p className="line-clamp-4 text-sm leading-6 text-slate-600">
+                    {article.excerpt}
+                  </p>
                 </div>
               </Link>
             ))}
