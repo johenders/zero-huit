@@ -334,7 +334,7 @@ export default function AdminArticlesPage() {
 
   const uploadAdapterPlugin = useCallback(
     (editor: Editor) => {
-      const fileRepository = editor.plugins.get("FileRepository") as {
+      const fileRepository = editor.plugins.get("FileRepository") as unknown as {
         createUploadAdapter: (loader: { file: Promise<File> }) => SupabaseUploadAdapter;
       };
       fileRepository.createUploadAdapter = (loader: { file: Promise<File> }) =>
