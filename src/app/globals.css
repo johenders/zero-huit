@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@ckeditor/ckeditor5-build-classic/build/ckeditor.css";
 
 :root {
   color-scheme: dark;
@@ -26,13 +25,44 @@ body {
   color: #e4e4e7;
 }
 
+.ck-editor {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ck-editor__top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .ck.ck-toolbar {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 6px;
 }
 
 .ck.ck-toolbar .ck-button,
 .ck.ck-toolbar .ck-dropdown__button {
+  color: #e4e4e7;
+}
+
+.ck.ck-toolbar .ck-button,
+.ck.ck-toolbar .ck-dropdown__button {
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.ck-content {
+  padding: 12px;
+}
+
+.ck.ck-dropdown__panel {
+  background: rgba(10, 12, 18, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ck.ck-dropdown__panel .ck-list__item .ck-button {
   color: #e4e4e7;
 }
 
