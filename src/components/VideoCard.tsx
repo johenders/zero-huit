@@ -24,7 +24,9 @@ export function VideoCard({
   const firstObjective = video.taxonomies.find((t) => t.kind === "objectif");
   const firstTone = video.taxonomies.find((t) => t.kind === "feel");
   const firstKeyword = video.taxonomies.find((t) => t.kind === "keyword");
-  const hoverTags = [firstObjective, firstTone, firstKeyword].filter(Boolean);
+  const hoverTags = [firstObjective, firstTone, firstKeyword].filter(
+    (tag): tag is NonNullable<typeof tag> => Boolean(tag),
+  );
   const tagClassByKind: Record<string, string> = {
     objectif: "border-blue-400/40 bg-blue-500/20 text-blue-100",
     feel: "border-purple-400/40 bg-purple-500/20 text-purple-100",
