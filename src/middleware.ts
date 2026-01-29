@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
+function resolveLocale(pathname: string) {
+  return pathname === "/en" || pathname.startsWith("/en/") ? "en" : "fr";
+}
+
 function isPublicPath(pathname: string) {
   if (pathname === "/login") return true;
   if (pathname === "/auth/callback") return true;
@@ -24,12 +28,15 @@ function buildLoginRedirect(request: NextRequest, reason?: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const locale = resolveLocale(pathname);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-locale", locale);
 
   if (isPublicPath(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  const response = NextResponse.next();
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   const { url, anonKey } = getSupabaseEnv();
   const supabase = createServerClient(url, anonKey, {
     cookies: {

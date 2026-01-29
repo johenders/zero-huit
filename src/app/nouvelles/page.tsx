@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { fallbackArticles } from "@/lib/articles";
+import { getUiDictionary } from "@/lib/i18n/server";
+import { withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article } from "@/lib/types";
 
@@ -18,10 +20,10 @@ type DisplayArticle = {
   image?: (typeof fallbackArticles)[number]["image"];
 };
 
-function formatDateLabel(value: string) {
+function formatDateLabel(value: string, locale: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("fr-CA", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-CA" : "fr-CA", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -36,8 +38,10 @@ function getInitials(name: string) {
   return `${first}${last}`.toUpperCase() || "—";
 }
 
-export default async function NouvellesPage() {
+export async function NouvellesPage({ locale }: { locale: "fr" | "en" }) {
   let articles: DisplayArticle[] = [];
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
 
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -92,8 +96,8 @@ export default async function NouvellesPage() {
         author: authorProfile?.name ?? article.author ?? "Zéro huit",
         authorRole: authorProfile?.role_title ?? null,
         authorAvatarUrl: authorProfile?.avatar_url ?? null,
-        dateLabel: formatDateLabel(article.published_at),
-        href: `/nouvelles/${article.slug}`,
+        dateLabel: formatDateLabel(article.published_at, locale),
+        href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
         imageUrl: article.cover_image_url,
       };
     });
@@ -108,7 +112,7 @@ export default async function NouvellesPage() {
       authorRole: null,
       authorAvatarUrl: null,
       dateLabel: article.dateLabel,
-      href: article.href,
+      href: withLocaleHref(locale, article.href),
       image: article.image,
     }));
   }
@@ -117,14 +121,13 @@ export default async function NouvellesPage() {
     <div className="min-h-screen bg-[#fefefe] text-slate-900">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-10 pt-16">
         <span className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
-          Nouvelles
+          {t("news.label")}
         </span>
         <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">
-          Articles, idées et stratégies qui font avancer vos vidéos.
+          {t("news.title")}
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-slate-600">
-          Découvrez nos analyses, inspirations et conseils pour vos projets corporatifs,
-          RH et marketing.
+          {t("news.subtitle")}
         </p>
       </section>
 
@@ -151,7 +154,7 @@ export default async function NouvellesPage() {
                   />
                 )}
                 <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
-                  Blog
+                  {t("home.latest.badge")}
                 </span>
               </div>
               <div className="space-y-4 px-5 pb-6 pt-5">
@@ -168,7 +171,9 @@ export default async function NouvellesPage() {
                       {getInitials(article.author)}
                     </span>
                   )}
-                  <span>par {article.author}</span>
+                  <span>
+                    {t("home.latest.by")} {article.author}
+                  </span>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
                 <p className="line-clamp-4 text-sm leading-6 text-slate-600">
@@ -181,4 +186,8 @@ export default async function NouvellesPage() {
       </section>
     </div>
   );
+}
+
+export default async function NouvellesPageDefault() {
+  return NouvellesPage({ locale: "fr" });
 }

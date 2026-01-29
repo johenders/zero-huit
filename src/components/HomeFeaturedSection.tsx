@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import type { Video } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 type Props = {
   featuredVideos: Video[];
@@ -19,6 +21,7 @@ function FeaturedVideoCard({
   priority?: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useI18n();
   const previewStart = video.thumbnail_time_seconds ?? 0;
 
   return (
@@ -59,7 +62,7 @@ function FeaturedVideoCard({
         <div className="absolute inset-x-6 bottom-6 text-center text-white">
           <div className="text-xs uppercase tracking-[0.3em] text-white/80">
             {video.taxonomies.find((taxonomy) => taxonomy.kind === "type")?.label ??
-              "Vid&#233;o"}
+              t("home.featured.fallback")}
           </div>
           <div className="mt-2 text-lg font-semibold">{video.title}</div>
         </div>
@@ -70,6 +73,7 @@ function FeaturedVideoCard({
 
 export function HomeFeaturedSection({ featuredVideos }: Props) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
+  const { locale, t } = useI18n();
 
   useEffect(() => {
     const urls = ["https://videodelivery.net", "https://iframe.videodelivery.net"];
@@ -94,40 +98,32 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
     <section className="bg-white py-20 text-zinc-900">
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:py-12">
         <p className="text-left text-xs font-bold uppercase tracking-[0.4em] text-[#8acd5f]">
-          Z&#201;RO QUOI?
+          {t("home.featured.kicker")}
         </p>
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_2fr]">
           <div>
             <h2 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
-              <span className="block">Nous sommes</span>
+              <span className="block">{t("home.featured.title.line1")}</span>
               <span className="block">
-                une agence{" "}
-                <span className="font-normal italic text-zinc-700">lean</span>
+                {t("home.featured.title.line2")}{" "}
+                <span className="font-normal italic text-zinc-700">
+                  {t("home.featured.title.lean")}
+                </span>
               </span>
             </h2>
             <Link
-              href="/about"
+              href={withLocaleHref(locale, "/about")}
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-900"
             >
-              Notre &#233;quipe
+              {t("home.featured.cta")}
               <span aria-hidden className="text-lg">
                 &#8594;
               </span>
             </Link>
           </div>
           <div className="space-y-4 text-sm leading-7 text-zinc-600">
-            <p>
-              Z&#233;ro huit offre un service de production vid&#233;o haut de gamme
-              pour les entreprises et organismes de la Rive-Sud de Montr&#233;al.
-            </p>
-            <p>
-              Pourquoi <span className="italic">lean</span>? Le terme{" "}
-              <span className="italic">lean</span> est associ&#233; &#224; des principes
-              et des m&#233;thodes visant &#224; optimiser les processus, &#224; &#233;liminer
-              les gaspillages et &#224; am&#233;liorer l&#39;efficacit&#233;. Ici, on fait
-              r&#233;f&#233;rence &#224; une petite &#233;quipe polyvalente qui maximise la
-              cr&#233;ation de projet &#224; l&#39;interne.
-            </p>
+            <p>{t("home.featured.body.1")}</p>
+            <p>{t("home.featured.body.2")}</p>
           </div>
         </div>
       </div>
@@ -145,10 +141,10 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
       </div>
       <div className="mx-auto mt-10 flex w-full max-w-6xl justify-center px-6">
         <a
-          href="/portfolio"
+          href={withLocaleHref(locale, "/portfolio")}
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:-translate-y-0.5"
         >
-          Tous nos projets
+          {t("home.featured.cta.projects")}
         </a>
       </div>
       {activeVideo ? (
@@ -171,7 +167,7 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
                 onClick={() => setActiveVideo(null)}
                 type="button"
               >
-                Fermer
+                {t("home.featured.modal.close")}
               </button>
             </div>
             <div className="aspect-video w-full">

@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+import { getUiDictionary } from "@/lib/i18n/server";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 import batisse from "../../../assets/batisse.jpg";
 
@@ -19,8 +21,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export async function ContactPage({ locale }: { locale: "fr" | "en" }) {
   const headerOffset = 120;
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
 
   return (
     <section
@@ -36,7 +40,7 @@ export default function ContactPage() {
         <div className="relative overflow-hidden rounded-2xl bg-black/40">
           <Image
             src={batisse}
-            alt="Bâtisse Zéro huit"
+            alt={t("contact.image.alt")}
             className="h-full w-full object-cover"
             priority
           />
@@ -45,22 +49,21 @@ export default function ContactPage() {
         <div className="flex flex-col justify-center gap-10">
           <div>
             <span className="text-xs font-semibold tracking-[0.45em] text-zinc-400">
-              CONTACT
+              {t("contact.kicker")}
             </span>
             <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl lg:text-5xl">
-              Parlez-nous de votre projet
+              {t("contact.title")}
             </h1>
             <p className="mt-4 text-sm text-zinc-300 sm:text-base">
-              On est en face de la Patate Mallette, une bonne raison de passer nous
-              voir ;)
+              {t("contact.subtitle")}
             </p>
           </div>
           <div>
             <h2 className="text-2xl font-semibold text-white sm:text-3xl">
-              Coordonnées
+              {t("contact.info.title")}
             </h2>
             <p className="mt-6 text-base leading-7 text-zinc-300">
-              74 rue St-Laurent, Beauharnois, Québec, J6N 1V6
+              {t("contact.info.address")}
             </p>
             <p className="mt-3 text-base text-zinc-300">
               <a href="tel:14503951777" className="font-semibold text-white">
@@ -75,21 +78,24 @@ export default function ContactPage() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/30 p-8 backdrop-blur">
             <h3 className="text-lg font-semibold text-white">
-              Parlez-nous de votre projet
+              {t("contact.card.title")}
             </h3>
             <p className="mt-3 text-sm text-zinc-300">
-              Remplissez notre demande de soumission pour recevoir une réponse
-              rapide et personnalisée.
+              {t("contact.card.body")}
             </p>
             <a
-              href="/request"
+              href={withLocaleHref(locale, "/request")}
               className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
             >
-              Demande de soumission
+              {t("contact.card.cta")}
             </a>
           </div>
         </div>
       </div>
     </section>
   );
+}
+
+export default async function ContactPageDefault() {
+  return ContactPage({ locale: "fr" });
 }

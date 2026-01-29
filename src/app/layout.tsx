@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/SiteShell";
+import { I18nProvider } from "@/lib/i18n/client";
+import { getUiDictionary } from "@/lib/i18n/server";
+import { normalizeLocale } from "@/lib/i18n/shared";
+import { headers } from "next/headers";
 import "./globals.css";
 
 const siteUrl =
@@ -40,15 +44,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  const dictionary = await getUiDictionary(locale);
   return (
-    <html lang="fr-CA">
+    <html lang={locale === "en" ? "en-CA" : "fr-CA"}>
       <body className="antialiased">
-        <SiteShell>{children}</SiteShell>
+        <I18nProvider locale={locale} dictionary={dictionary}>
+          <SiteShell>{children}</SiteShell>
+        </I18nProvider>
       </body>
     </html>
   );

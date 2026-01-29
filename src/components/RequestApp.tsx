@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cloudflareIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
+import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 import type {
   Project,
   ProjectDiffusion,
@@ -16,8 +18,8 @@ import levPhoto from "../../assets/Lev.jpg";
 
 type ObjectiveOption = {
   id: ProjectObjective;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
 };
 
@@ -65,52 +67,52 @@ type ReferralOptionId =
 
 type AudienceOption = {
   id: Audience;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
 };
 
 type DiffusionOption = {
   id: ProjectDiffusion;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
 };
 
 type DeliverableOption = {
   id: DeliverableKey;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
 };
 
 type UpsellOption = {
   id: Upsell;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
 };
 
 type BudgetOption = {
   id: BudgetOptionId;
-  label: string;
+  labelKey: string;
 };
 
 type TimelineOption = {
   id: TimelineOptionId;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
 };
 
 type ReferralOption = {
   id: ReferralOptionId;
-  label: string;
+  labelKey: string;
 };
 
 const objectiveOptions: ObjectiveOption[] = [
   {
     id: "promotion",
-    label: "Promotion",
-    description: "Vendre ou faire rayonner une offre.",
+    labelKey: "request.objective.promotion.label",
+    descriptionKey: "request.objective.promotion.desc",
     icon: (
       <svg
         aria-hidden
@@ -132,8 +134,8 @@ const objectiveOptions: ObjectiveOption[] = [
   },
   {
     id: "recrutement",
-    label: "Recrutement",
-    description: "Attirer de nouveaux talents.",
+    labelKey: "request.objective.recrutement.label",
+    descriptionKey: "request.objective.recrutement.desc",
     icon: (
       <svg
         aria-hidden
@@ -154,8 +156,8 @@ const objectiveOptions: ObjectiveOption[] = [
   },
   {
     id: "informatif",
-    label: "Informatif",
-    description: "Expliquer, former ou clarifier.",
+    labelKey: "request.objective.informatif.label",
+    descriptionKey: "request.objective.informatif.desc",
     icon: (
       <svg
         aria-hidden
@@ -176,8 +178,8 @@ const objectiveOptions: ObjectiveOption[] = [
   },
   {
     id: "divertissement",
-    label: "Divertissement",
-    description: "Captiver, surprendre, faire sourire.",
+    labelKey: "request.objective.divertissement.label",
+    descriptionKey: "request.objective.divertissement.desc",
     icon: (
       <svg
         aria-hidden
@@ -198,8 +200,8 @@ const objectiveOptions: ObjectiveOption[] = [
   },
   {
     id: "autre",
-    label: "Autre",
-    description: "Un objectif particulier ou hybride.",
+    labelKey: "request.objective.autre.label",
+    descriptionKey: "request.objective.autre.desc",
     icon: (
       <svg
         aria-hidden
@@ -222,8 +224,8 @@ const objectiveOptions: ObjectiveOption[] = [
 const audienceOptions: AudienceOption[] = [
   {
     id: "clients_potentiels",
-    label: "Clients potentiels",
-    description: "Attirer de nouveaux clients.",
+    labelKey: "request.audience.clients_potentiels.label",
+    descriptionKey: "request.audience.clients_potentiels.desc",
     icon: (
       <svg
         aria-hidden
@@ -245,8 +247,8 @@ const audienceOptions: AudienceOption[] = [
   },
   {
     id: "clients_actuels",
-    label: "Clients actuels",
-    description: "Fidéliser et informer.",
+    labelKey: "request.audience.clients_actuels.label",
+    descriptionKey: "request.audience.clients_actuels.desc",
     icon: (
       <svg
         aria-hidden
@@ -267,8 +269,8 @@ const audienceOptions: AudienceOption[] = [
   },
   {
     id: "interne",
-    label: "Interne",
-    description: "Équipes, formation, culture.",
+    labelKey: "request.audience.interne.label",
+    descriptionKey: "request.audience.interne.desc",
     icon: (
       <svg
         aria-hidden
@@ -288,8 +290,8 @@ const audienceOptions: AudienceOption[] = [
   },
   {
     id: "evenement",
-    label: "Diffusion lors d'un événement",
-    description: "Projection en salle ou sur scène.",
+    labelKey: "request.audience.evenement.label",
+    descriptionKey: "request.audience.evenement.desc",
     icon: (
       <svg
         aria-hidden
@@ -311,8 +313,8 @@ const audienceOptions: AudienceOption[] = [
   },
   {
     id: "autre",
-    label: "Autre",
-    description: "Autre type d'audience.",
+    labelKey: "request.audience.autre.label",
+    descriptionKey: "request.audience.autre.desc",
     icon: (
       <svg
         aria-hidden
@@ -335,8 +337,8 @@ const audienceOptions: AudienceOption[] = [
 const diffusionOptions: DiffusionOption[] = [
   {
     id: "reseaux_sociaux",
-    label: "Réseaux sociaux",
-    description: "Courts formats, stories, ads.",
+    labelKey: "request.diffusion.reseaux_sociaux.label",
+    descriptionKey: "request.diffusion.reseaux_sociaux.desc",
     icon: (
       <svg
         aria-hidden
@@ -358,8 +360,8 @@ const diffusionOptions: DiffusionOption[] = [
   },
   {
     id: "web",
-    label: "Web",
-    description: "Site, landing page, email.",
+    labelKey: "request.diffusion.web.label",
+    descriptionKey: "request.diffusion.web.desc",
     icon: (
       <svg
         aria-hidden
@@ -379,8 +381,8 @@ const diffusionOptions: DiffusionOption[] = [
   },
   {
     id: "tv",
-    label: "TV",
-    description: "Diffusion télévisuelle.",
+    labelKey: "request.diffusion.tv.label",
+    descriptionKey: "request.diffusion.tv.desc",
     icon: (
       <svg
         aria-hidden
@@ -399,8 +401,8 @@ const diffusionOptions: DiffusionOption[] = [
   },
   {
     id: "interne",
-    label: "Interne",
-    description: "Teams, Slack, Intranet.",
+    labelKey: "request.diffusion.interne.label",
+    descriptionKey: "request.diffusion.interne.desc",
     icon: (
       <svg
         aria-hidden
@@ -420,8 +422,8 @@ const diffusionOptions: DiffusionOption[] = [
   },
   {
     id: "autre",
-    label: "Autre",
-    description: "Autre canal de diffusion.",
+    labelKey: "request.diffusion.autre.label",
+    descriptionKey: "request.diffusion.autre.desc",
     icon: (
       <svg
         aria-hidden
@@ -445,36 +447,36 @@ const diffusionOptions: DiffusionOption[] = [
 const deliverableOptions: DeliverableOption[] = [
   {
     id: "courte_video",
-    label: "30 secondes et moins",
-    description: "Ex.: Story ou Publicité",
+    labelKey: "request.deliverable.courte_video.label",
+    descriptionKey: "request.deliverable.courte_video.desc",
   },
   {
     id: "publicite",
-    label: "30 à 60 secondes",
-    description: "Ex.: Publicité ou capsule",
+    labelKey: "request.deliverable.publicite.label",
+    descriptionKey: "request.deliverable.publicite.desc",
   },
   {
     id: "film_publicitaire",
-    label: "2 à 4 minutes",
-    description: "Ex.: Vidéo corporative, capsule ou film publicitaire",
+    labelKey: "request.deliverable.film_publicitaire.label",
+    descriptionKey: "request.deliverable.film_publicitaire.desc",
   },
   {
     id: "mini_documentaire",
-    label: "5 min et +",
-    description: "Ex.: Mini-documentaire, capsule ou court-métrage",
+    labelKey: "request.deliverable.mini_documentaire.label",
+    descriptionKey: "request.deliverable.mini_documentaire.desc",
   },
   {
     id: "incertain",
-    label: "Je ne sais pas",
-    description: "À définir ensemble",
+    labelKey: "request.deliverable.incertain.label",
+    descriptionKey: "request.deliverable.incertain.desc",
   },
 ];
 
 const upsellOptions: UpsellOption[] = [
   {
     id: "photos_professionnelles",
-    label: "Photos professionnelles",
-    description: "Photos de marque ou d'équipe.",
+    labelKey: "request.upsell.photos_professionnelles.label",
+    descriptionKey: "request.upsell.photos_professionnelles.desc",
     icon: (
       <svg
         aria-hidden
@@ -494,8 +496,8 @@ const upsellOptions: UpsellOption[] = [
   },
   {
     id: "animation_logo",
-    label: "Animation de logo",
-    description: "Logo animé pour ouverture.",
+    labelKey: "request.upsell.animation_logo.label",
+    descriptionKey: "request.upsell.animation_logo.desc",
     icon: (
       <svg
         aria-hidden
@@ -514,8 +516,8 @@ const upsellOptions: UpsellOption[] = [
   },
   {
     id: "non_merci",
-    label: "Non merci",
-    description: "Pas pour l'instant.",
+    labelKey: "request.upsell.non_merci.label",
+    descriptionKey: "request.upsell.non_merci.desc",
     icon: (
       <svg
         aria-hidden
@@ -536,44 +538,44 @@ const upsellOptions: UpsellOption[] = [
 ];
 
 const budgetOptions: BudgetOption[] = [
-  { id: "2000-5000", label: "2 000$ à 5 000$" },
-  { id: "5000-10000", label: "5 000$ à 10 000$" },
-  { id: "10000-20000", label: "10 000$ à 20 000$" },
-  { id: "20000+", label: "20 000$ et +" },
-  { id: "unknown", label: "Je ne sais pas" },
+  { id: "2000-5000", labelKey: "request.budget.2000-5000" },
+  { id: "5000-10000", labelKey: "request.budget.5000-10000" },
+  { id: "10000-20000", labelKey: "request.budget.10000-20000" },
+  { id: "20000+", labelKey: "request.budget.20000plus" },
+  { id: "unknown", labelKey: "request.budget.unknown" },
 ];
 
 const timelineOptions: TimelineOption[] = [
   {
     id: "asap",
-    label: "Le plus rapidement possible",
-    description: "Démarrage immédiat.",
+    labelKey: "request.timeline.asap.label",
+    descriptionKey: "request.timeline.asap.desc",
   },
   {
     id: "1_month",
-    label: "Dans le prochain mois",
-    description: "Planification rapide.",
+    labelKey: "request.timeline.1_month.label",
+    descriptionKey: "request.timeline.1_month.desc",
   },
   {
     id: "1_3_months",
-    label: "1 à 3 mois",
-    description: "Calendrier standard.",
+    labelKey: "request.timeline.1_3_months.label",
+    descriptionKey: "request.timeline.1_3_months.desc",
   },
   {
     id: "relaxed",
-    label: "Ça ne presse pas",
-    description: "Flexible.",
+    labelKey: "request.timeline.relaxed.label",
+    descriptionKey: "request.timeline.relaxed.desc",
   },
 ];
 
 const referralOptions: ReferralOption[] = [
-  { id: "client_actuel", label: "Je suis déjà client" },
-  { id: "bouche_a_oreille", label: "Bouche à oreille" },
-  { id: "agence", label: "Agence" },
-  { id: "adwords", label: "Google" },
-  { id: "reseaux_sociaux", label: "Réseaux sociaux" },
-  { id: "amis", label: "Amis" },
-  { id: "seo", label: "Autre" },
+  { id: "client_actuel", labelKey: "request.referral.client_actuel" },
+  { id: "bouche_a_oreille", labelKey: "request.referral.bouche_a_oreille" },
+  { id: "agence", labelKey: "request.referral.agence" },
+  { id: "adwords", labelKey: "request.referral.adwords" },
+  { id: "reseaux_sociaux", labelKey: "request.referral.reseaux_sociaux" },
+  { id: "amis", labelKey: "request.referral.amis" },
+  { id: "seo", labelKey: "request.referral.seo" },
 ];
 
 function toggleArrayValue<T extends string>(list: T[], value: T) {
@@ -584,6 +586,7 @@ function toggleArrayValue<T extends string>(list: T[], value: T) {
 
 export function RequestApp() {
   const supabase = useSupabaseClient();
+  const { locale, t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const preselectedReferenceId = searchParams.get("referenceId");
@@ -711,7 +714,7 @@ export function RequestApp() {
         setProject(null);
         setProjectStatus("error");
         setProjectMessage(
-          error?.message ?? "Impossible de récupérer le projet.",
+          error?.message ?? t("request.project.error"),
         );
         return;
       }
@@ -726,7 +729,7 @@ export function RequestApp() {
     return () => {
       ignore = true;
     };
-  }, [projectId, supabase]);
+  }, [projectId, supabase, t]);
 
   useEffect(() => {
     const selectedDurations = Object.entries(deliverables)
@@ -778,7 +781,7 @@ export function RequestApp() {
             }
           | { error: string };
         if (!response.ok || "error" in json) {
-          throw new Error("error" in json ? json.error : "Erreur AI");
+          throw new Error("error" in json ? json.error : t("request.ai.error"));
         }
         setReferenceVideos(json.videos);
         setReferenceDebug("debug" in json ? json.debug ?? null : null);
@@ -788,7 +791,7 @@ export function RequestApp() {
         if ((error as Error).name === "AbortError") return;
         setReferenceStatus("error");
         setReferenceMessage(
-          error instanceof Error ? error.message : "Erreur AI",
+          error instanceof Error ? error.message : t("request.ai.error"),
         );
       }
     }, 650);
@@ -804,6 +807,7 @@ export function RequestApp() {
     objectives,
     projectDescription,
     audiences,
+    t,
   ]);
 
   useEffect(() => {
@@ -859,7 +863,7 @@ export function RequestApp() {
           }
         | { error: string };
       if (!response.ok || "error" in json) {
-        throw new Error("error" in json ? json.error : "Erreur AI");
+        throw new Error("error" in json ? json.error : t("request.ai.error"));
       }
       setReferenceVideos((prev) => [...prev, ...json.videos]);
       if ("debug" in json && json.debug) setReferenceDebug(json.debug);
@@ -867,7 +871,7 @@ export function RequestApp() {
     } catch (error) {
       setReferenceStatus("error");
       setReferenceMessage(
-        error instanceof Error ? error.message : "Erreur AI",
+        error instanceof Error ? error.message : t("request.ai.error"),
       );
     }
   }
@@ -886,15 +890,13 @@ export function RequestApp() {
         <button
           className="absolute right-6 top-6 z-20 rounded-full border border-white/10 bg-black/40 p-2 text-white hover:bg-white/10"
           type="button"
-          aria-label="Quitter la demande"
+          aria-label={t("request.exit.aria")}
           onClick={() => {
             if (hasStarted) {
-              const ok = confirm(
-                "Vous avez commencé votre demande. Voulez-vous vraiment quitter ?",
-              );
+              const ok = confirm(t("request.exit.confirm"));
               if (!ok) return;
             }
-            router.push("/");
+            router.push(withLocaleHref(locale, "/"));
           }}
         >
           <svg
@@ -921,10 +923,10 @@ export function RequestApp() {
                 </div>
               </div>
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Merci pour votre demande.
+                {t("request.sent.title")}
               </h1>
               <p className="text-sm text-zinc-300">
-                Notre producteur vous contactera rapidement.
+                {t("request.sent.subtitle")}
               </p>
               <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/30 p-5 text-left sm:flex-row sm:items-center">
                 <div className="h-20 w-20 overflow-hidden rounded-full border border-white/10">
@@ -937,31 +939,33 @@ export function RequestApp() {
                 </div>
                 <div className="space-y-1 text-sm text-zinc-200">
                   <div className="text-base font-semibold text-white">Lev Rapoport</div>
-                  <div>Producteur</div>
+                  <div>{t("request.sent.role")}</div>
                   <div>lev@zerohuit.ca</div>
                   <div>450.395.1777 poste 4</div>
                 </div>
               </div>
               <div className="flex justify-center">
                 <a
-                  href="/"
+                  href={withLocaleHref(locale, "/")}
                   className="rounded-full border border-white/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-200 hover:bg-white/10"
                 >
-                  Retour au site web
+                  {t("request.sent.back")}
                 </a>
               </div>
             </div>
           ) : (
             <>
               <div className="mb-6 flex flex-wrap items-center justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500">
-                <span>Demande de soumission</span>
+                <span>{t("request.title")}</span>
                 <span className="h-px w-6 bg-white/10" />
-                <span>Étape {step + 1} / 12</span>
+                <span>
+                  {t("request.step.label")} {step + 1} / 12
+                </span>
               </div>
 
           {project ? (
             <div className="mb-8 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs uppercase tracking-[0.18em] text-amber-200">
-              Prérempli depuis {project.title}
+              {t("request.prefill")} {project.title}
             </div>
           ) : null}
 
@@ -980,53 +984,53 @@ export function RequestApp() {
               }}
             >
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Qui êtes-vous?
+                {t("request.step1.title")}
               </h1>
               <div className="mx-auto mt-8 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
                 <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Votre nom
+                    {t("request.step1.name.label")}
                   </span>
                   <input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Ex: Camille Tremblay"
+                    placeholder={t("request.step1.name.placeholder")}
                     className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
                 <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Nom de l'entreprise
+                    {t("request.step1.company.label")}
                   </span>
                   <input
                     value={company}
                     onChange={(event) => setCompany(event.target.value)}
-                    placeholder="Ex: Studio Nord"
+                    placeholder={t("request.step1.company.placeholder")}
                     className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
                 <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Courriel
+                    {t("request.step1.email.label")}
                   </span>
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="Ex: camille@entreprise.com"
+                    placeholder={t("request.step1.email.placeholder")}
                     autoComplete="email"
                     className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
                 <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Téléphone (optionnel)
+                    {t("request.step1.phone.label")}
                   </span>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
-                    placeholder="Ex: 514 555 1234"
+                    placeholder={t("request.step1.phone.placeholder")}
                     autoComplete="tel"
                     className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
@@ -1038,17 +1042,17 @@ export function RequestApp() {
                   disabled={!canGoNext}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </form>
           ) : step === 1 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Quelle est l&apos;objectif de la vidéo?
+                {t("request.step2.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Sélectionne tout ce qui s&apos;applique.
+                {t("request.step2.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {objectiveOptions.map((option) => {
@@ -1079,10 +1083,10 @@ export function RequestApp() {
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {option.label}
+                          {t(option.labelKey)}
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
                     </button>
@@ -1095,24 +1099,24 @@ export function RequestApp() {
                   onClick={() => setStep(0)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(2)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 2 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                À qui s&apos;adresse la vidéo?
+                {t("request.step3.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Sélectionne tout ce qui s&apos;applique.
+                {t("request.step3.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {audienceOptions.map((option) => {
@@ -1143,10 +1147,10 @@ export function RequestApp() {
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {option.label}
+                          {t(option.labelKey)}
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
                     </button>
@@ -1159,24 +1163,24 @@ export function RequestApp() {
                   onClick={() => setStep(1)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(3)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 3 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Où sera diffusée la vidéo?
+                {t("request.step4.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Sélectionne tout ce qui s&apos;applique.
+                {t("request.step4.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {diffusionOptions.map((option) => {
@@ -1207,10 +1211,10 @@ export function RequestApp() {
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {option.label}
+                          {t(option.labelKey)}
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
                     </button>
@@ -1223,45 +1227,45 @@ export function RequestApp() {
                   onClick={() => setStep(2)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(4)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 4 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Décris brièvement ton projet.
+                {t("request.step5.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Contenu désiré, idée préliminaire de scénario, etc.
+                {t("request.step5.subtitle")}
               </p>
               <div className="mx-auto mt-6 w-full max-w-3xl space-y-5 text-left">
                 <label className="block space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Description du projet
+                    {t("request.step5.description.label")}
                   </span>
                   <textarea
                     value={projectDescription}
                     onChange={(event) => setProjectDescription(event.target.value)}
-                    placeholder="Parle-nous du message, du ton, du déroulement..."
+                    placeholder={t("request.step5.description.placeholder")}
                     className="min-h-[160px] w-full resize-none bg-transparent text-base text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
                 <label className="block space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Lieux de tournage
+                    {t("request.step5.locations.label")}
                   </span>
                   <input
                     value={shootingLocations}
                     onChange={(event) => setShootingLocations(event.target.value)}
-                    placeholder="Ex: Montréal, bureaux, studio..."
+                    placeholder={t("request.step5.locations.placeholder")}
                     className="w-full bg-transparent text-lg font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
@@ -1272,24 +1276,24 @@ export function RequestApp() {
                   onClick={() => setStep(3)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(5)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 5 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Quels sont les livrables?
+                {t("request.step6.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Indique la durée, la quantité et le format.
+                {t("request.step6.subtitle")}
               </p>
               <div className="mx-auto mt-6 w-full max-w-4xl space-y-4 text-left">
                 {deliverableOptions.map((option) => {
@@ -1321,10 +1325,10 @@ export function RequestApp() {
                       >
                         <div>
                           <div className="text-lg font-semibold">
-                            {option.label}
+                            {t(option.labelKey)}
                           </div>
                           <div className="mt-1 text-sm text-zinc-400">
-                            {option.description}
+                            {t(option.descriptionKey)}
                           </div>
                         </div>
                         <div
@@ -1334,7 +1338,9 @@ export function RequestApp() {
                               : "border-white/10 text-zinc-500"
                           }`}
                         >
-                          {deliverableUnknown ? "Choisi" : "Option"}
+                          {deliverableUnknown
+                            ? t("request.step6.unknown.selected")
+                            : t("request.step6.unknown.option")}
                         </div>
                       </button>
                     );
@@ -1381,10 +1387,10 @@ export function RequestApp() {
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                           <div className="text-lg font-semibold text-zinc-100">
-                            {option.label}
+                            {t(option.labelKey)}
                           </div>
                           <div className="mt-1 text-sm text-zinc-400">
-                            {option.description}
+                            {t(option.descriptionKey)}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1400,7 +1406,7 @@ export function RequestApp() {
                               }))
                             }
                             className="h-9 w-9 rounded-full border border-white/10 text-xl text-zinc-200 hover:bg-white/10"
-                            aria-label={`Retirer un ${option.label}`}
+                            aria-label={`${t("request.step6.remove")} ${t(option.labelKey)}`}
                           >
                             -
                           </button>
@@ -1417,16 +1423,16 @@ export function RequestApp() {
                               setDeliverableUnknown(false);
                             }}
                             className="h-9 w-9 rounded-full border border-white/10 text-xl text-zinc-200 hover:bg-white/10"
-                            aria-label={`Ajouter un ${option.label}`}
+                            aria-label={`${t("request.step6.add")} ${t(option.labelKey)}`}
                           >
                             +
                           </button>
                         </div>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {formatButton("horizontal", "Horizontal")}
-                        {formatButton("vertical", "Vertical")}
-                        {formatButton("carre", "Carré")}
+                        {formatButton("horizontal", t("request.step6.format.horizontal"))}
+                        {formatButton("vertical", t("request.step6.format.vertical"))}
+                        {formatButton("carre", t("request.step6.format.square"))}
                       </div>
                     </div>
                   );
@@ -1434,12 +1440,12 @@ export function RequestApp() {
               </div>
               <div className="mx-auto mt-8 w-full max-w-4xl space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-left">
                 <div className="text-sm font-semibold text-zinc-200">
-                  Est-ce que ça doit être sous-titré?
+                  {t("request.step6.subtitles.title")}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: true, label: "Oui" },
-                    { value: false, label: "Non" },
+                    { value: true, label: t("request.yes") },
+                    { value: false, label: t("request.no") },
                   ].map((option) => (
                     <button
                       key={String(option.value)}
@@ -1462,24 +1468,24 @@ export function RequestApp() {
                   onClick={() => setStep(4)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(6)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 6 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Est-ce que vous seriez intéressé par :
+                {t("request.step7.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Sélectionne ce qui pourrait être utile.
+                {t("request.step7.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {upsellOptions.map((option) => {
@@ -1516,10 +1522,10 @@ export function RequestApp() {
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {option.label}
+                          {t(option.labelKey)}
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
                     </button>
@@ -1532,24 +1538,24 @@ export function RequestApp() {
                   onClick={() => setStep(5)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(7)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 7 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Quelle est votre budget?
+                {t("request.step8.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Même échelle que dans la page des projets.
+                {t("request.step8.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
                 {budgetOptions.map((option) => {
@@ -1565,7 +1571,7 @@ export function RequestApp() {
                           : "border-white/10 bg-black/30 text-zinc-200 hover:border-white/30"
                       }`}
                     >
-                      {option.label}
+                      {t(option.labelKey)}
                     </button>
                   );
                 })}
@@ -1576,72 +1582,78 @@ export function RequestApp() {
                   onClick={() => setStep(6)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(8)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 8 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Références
+                {t("request.step9.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Choisis parmi les vidéos suivantes celle que tu préfères.
+                {t("request.step9.subtitle")}
               </p>
               {referenceDebug ? (
                 <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4 text-left text-xs text-zinc-200">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                    Debug filtres (temporaire)
+                    {t("request.step9.debug")}
                   </div>
                   <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <div className="text-[11px] text-zinc-500">Étape 1</div>
+                      <div className="text-[11px] text-zinc-500">
+                        {t("request.step9.debug.step1")}
+                      </div>
                       <div className="mt-1">
-                        Objectifs:{" "}
+                        {t("request.step9.debug.objectives")}:{" "}
                         {(referenceDebug.objectives ?? []).join(", ") || "—"}
                       </div>
                       <div className="mt-1">
-                        Types autorisés:{" "}
+                        {t("request.step9.debug.allowedTypes")}:{" "}
                         {(referenceDebug.allowedTypes ?? []).join(", ") || "—"}
                       </div>
                       <div className="mt-1">
-                        Objectifs autorisés:{" "}
+                        {t("request.step9.debug.allowedObjectives")}:{" "}
                         {(referenceDebug.allowedObjectifs ?? []).join(", ") || "—"}
                       </div>
                       <div className="mt-1">
-                        Objectifs prioritaires:{" "}
+                        {t("request.step9.debug.priorityObjectives")}:{" "}
                         {(referenceDebug.priorityObjectifs ?? []).join(", ") || "—"}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-zinc-500">Étape 2</div>
+                      <div className="text-[11px] text-zinc-500">
+                        {t("request.step9.debug.step2")}
+                      </div>
                       <div className="mt-1">
-                        Audiences:{" "}
+                        {t("request.step9.debug.audiences")}:{" "}
                         {(referenceDebug.audiences ?? []).join(", ") || "—"}
                       </div>
                       <div className="mt-1">
-                        Types retirés:{" "}
+                        {t("request.step9.debug.removedTypes")}:{" "}
                         {(referenceDebug.removedTypes ?? []).join(", ") || "—"}
                       </div>
                       <div className="mt-1">
-                        Budget: {referenceDebug.budget ?? "—"}
+                        {t("request.step9.debug.budget")}: {referenceDebug.budget ?? "—"}
                       </div>
                       <div className="mt-1">
-                        Durées:{" "}
+                        {t("request.step9.debug.durations")}:{" "}
                         {(referenceDebug.activeDurationFilters ?? []).join(", ") ||
                           (referenceDebug.durations ?? []).join(", ") ||
                           "—"}
                       </div>
                     </div>
                     <div className="sm:col-span-2">
-                      <div className="text-[11px] text-zinc-500">Mots-clés</div>
+                      <div className="text-[11px] text-zinc-500">
+                        {t("request.step9.debug.keywords")}
+                      </div>
                       <div className="mt-1">
                         {(referenceDebug.matchedKeywordLabels ?? []).join(", ") || "—"}
                       </div>
@@ -1658,19 +1670,20 @@ export function RequestApp() {
               ) : null}
               {referenceStatus === "error" ? (
                 <div className="mt-8 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                  {referenceMessage ?? "Impossible de charger les références."}
+                  {referenceMessage ?? t("request.step9.error")}
                 </div>
               ) : null}
               {referenceVideos.length === 0 && referenceStatus !== "loading" ? (
                 <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-400">
-                  Pas encore de recommandations. Ajoute plus de détails avant
-                  cette étape.
+                  {t("request.step9.empty")}
                 </div>
               ) : referenceVideos.length > 0 ? (
                 <div className="mt-8 space-y-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {selectedReferenceIds.size} sélection
-                    {selectedReferenceIds.size > 1 ? "s" : ""}
+                    {selectedReferenceIds.size}{" "}
+                    {selectedReferenceIds.size > 1
+                      ? t("request.step9.selection.plural")
+                      : t("request.step9.selection.singular")}
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {referenceVideos.map((video) => {
@@ -1716,14 +1729,14 @@ export function RequestApp() {
                               </div>
                               {referenceDebug?.reasonsByVideoId?.[video.id]?.length ? (
                                 <div className="mt-2 text-xs text-zinc-500">
-                                  Raison:{" "}
+                                  {t("request.step9.reason")}:{" "}
                                   {referenceDebug.reasonsByVideoId[video.id].join(", ")}
                                 </div>
                               ) : null}
                             </div>
                           </button>
                           <div className="flex items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-xs text-zinc-400">
-                            <span>Choisir</span>
+                            <span>{t("request.step9.choose")}</span>
                             <button
                               type="button"
                               onClick={() =>
@@ -1743,7 +1756,9 @@ export function RequestApp() {
                                   : "border-white/10 text-zinc-400 hover:border-white/30"
                               }`}
                             >
-                              {isSelected ? "Sélectionné" : "Choisir"}
+                              {isSelected
+                                ? t("request.step9.selected")
+                                : t("request.step9.choose")}
                             </button>
                           </div>
                         </div>
@@ -1758,8 +1773,8 @@ export function RequestApp() {
                       className="rounded-full border border-white/10 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {referenceStatus === "loading"
-                        ? "Chargement…"
-                        : "Charger plus"}
+                        ? t("request.step9.loading")
+                        : t("request.step9.loadMore")}
                     </button>
                   </div>
                 </div>
@@ -1770,24 +1785,24 @@ export function RequestApp() {
                   onClick={() => setStep(7)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(9)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 9 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Quelle est votre échéancier?
+                {t("request.step10.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Donne une idée du rythme souhaité.
+                {t("request.step10.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {timelineOptions.map((option) => {
@@ -1826,10 +1841,10 @@ export function RequestApp() {
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {option.label}
+                          {t(option.labelKey)}
                         </div>
                         <div className="mt-1 text-sm text-zinc-400">
-                          {option.description}
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
                     </button>
@@ -1842,24 +1857,24 @@ export function RequestApp() {
                   onClick={() => setStep(8)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(10)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
-                  Suivant
+                  {t("request.nav.next")}
                 </button>
               </div>
             </div>
           ) : step === 10 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Comment avez-vous entendu parler de nous?
+                {t("request.step11.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                Choisis une source principale.
+                {t("request.step11.subtitle")}
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-3xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
                 {referralOptions.map((option) => {
@@ -1875,7 +1890,7 @@ export function RequestApp() {
                           : "border-white/10 bg-black/30 text-zinc-200 hover:border-white/30"
                       }`}
                     >
-                      {option.label}
+                      {t(option.labelKey)}
                     </button>
                   );
                 })}
@@ -1886,7 +1901,7 @@ export function RequestApp() {
                   onClick={() => setStep(9)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
@@ -1894,14 +1909,14 @@ export function RequestApp() {
                   disabled={!referralChoice}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/60"
                 >
-                  Prochaine étape
+                  {t("request.nav.nextStep")}
                 </button>
               </div>
             </div>
           ) : (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                Récapitulatif
+                {t("request.step12.title")}
               </h1>
               <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center">
                 <button
@@ -1912,44 +1927,58 @@ export function RequestApp() {
                   }}
                   className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
                 >
-                  Envoyer la soumission
+                  {t("request.step12.submit")}
                 </button>
                 <p className="text-sm text-zinc-400">
-                Vérifie tes choix avant d&apos;envoyer la soumission.
+                  {t("request.step12.subtitle")}
                 </p>
               </div>
               <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 text-left md:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Identité
+                    {t("request.step12.identity.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
-                    <div>Nom: {name || "—"}</div>
-                    <div>Entreprise: {company || "—"}</div>
-                    <div>Courriel: {email || "—"}</div>
-                    <div>Téléphone: {phone || "—"}</div>
+                    <div>
+                      {t("request.step12.identity.name")}: {name || "—"}
+                    </div>
+                    <div>
+                      {t("request.step12.identity.company")}: {company || "—"}
+                    </div>
+                    <div>
+                      {t("request.step12.identity.email")}: {email || "—"}
+                    </div>
+                    <div>
+                      {t("request.step12.identity.phone")}: {phone || "—"}
+                    </div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Objectif & audience
+                    {t("request.step12.objectives.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     <div>
-                      Objectifs:{" "}
+                      {t("request.step12.objectives.label")}:{" "}
                       {objectives
                         .map(
                           (id) =>
-                            objectiveOptions.find((o) => o.id === id)?.label ?? id,
+                            t(
+                              objectiveOptions.find((o) => o.id === id)?.labelKey ??
+                                id,
+                            ),
                         )
                         .join(", ") || "—"}
                     </div>
                     <div className="mt-1">
-                      Audience:{" "}
+                      {t("request.step12.audience.label")}:{" "}
                       {audiences
                         .map(
                           (id) =>
-                            audienceOptions.find((o) => o.id === id)?.label ?? id,
+                            t(
+                              audienceOptions.find((o) => o.id === id)?.labelKey ??
+                                id,
+                            ),
                         )
                         .join(", ") || "—"}
                     </div>
@@ -1957,66 +1986,73 @@ export function RequestApp() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Budget & durée
+                    {t("request.step12.budget.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     <div>
-                      Budget:{" "}
+                      {t("request.step12.budget.label")}:{" "}
                       {budgetChoice
-                        ? budgetOptions.find((b) => b.id === budgetChoice)?.label ??
-                          budgetChoice
+                        ? t(
+                            budgetOptions.find((b) => b.id === budgetChoice)
+                              ?.labelKey ?? budgetChoice,
+                          )
                         : "—"}
                     </div>
                     <div className="mt-1">
-                      Durées:{" "}
+                      {t("request.step12.durations.label")}:{" "}
                       {(deliverableUnknown
-                        ? ["Incertain"]
+                        ? [t("request.step12.durations.unknown")]
                         : Object.entries(deliverables)
                             .filter(([, quantity]) => quantity > 0)
                             .map(([key]) => {
                               const option = deliverableOptions.find(
                                 (item) => item.id === key,
                               );
-                              return option?.label ?? key;
+                              return t(option?.labelKey ?? key);
                             })
                       ).join(", ") || "—"}
                     </div>
                     <div className="mt-1">
-                      Sous-titrage:{" "}
+                      {t("request.step12.subtitles.label")}:{" "}
                       {needsSubtitles === null
                         ? "—"
                         : needsSubtitles
-                          ? "Oui"
-                          : "Non"}
+                          ? t("request.yes")
+                          : t("request.no")}
                     </div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Diffusion & échéancier
+                    {t("request.step12.diffusion.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     <div>
-                      Diffusion:{" "}
+                      {t("request.step12.diffusion.label")}:{" "}
                       {diffusions
                         .map(
                           (id) =>
-                            diffusionOptions.find((o) => o.id === id)?.label ?? id,
+                            t(
+                              diffusionOptions.find((o) => o.id === id)?.labelKey ??
+                                id,
+                            ),
                         )
                         .join(", ") || "—"}
                     </div>
                     <div className="mt-1">
-                      Échéancier:{" "}
+                      {t("request.step12.timeline.label")}:{" "}
                       {timelineChoice
-                        ? timelineOptions.find((t) => t.id === timelineChoice)?.label ??
-                          timelineChoice
+                        ? t(
+                            timelineOptions.find((t) => t.id === timelineChoice)
+                              ?.labelKey ?? timelineChoice,
+                          )
                         : "—"}
                     </div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Description
+                    {t("request.step12.description.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     {projectDescription.trim() || "—"}
@@ -2024,7 +2060,7 @@ export function RequestApp() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Lieux de tournage
+                    {t("request.step12.locations.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     {shootingLocations.trim() || "—"}
@@ -2032,7 +2068,7 @@ export function RequestApp() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Références sélectionnées
+                    {t("request.step12.references.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     {referenceVideos
@@ -2043,12 +2079,14 @@ export function RequestApp() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    Source
+                    {t("request.step12.referral.title")}
                   </div>
                   <div className="mt-2 text-sm text-zinc-200">
                     {referralChoice
-                      ? referralOptions.find((r) => r.id === referralChoice)?.label ??
-                        referralChoice
+                      ? t(
+                          referralOptions.find((r) => r.id === referralChoice)
+                            ?.labelKey ?? referralChoice,
+                        )
                       : "—"}
                   </div>
                 </div>
@@ -2059,7 +2097,7 @@ export function RequestApp() {
                   onClick={() => setStep(10)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
-                  Retour
+                  {t("request.nav.back")}
                 </button>
               </div>
             </div>
@@ -2087,7 +2125,7 @@ export function RequestApp() {
                 }
                 type="button"
               >
-                Fermer
+                {t("request.modal.close")}
               </button>
             </div>
             <div className="bg-zinc-950/70 p-4">

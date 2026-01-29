@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getUiDictionary } from "@/lib/i18n/server";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 import bg from "../../../assets/bg/bg_a_propos.jpg";
 import cedric from "../../../assets/team/ced.jpeg";
@@ -27,8 +29,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AboutPage() {
+export async function AboutPage({ locale }: { locale: "fr" | "en" }) {
   const headerOffset = 120;
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
 
   return (
     <div>
@@ -44,31 +48,23 @@ export default function AboutPage() {
         <div className="relative mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-center gap-10 px-6 py-20 lg:flex-row lg:items-center lg:gap-16">
           <div className="max-w-2xl">
             <span className="text-xs font-semibold tracking-[0.45em] text-zinc-300">
-              À PROPOS
+              {t("about.kicker")}
             </span>
             <h1 className="mt-6 text-3xl font-semibold text-white sm:text-4xl lg:text-5xl">
-              Nous sommes une coalition de créatifs{" "}
+              {t("about.title")}{" "}
               <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-                passionnés
+                {t("about.title.highlight")}
               </span>
               .
             </h1>
           </div>
           <div className="max-w-2xl text-sm leading-7 text-zinc-200 sm:text-base">
-            <p>
-              Zéro huit est d'abord le résultat d'une fusion entre deux piliers de
-              la production vidéo sur la Rive-Sud de Montréal, Création Webson et
-              Beavr. S'y sont ensuite joints plusieurs créatifs passionnés en
-              quête d'avancement. Notre mission est de démocratiser la production
-              de vidéo haut de gamme; c'est pourquoi nous offrons à notre équipe
-              les meilleurs outils sur le marché ainsi que l'espace nécessaire
-              afin d'alimenter leur inspiration.
-            </p>
+            <p>{t("about.body")}</p>
             <Link
-              href="/services"
+              href={withLocaleHref(locale, "/services")}
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-emerald-300"
             >
-              Nos services <span aria-hidden="true">→</span>
+              {t("about.cta")} <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
@@ -79,38 +75,38 @@ export default function AboutPage() {
             {[
               {
                 name: "Jonathan Henderson",
-                role: "Co-fondateur / Producteur",
-                bio: "Vieux sage, mais pas trop. Tech geek. Acheteur compulsif. Buveur de café professionnel.",
+                role: t("about.team.jonathan.role"),
+                bio: t("about.team.jonathan.bio"),
                 image: jo,
               },
               {
                 name: "Cédrick Provost",
-                role: "Co-fondateur / Réalisateur",
-                bio: "Gear addict et Guru addict. A le “hmm.. on peut faire mieux” facile. Magicien à temps partiel. En crocs à temps plein.",
+                role: t("about.team.cedric.role"),
+                bio: t("about.team.cedric.bio"),
                 image: cedric,
               },
               {
                 name: "Xavier Provost",
-                role: "Directeur de la photographie",
-                bio: "Movie geek. Jamais besoin d'un Easy rig. Chasseur de poster. Trip un peu trop sur le F1.4 et le Vitamin Water.",
+                role: t("about.team.xavier.role"),
+                bio: t("about.team.xavier.bio"),
                 image: xav,
               },
               {
                 name: "Maxime Auclair",
-                role: "Caméraman / Monteur",
-                bio: "Plus sage que l vieux sage. Plus cinéphile que l Movie geek. Son rest face est imprévisible, mais sa créativité est toujours A1.",
+                role: t("about.team.max.role"),
+                bio: t("about.team.max.bio"),
                 image: max,
               },
               {
                 name: "Jean-Benoit Monnière",
-                role: "Directeur des finances et opérations",
-                bio: "Toqué des stats. Il voit mal les couleurs, mais voit très bien les chiffres. Athlète déterminé. Strava et ChatGPT sont de loin ses meilleurs amis.",
+                role: t("about.team.jb.role"),
+                bio: t("about.team.jb.bio"),
                 image: jb,
               },
               {
                 name: "Lev Rapoport",
-                role: "Producteur",
-                bio: "Caféinomane au coeur tendre, Samouraï cueilleur de fleurs et futur propriétaire de voitures exotiques. Il sait parler aux gens, mais le fait mieux en anglais.",
+                role: t("about.team.lev.role"),
+                bio: t("about.team.lev.bio"),
                 image: lev,
               },
             ].map((member) => (
@@ -138,10 +134,9 @@ export default function AboutPage() {
                 />
               </div>
               <h3 className="mt-6 text-lg font-semibold">William Cardinal</h3>
-              <p className="text-sm text-zinc-600">Monteur / Effets spéciaux</p>
+              <p className="text-sm text-zinc-600">{t("about.team.will.role")}</p>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                Fix it in post. N'aime pas les réflexions. Champion du lancé de
-                saumon. Trépied humain. Meilleur ami de Larry.
+                {t("about.team.will.bio")}
               </p>
             </div>
           </div>
@@ -149,4 +144,8 @@ export default function AboutPage() {
       </section>
     </div>
   );
+}
+
+export default async function AboutPageDefault() {
+  return AboutPage({ locale: "fr" });
 }

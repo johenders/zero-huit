@@ -4,6 +4,8 @@ import { HomeClientsSection } from "@/components/HomeClientsSection";
 import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHero } from "@/components/HomeHero";
 import { fallbackArticles } from "@/lib/articles";
+import { applyTaxonomyTranslations, getUiDictionary } from "@/lib/i18n/server";
+import { withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article, Taxonomy, Video } from "@/lib/types";
 import type { Metadata } from "next";
@@ -38,10 +40,10 @@ type DisplayArticle = {
   image?: (typeof fallbackArticles)[number]["image"];
 };
 
-function formatDateLabel(value: string) {
+function formatDateLabel(value: string, locale: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("fr-CA", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-CA" : "fr-CA", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -56,9 +58,11 @@ function getInitials(name: string) {
   return `${first}${last}`.toUpperCase() || "—";
 }
 
-export default async function Home() {
+export async function HomePage({ locale }: { locale: "fr" | "en" }) {
   let featuredVideos: Video[] = [];
   let latestArticles: DisplayArticle[] = [];
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
 
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -101,8 +105,13 @@ export default async function Home() {
           []) as { video_id: string; taxonomy_id: string }[];
       }
 
+      const translatedTaxonomies = await applyTaxonomyTranslations(
+        (taxonomies ?? []) as Taxonomy[],
+        locale,
+      );
+
       const taxonomyById = new Map<string, Taxonomy>();
-      for (const t of (taxonomies ?? []) as Taxonomy[]) taxonomyById.set(t.id, t);
+      for (const t of translatedTaxonomies) taxonomyById.set(t.id, t);
 
       const taxonomyIdsByVideoId = new Map<string, string[]>();
       for (const row of videoTaxonomies) {
@@ -165,8 +174,8 @@ export default async function Home() {
           author: authorProfile?.name ?? article.author ?? "Zéro huit",
           authorRole: authorProfile?.role_title ?? null,
           authorAvatarUrl: authorProfile?.avatar_url ?? null,
-          dateLabel: formatDateLabel(article.published_at),
-          href: `/nouvelles/${article.slug}`,
+          dateLabel: formatDateLabel(article.published_at, locale),
+          href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
           imageUrl: article.cover_image_url,
         };
       });
@@ -181,7 +190,7 @@ export default async function Home() {
       authorRole: null,
       authorAvatarUrl: null,
       dateLabel: article.dateLabel,
-      href: article.href,
+      href: withLocaleHref(locale, article.href),
       image: article.image,
     }));
   }
@@ -196,21 +205,20 @@ export default async function Home() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.45em] text-slate-500">
-                Quoi de neuf
+                {t("home.latest.label")}
               </span>
               <h2 className="mt-6 text-3xl font-semibold text-slate-900 sm:text-4xl">
-                Les derniers articles du blog.
+                {t("home.latest.title")}
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-                Conseils stratégiques, tendances et retours d'expérience pour améliorer
-                vos vidéos corporatives.
+                {t("home.latest.subtitle")}
               </p>
             </div>
             <Link
-              href="/nouvelles"
+              href={withLocaleHref(locale, "/nouvelles")}
               className="inline-flex items-center justify-center rounded-full border border-emerald-500 px-6 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-600 hover:text-emerald-800"
             >
-              Voir les nouvelles
+              {t("home.latest.cta")}
             </Link>
           </div>
 
@@ -236,7 +244,7 @@ export default async function Home() {
                     />
                   )}
                   <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
-                    Blog
+                    {t("home.latest.badge")}
                   </span>
                 </div>
                 <div className="space-y-4 px-5 pb-6 pt-5">
@@ -253,7 +261,9 @@ export default async function Home() {
                         {getInitials(article.author)}
                       </span>
                     )}
-                    <span>par {article.author}</span>
+                    <span>
+                      {t("home.latest.by")} {article.author}
+                    </span>
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
                   <p className="line-clamp-4 text-sm leading-6 text-slate-600">
@@ -267,4 +277,8 @@ export default async function Home() {
       </section>
     </div>
   );
+}
+
+export default async function Home() {
+  return HomePage({ locale: "fr" });
 }

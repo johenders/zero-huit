@@ -7,6 +7,8 @@ import { budgetLevels, formatCad } from "@/lib/budget";
 import { cloudflarePreviewIframeSrc } from "@/lib/cloudflare";
 import Link from "next/link";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
+import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 import bg from "../../assets/bg/bg_services.jpg";
 import type {
   Project,
@@ -58,34 +60,34 @@ const keywordGroupKinds: TaxonomyKind[] = ["keyword", "style", "parametre"];
 type FilterFieldDefinition = {
   id: string;
   kinds: TaxonomyKind[];
-  label: string;
-  placeholder: string;
+  labelKey: string;
+  placeholderKey: string;
 };
 
 const filterFields: FilterFieldDefinition[] = [
   {
     id: "type",
     kinds: ["type"],
-    label: "Type de vidéo",
-    placeholder: "Publicité, capsule, documentaire...",
+    labelKey: "portfolio.filters.type",
+    placeholderKey: "portfolio.filters.type.placeholder",
   },
   {
     id: "objectif",
     kinds: ["objectif"],
-    label: "Objectifs",
-    placeholder: "Promotionnelle, recrutement, notoriété...",
+    labelKey: "portfolio.filters.objectif",
+    placeholderKey: "portfolio.filters.objectif.placeholder",
   },
   {
     id: "feel",
     kinds: ["feel"],
-    label: "Ton",
-    placeholder: "Dynamique, nostalgique, épique...",
+    labelKey: "portfolio.filters.feel",
+    placeholderKey: "portfolio.filters.feel.placeholder",
   },
   {
     id: "keywords",
     kinds: keywordGroupKinds,
-    label: "Mots clés",
-    placeholder: "Restaurant, B-roll, voix off, événement...",
+    labelKey: "portfolio.filters.keywords",
+    placeholderKey: "portfolio.filters.keywords.placeholder",
   },
 ];
 
@@ -172,6 +174,7 @@ function parseBudgetValues(prompt: string) {
 
 export function PortfolioApp({ initialVideos, taxonomies }: Props) {
   const supabase = useSupabaseClient();
+  const { locale, t } = useI18n();
 
   const [filters, setFilters] = useState<Filters>(() => newDefaultFilters());
   const [videos] = useState<Video[]>(initialVideos);
@@ -978,27 +981,23 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
         <div className="relative mx-auto flex min-h-[49vh] max-w-7xl flex-col justify-center gap-10 px-6 py-20 lg:flex-row lg:items-center lg:gap-16">
           <div className="max-w-2xl">
             <span className="text-xs font-semibold tracking-[0.45em] text-zinc-300">
-              PORTFOLIO
+              {t("portfolio.header.kicker")}
             </span>
             <h1 className="mt-6 text-3xl font-semibold text-white sm:text-4xl lg:text-5xl">
-              Des références vidéo qui{" "}
+              {t("portfolio.header.title")}{" "}
               <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-                parlent
+                {t("portfolio.header.title.highlight")}
               </span>
               .
             </h1>
           </div>
           <div className="max-w-2xl text-sm leading-7 text-zinc-200 sm:text-base">
-            <p>
-              Explore nos projets par type, ton, style et budget. Puis utilise la
-              recherche AI pour appliquer rapidement les filtres qui correspondent à ton
-              besoin.
-            </p>
+            <p>{t("portfolio.header.body")}</p>
             <Link
-              href="/services"
+              href={withLocaleHref(locale, "/services")}
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-emerald-300"
             >
-              Voir nos services <span aria-hidden="true">→</span>
+              {t("portfolio.header.cta")} <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
@@ -1007,9 +1006,9 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
       <main className="mx-auto w-full max-w-none space-y-4 p-4 lg:p-6">
         <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-4 backdrop-blur">
           <div className="mb-0 pl-1 text-base font-semibold text-zinc-300">
-            Recherche par{" "}
+            {t("portfolio.filters.title")}{" "}
             <span className="bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent">
-              mots-clés
+              {t("portfolio.filters.title.highlight")}
             </span>
             .
           </div>
@@ -1031,7 +1030,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                   }`}
                   aria-expanded={isActive}
                 >
-                  <span className={labelTone}>{field.label}</span>
+                  <span className={labelTone}>{t(field.labelKey)}</span>
                   {selectedCount > 0 ? (
                     <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
                       {selectedCount}
@@ -1057,7 +1056,9 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               }`}
               aria-expanded={activeFilterPanel === "budget"}
             >
-              <span className={filterLabelToneById.budget}>Budget</span>
+              <span className={filterLabelToneById.budget}>
+                {t("portfolio.filters.budget")}
+              </span>
               {filters.budgetMinIndex !== 0 ||
               filters.budgetMaxIndex !== budgetLevels.length - 1 ? (
                 <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
@@ -1082,7 +1083,9 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               }`}
               aria-expanded={activeFilterPanel === "duration"}
             >
-              <span className={filterLabelToneById.duration}>Durée</span>
+              <span className={filterLabelToneById.duration}>
+                {t("portfolio.filters.duration")}
+              </span>
               {filters.durationMinIndex !== 0 ||
               filters.durationMaxIndex !== durationLevels.length - 1 ? (
                 <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
@@ -1102,7 +1105,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               type="button"
               onClick={() => setFilters(newDefaultFilters())}
             >
-              Réinitialiser
+              {t("portfolio.filters.reset")}
             </button>
             <span className="flex-1" aria-hidden />
             <button
@@ -1118,7 +1121,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               }}
               aria-expanded={aiSearchOpen}
             >
-              Recherche
+              {t("portfolio.filters.ai")}
               <span className="rounded-full bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
                 AI
               </span>
@@ -1155,7 +1158,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                   <input
                     ref={aiInputRef}
                     className="w-full bg-transparent text-base text-zinc-100 outline-none placeholder:text-zinc-500"
-                    placeholder="Décris ton projet pour trouver des références"
+                    placeholder={t("portfolio.filters.ai.placeholder")}
                     value={aiPrompt}
                     onChange={(event) => setAiPrompt(event.target.value)}
                   />
@@ -1165,7 +1168,9 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                   type="submit"
                   disabled={aiStatus === "loading"}
                 >
-                  {aiStatus === "loading" ? "Recherche…" : "Appliquer"}
+                  {aiStatus === "loading"
+                    ? t("portfolio.filters.ai.loading")
+                    : t("portfolio.filters.ai.apply")}
                 </button>
                 {aiPrompt ? (
                   <button
@@ -1177,7 +1182,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                       setAiMessage(null);
                     }}
                   >
-                    Effacer
+                    {t("portfolio.filters.ai.clear")}
                   </button>
                 ) : null}
               </form>

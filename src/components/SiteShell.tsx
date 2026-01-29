@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { HomeHeader } from "@/components/HomeHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { stripLocalePrefix } from "@/lib/i18n/shared";
 
 type Props = {
   children: React.ReactNode;
@@ -11,12 +12,13 @@ type Props = {
 
 export function SiteShell({ children }: Props) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
-  const isRequest = pathname.startsWith("/request");
+  const normalizedPath = stripLocalePrefix(pathname).pathname;
+  const isHome = normalizedPath === "/";
+  const isRequest = normalizedPath.startsWith("/request");
   const hideShell =
-    pathname === "/login" ||
-    pathname.startsWith("/auth/callback") ||
-    pathname.startsWith("/debug");
+    normalizedPath === "/login" ||
+    normalizedPath.startsWith("/auth/callback") ||
+    normalizedPath.startsWith("/debug");
   const headerOffset = 120;
 
   if (isRequest || hideShell) return <>{children}</>;

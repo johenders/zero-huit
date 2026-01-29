@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n/client";
 
 const videoId = "0c63337d4f672f4dd6e39853d1d94301";
 const heroVideoSrc = `https://iframe.videodelivery.net/${videoId}?autoplay=true&muted=true&loop=true&controls=false&preload=true&quality=1080`;
@@ -8,6 +9,7 @@ const modalVideoSrc = `https://iframe.videodelivery.net/${videoId}?autoplay=true
 
 export function HomeHero() {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useI18n();
   const headerOffset = 120;
 
   return (
@@ -22,7 +24,7 @@ export function HomeHero() {
             minHeight: "56.25vw",
           }}
           src={heroVideoSrc}
-          title="Video de fond"
+          title={t("home.hero.bg")}
           allow="autoplay; fullscreen"
         />
       </div>
@@ -35,23 +37,23 @@ export function HomeHero() {
         }}
       >
           <h1 className="text-6xl font-semibold text-white sm:text-7xl lg:text-8xl">
-            Vous m&#233;ritez d&#39;&#234;tre{" "}
+            {t("home.hero.title")}{" "}
             <span className="block bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-              remarqu&#233;.
+              {t("home.hero.highlight")}
             </span>
           </h1>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm uppercase tracking-[0.2em] text-zinc-200">
-          <span>Vid&#233;o corporative</span>
-          <span>Publicit&#233;</span>
-          <span>Captation</span>
-          <span>Motion design</span>
-          <span>Photographie</span>
+          <span>{t("home.hero.tag.corporate")}</span>
+          <span>{t("home.hero.tag.ads")}</span>
+          <span>{t("home.hero.tag.capture")}</span>
+          <span>{t("home.hero.tag.motion")}</span>
+          <span>{t("home.hero.tag.photo")}</span>
         </div>
         <button
           className="mt-10 inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-white/15 text-white transition hover:bg-white/25"
           type="button"
           onClick={() => setIsOpen(true)}
-          aria-label="Lire la video"
+          aria-label={t("home.hero.play")}
         >
           <svg
             aria-hidden
@@ -71,7 +73,7 @@ export function HomeHero() {
               className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
               type="button"
               onClick={() => setIsOpen(false)}
-              aria-label="Fermer la video"
+              aria-label={t("home.hero.close")}
             >
               <svg
                 aria-hidden
@@ -91,7 +93,7 @@ export function HomeHero() {
               <iframe
                 className="h-full w-full"
                 src={modalVideoSrc}
-                title="Video principale"
+                title={t("home.hero.main")}
                 allow="autoplay; fullscreen"
               />
             </div>

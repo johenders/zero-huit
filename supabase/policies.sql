@@ -6,6 +6,8 @@ alter table public.favorites enable row level security;
 alter table public.projects enable row level security;
 alter table public.project_videos enable row level security;
 alter table public.articles enable row level security;
+alter table public.translations enable row level security;
+alter table public.taxonomy_translations enable row level security;
 
 -- profiles
 drop policy if exists "profiles_select_own" on public.profiles;
@@ -182,6 +184,38 @@ using (is_published = true);
 drop policy if exists "articles_admin_write" on public.articles;
 create policy "articles_admin_write"
 on public.articles
+for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+-- translations (public read)
+drop policy if exists "translations_select_all" on public.translations;
+create policy "translations_select_all"
+on public.translations
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "translations_admin_write" on public.translations;
+create policy "translations_admin_write"
+on public.translations
+for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+-- taxonomy translations (public read)
+drop policy if exists "taxonomy_translations_select_all" on public.taxonomy_translations;
+create policy "taxonomy_translations_select_all"
+on public.taxonomy_translations
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "taxonomy_translations_admin_write" on public.taxonomy_translations;
+create policy "taxonomy_translations_admin_write"
+on public.taxonomy_translations
 for all
 to authenticated
 using (public.is_admin())

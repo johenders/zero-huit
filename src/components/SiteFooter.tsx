@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 const socialLinks = [
   {
@@ -40,24 +44,25 @@ const socialLinks = [
 ];
 
 export function SiteFooter() {
+  const { locale, t } = useI18n();
   return (
     <footer className="bg-zinc-950 text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16">
         <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
           <h2 className="text-4xl font-semibold sm:text-5xl lg:text-6xl">
-            Laissez-nous raconter votre histoire
+            {t("footer.cta.label")}
           </h2>
           <Link
-            href="/contact"
+            href={withLocaleHref(locale, "/contact")}
             className="inline-flex items-center justify-center rounded-full bg-[#8acd5f] px-10 py-4 text-base font-semibold text-zinc-950 transition hover:opacity-90"
           >
-            Nous joindre
+            {t("footer.cta.button")}
           </Link>
         </div>
         <div className="mt-6 border-t border-white/10" />
         <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="text-base font-semibold">Suivez-nous</div>
+            <div className="text-base font-semibold">{t("footer.social.label")}</div>
             <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
               {socialLinks.map((link) => (
                 <a
@@ -74,37 +79,37 @@ export function SiteFooter() {
             </div>
           </div>
           <div>
-            <div className="text-base font-semibold">Menu</div>
+            <div className="text-base font-semibold">{t("footer.nav.label")}</div>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
               <li>
-                <Link href="/portfolio" className="hover:text-white">
-                  Nos projets
+                <Link href={withLocaleHref(locale, "/portfolio")} className="hover:text-white">
+                  {t("nav.portfolio")}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-white">
-                  &#192; propos
+                <Link href={withLocaleHref(locale, "/about")} className="hover:text-white">
+                  {t("nav.about")}
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-white">
-                  Services
+                <Link href={withLocaleHref(locale, "/services")} className="hover:text-white">
+                  {t("nav.services")}
                 </Link>
               </li>
               <li>
-                <Link href="/news" className="hover:text-white">
-                  Nouvelles
+                <Link href={withLocaleHref(locale, "/nouvelles")} className="hover:text-white">
+                  {t("footer.news.label")}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white">
-                  Contact
+                <Link href={withLocaleHref(locale, "/contact")} className="hover:text-white">
+                  {t("nav.contact")}
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <div className="text-base font-semibold">Articles</div>
+            <div className="text-base font-semibold">{t("footer.articles.label")}</div>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
               <li>
                 <Link href="/articles/combien-coute-une-production-video" className="hover:text-white">
@@ -135,7 +140,7 @@ export function SiteFooter() {
             </ul>
           </div>
           <div>
-            <div className="text-base font-semibold">Contact</div>
+            <div className="text-base font-semibold">{t("footer.contact.label")}</div>
             <div className="mt-4 space-y-2 text-sm text-white/80">
               <a href="mailto:info@zerohuit.ca" className="hover:text-white">
                 info@zerohuit.ca
@@ -146,8 +151,11 @@ export function SiteFooter() {
               <div>74 rue St-Laurent</div>
               <div>Beauharnois</div>
               <div>Qu&#233;bec, J6N 1V6</div>
-              <Link href="/contact" className="inline-block text-white hover:text-white/80">
-                Voir la map
+              <Link
+                href={withLocaleHref(locale, "/contact")}
+                className="inline-block text-white hover:text-white/80"
+              >
+                {t("footer.contact.map")}
               </Link>
             </div>
           </div>

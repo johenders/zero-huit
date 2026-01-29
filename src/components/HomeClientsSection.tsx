@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/client";
 
 import a30Logo from "../../assets/clients/a30.png";
 import braqueLogo from "../../assets/clients/braque.png";
@@ -37,14 +40,15 @@ const logos = [
 ];
 
 export function HomeClientsSection() {
+  const { t } = useI18n();
   return (
     <section className="bg-zinc-950 py-20 text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 sm:px-6">
         <div className="grid w-full gap-12 lg:grid-cols-[1fr_2.5fr] lg:items-center">
           <h2 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
-            Ils nous ont fait{" "}
+            {t("home.clients.title.prefix")}{" "}
             <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-              confiance
+              {t("home.clients.title.highlight")}
             </span>
           </h2>
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 lg:gap-12">

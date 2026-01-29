@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Article, Author } from "@/lib/types";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 type ArticleWithAuthor = Article & {
   authorProfile?: Author | null;
@@ -23,10 +25,10 @@ type ArticleState =
       normalizedParam: string | null;
     };
 
-function formatDateLabel(value: string) {
+function formatDateLabel(value: string, locale: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("fr-CA", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-CA" : "fr-CA", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -54,6 +56,7 @@ function getInitials(name: string) {
 
 export default function NouvellesDetailClient() {
   const supabase = useSupabaseClient();
+  const { locale, t } = useI18n();
   const params = useParams();
   const slugParam = useMemo(() => {
     const raw = params?.slug;
@@ -71,7 +74,7 @@ export default function NouvellesDetailClient() {
         if (!active) return;
         setState({
           status: "error",
-          message: "Slug manquant dans l'URL.",
+          message: t("news.detail.error.missing"),
           slug: null,
           publishedSlugs: [],
           normalizedSlugs: [],
@@ -153,23 +156,24 @@ export default function NouvellesDetailClient() {
     const rawContent = article.content ?? "";
     const sanitizedContent = sanitizeHtml(rawContent);
     const resolvedContent = sanitizedContent.trim() ? sanitizedContent : rawContent;
-    const authorName = article.authorProfile?.name ?? article.author ?? "Zéro huit";
+    const authorName =
+      article.authorProfile?.name ?? article.author ?? t("news.detail.author.fallback");
     const authorRole = article.authorProfile?.role_title ?? null;
     const authorAvatar = article.authorProfile?.avatar_url ?? null;
     return (
       <div className="min-h-screen bg-[#fefefe] text-slate-900">
         <section className="mx-auto w-full max-w-3xl px-6 pb-6 pt-16">
           <Link
-            href="/nouvelles"
+            href={withLocaleHref(locale, "/nouvelles")}
             className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700"
           >
-            Retour aux nouvelles
+            {t("news.detail.back")}
           </Link>
           <h1 className="mt-6 text-3xl font-semibold text-slate-900 sm:text-4xl">
             {article.title}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span>{formatDateLabel(article.published_at)}</span>
+            <span>{formatDateLabel(article.published_at, locale)}</span>
             <span className="flex items-center gap-2">
               {authorAvatar ? (
                 <img
@@ -182,7 +186,7 @@ export default function NouvellesDetailClient() {
                   {getInitials(authorName)}
                 </span>
               )}
-              par {authorName}
+              {t("home.latest.by")} {authorName}
             </span>
           </div>
         </section>
@@ -219,7 +223,7 @@ export default function NouvellesDetailClient() {
             <div>
               <div className="text-lg font-semibold text-slate-900">{authorName}</div>
               <div className="text-sm text-slate-500">
-                {authorRole ?? "Auteur"}
+                {authorRole ?? t("news.detail.author.label")}
               </div>
             </div>
           </div>
@@ -233,22 +237,22 @@ export default function NouvellesDetailClient() {
     <div className="min-h-screen bg-[#fefefe] text-slate-900">
       <section className="mx-auto w-full max-w-3xl px-6 pb-16 pt-16">
         <h1 className="text-2xl font-semibold">
-          {isLoading ? "Chargement..." : "Article introuvable"}
+          {isLoading ? t("news.detail.loading") : t("news.detail.notFound")}
         </h1>
         {!isLoading && state.status === "error" ? (
           <>
             <p className="mt-4 text-sm text-slate-600">
-              Impossible de charger l'article{" "}
+              {t("news.detail.error.load")}{" "}
               <span className="font-semibold">{state.slug ?? "—"}</span>.
             </p>
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
               <div>{state.message}</div>
             </div>
             <Link
-              href="/nouvelles"
+              href={withLocaleHref(locale, "/nouvelles")}
               className="mt-6 inline-flex items-center text-sm font-semibold text-emerald-700"
             >
-              Retour aux nouvelles
+              {t("news.detail.back")}
             </Link>
           </>
         ) : null}

@@ -76,3 +76,19 @@ export type Author = {
   created_at: string;
   updated_at: string;
 };
+
+export type Translation = {
+  key: string;
+  locale: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TaxonomyTranslation = {
+  taxonomy_id: string;
+  locale: string;
+  label: string;
+  created_at: string;
+  updated_at: string;
+};

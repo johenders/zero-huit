@@ -2,6 +2,7 @@ import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
 import { ProjectsApp } from "@/components/ProjectsApp";
 import type { Metadata } from "next";
+import { applyTaxonomyTranslations } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ProjectsPage() {
+export async function ProjectsPage({ locale }: { locale: "fr" | "en" }) {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -102,8 +103,13 @@ export default async function ProjectsPage() {
     );
   }
 
+  const translatedTaxonomies = await applyTaxonomyTranslations(
+    (taxonomies ?? []) as Taxonomy[],
+    locale,
+  );
+
   const taxonomyById = new Map<string, Taxonomy>();
-  for (const t of (taxonomies ?? []) as Taxonomy[]) taxonomyById.set(t.id, t);
+  for (const t of translatedTaxonomies) taxonomyById.set(t.id, t);
 
   const taxonomyIdsByVideoId = new Map<string, string[]>();
   for (const row of (videoTaxonomies ?? []) as { video_id: string; taxonomy_id: string }[]) {
@@ -127,4 +133,8 @@ export default async function ProjectsPage() {
   );
 
   return <ProjectsApp initialVideos={visibleVideos} />;
+}
+
+export default async function Projects() {
+  return ProjectsPage({ locale: "fr" });
 }
