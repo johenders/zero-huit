@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 
 import { HomeHeader } from "@/components/HomeHeader";
+import { CookieBanner } from "@/components/CookieBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { stripLocalePrefix } from "@/lib/i18n/shared";
 
@@ -30,6 +31,7 @@ export function SiteShell({ children }: Props) {
         {children}
       </div>
       <SiteFooter />
+      <CookieBanner />
     </>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { AuthModal } from "@/components/AuthModal";
+import { usePathname, useRouter } from "next/navigation";
+import { useSupabaseClient } from "@/lib/supabase/useClient";
 
 const navItems = [
   { href: "/admin/portfolio", label: "Portfolio" },
@@ -17,7 +17,36 @@ const navItems = [
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [authOpen, setAuthOpen] = useState(false);
+  const router = useRouter();
+  const supabase = useSupabaseClient();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let ignore = false;
+    async function syncAuthState() {
+      const { data } = await supabase.auth.getUser();
+      if (ignore) return;
+      setIsAuthenticated(Boolean(data.user));
+    }
+
+    void syncAuthState();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user));
+    });
+
+    return () => {
+      ignore = true;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  async function handleSignOut() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    router.replace("/login");
+  }
 
   return (
     <div className="min-h-screen text-zinc-100">
@@ -30,19 +59,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10"
-              href="/"
-            >
-              Retour
-            </Link>
-            <button
-              className="rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-95"
-              type="button"
-              onClick={() => setAuthOpen(true)}
-            >
-              Se connecter
-            </button>
+            {isAuthenticated ? (
+              <button
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10"
+                type="button"
+                onClick={handleSignOut}
+              >
+                Se déconnecter
+              </button>
+            ) : (
+              <Link
+                className="rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-95"
+                href={`/login?next=${encodeURIComponent(pathname ?? "/admin")}`}
+              >
+                Se connecter
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -97,8 +129,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           {children}
         </div>
       </div>
-
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }

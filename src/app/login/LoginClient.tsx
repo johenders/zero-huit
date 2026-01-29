@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 
-type Status = "idle" | "checking" | "sending" | "sent" | "error" | "no_access";
+type Status = "idle" | "checking" | "signing" | "error" | "no_access";
 
 export function LoginClient() {
   const supabase = useSupabaseClient();
@@ -14,6 +14,7 @@ export function LoginClient() {
   const reason = searchParams.get("reason");
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status>("checking");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -58,25 +59,17 @@ export function LoginClient() {
     };
   }, [reason, redirectTarget, router, supabase]);
 
-  async function sendLink() {
+  async function signIn() {
     if (!supabase) return;
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return;
+    if (!cleanEmail || !password) return;
 
-    setStatus("sending");
+    setStatus("signing");
     setMessage(null);
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.NEXT_PUBLIC_VERCEL_URL
-        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-        : window.location.origin);
-    const redirectTo = `${baseUrl}/auth/callback?next=${encodeURIComponent(
-      redirectTarget,
-    )}`;
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
-      options: { emailRedirectTo: redirectTo },
+      password,
     });
 
     if (error) {
@@ -85,8 +78,9 @@ export function LoginClient() {
       return;
     }
 
-    setStatus("sent");
-    setMessage("Lien envoyé. Vérifie tes courriels pour te connecter.");
+    setStatus("idle");
+    setMessage(null);
+    router.replace(redirectTarget);
   }
 
   return (
@@ -94,7 +88,7 @@ export function LoginClient() {
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/70 p-6 shadow-2xl shadow-black/40">
         <h1 className="text-xl font-semibold text-white">Accès privé</h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Connecte-toi avec un compte admin Supabase pour accéder au site.
+          Connecte-toi avec un compte admin pour accéder au site.
         </p>
 
         {status === "no_access" ? (
@@ -114,7 +108,20 @@ export function LoginClient() {
               placeholder="admin@exemple.com"
               autoComplete="email"
               inputMode="email"
-              disabled={status === "sending" || status === "checking"}
+              disabled={status === "signing" || status === "checking"}
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-zinc-200">Mot de passe</span>
+            <input
+              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100 placeholder:text-zinc-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              type="password"
+              disabled={status === "signing" || status === "checking"}
             />
           </label>
 
@@ -126,11 +133,17 @@ export function LoginClient() {
 
           <button
             className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            onClick={sendLink}
-            disabled={status === "sending" || status === "checking" || !email.trim() || !supabase}
+            onClick={signIn}
+            disabled={
+              status === "signing" ||
+              status === "checking" ||
+              !email.trim() ||
+              !password ||
+              !supabase
+            }
             type="button"
           >
-            {status === "sending" ? "Envoi…" : "Envoyer le lien magique"}
+            {status === "signing" ? "Connexion…" : "Se connecter"}
           </button>
         </div>
       </div>

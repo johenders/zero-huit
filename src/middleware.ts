@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/env";
+import { getFrRedirect } from "@/lib/i18n/shared";
 
 function resolveLocale(pathname: string) {
   return pathname === "/en" || pathname.startsWith("/en/") ? "en" : "fr";
@@ -31,6 +32,15 @@ export async function middleware(request: NextRequest) {
   const locale = resolveLocale(pathname);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-locale", locale);
+
+  if (locale === "fr") {
+    const redirectPath = getFrRedirect(pathname);
+    if (redirectPath && redirectPath !== pathname) {
+      const url = request.nextUrl.clone();
+      url.pathname = redirectPath;
+      return NextResponse.redirect(url);
+    }
+  }
 
   if (isPublicPath(pathname)) {
     return NextResponse.next({ request: { headers: requestHeaders } });

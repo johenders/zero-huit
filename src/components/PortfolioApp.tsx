@@ -188,6 +188,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
   const durationTrackRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
   const [activeFilterPanel, setActiveFilterPanel] = useState<string | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [videoModal, setVideoModal] = useState<{
     open: boolean;
@@ -1012,126 +1013,154 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
             </span>
             .
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {filterFields.map((field) => {
-              const selectedCount = field.kinds.reduce(
-                (count, kind) => count + filters.selected[kind].size,
-                0,
-              );
-              const isActive = activeFilterPanel === field.id;
-              const labelTone = filterLabelToneById[field.id] ?? "";
-              return (
-                <button
-                  key={field.id}
-                  type="button"
-                  onClick={() => togglePanel(field.id)}
-                  className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
-                    isActive ? "text-white" : "text-zinc-300 hover:text-white"
-                  }`}
-                  aria-expanded={isActive}
-                >
-                  <span className={labelTone}>{t(field.labelKey)}</span>
-                  {selectedCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
-                      {selectedCount}
-                    </span>
-                  ) : null}
-                  <span
-                    className={`text-lg text-zinc-400 transition-transform ${
-                      isActive ? "rotate-180" : ""
-                    }`}
-                  >
-                    ▾
-                  </span>
-                </button>
-              );
-            })}
+          <div className="mt-3 sm:hidden">
             <button
-              type="button"
-              onClick={() => togglePanel("budget")}
-              className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
-                activeFilterPanel === "budget"
-                  ? "text-white"
-                  : "text-zinc-300 hover:text-white"
-              }`}
-              aria-expanded={activeFilterPanel === "budget"}
-            >
-              <span className={filterLabelToneById.budget}>
-                {t("portfolio.filters.budget")}
-              </span>
-              {filters.budgetMinIndex !== 0 ||
-              filters.budgetMaxIndex !== budgetLevels.length - 1 ? (
-                <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
-                  1
-                </span>
-              ) : null}
-              <span
-                className={`text-lg text-zinc-400 transition-transform ${
-                  activeFilterPanel === "budget" ? "rotate-180" : ""
-                }`}
-              >
-                ▾
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => togglePanel("duration")}
-              className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
-                activeFilterPanel === "duration"
-                  ? "text-white"
-                  : "text-zinc-300 hover:text-white"
-              }`}
-              aria-expanded={activeFilterPanel === "duration"}
-            >
-              <span className={filterLabelToneById.duration}>
-                {t("portfolio.filters.duration")}
-              </span>
-              {filters.durationMinIndex !== 0 ||
-              filters.durationMaxIndex !== durationLevels.length - 1 ? (
-                <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
-                  1
-                </span>
-              ) : null}
-              <span
-                className={`text-lg text-zinc-400 transition-transform ${
-                  activeFilterPanel === "duration" ? "rotate-180" : ""
-                }`}
-              >
-                ▾
-              </span>
-            </button>
-            <button
-              className="px-1 pt-[5px] pb-[3px] text-xs font-semibold text-zinc-300 hover:text-white"
-              type="button"
-              onClick={() => setFilters(newDefaultFilters())}
-            >
-              {t("portfolio.filters.reset")}
-            </button>
-            <span className="flex-1" aria-hidden />
-            <button
-              className={`relative -top-[8px] inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold leading-none transition self-center my-0 ${
-                aiSearchOpen
-                  ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100"
-                  : "border-white/15 bg-white/5 text-zinc-200 hover:bg-white/10"
-              }`}
               type="button"
               onClick={() => {
                 setActiveFilterPanel(null);
-                setAiSearchOpen((prev) => !prev);
+                setAiSearchOpen(false);
+                setMobileFiltersOpen((prev) => !prev);
               }}
-              aria-expanded={aiSearchOpen}
+              className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-zinc-200"
+              aria-expanded={mobileFiltersOpen}
             >
-              {t("portfolio.filters.ai")}
-              <span className="rounded-full bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
-                AI
+              <span>Filtres</span>
+              <span
+                className={`text-lg text-zinc-400 transition-transform ${
+                  mobileFiltersOpen ? "rotate-180" : ""
+                }`}
+              >
+                ▾
               </span>
             </button>
+          </div>
+          <div
+            className={`mt-3 flex flex-col gap-3 sm:mt-0 sm:flex-row sm:flex-wrap sm:items-center ${
+              mobileFiltersOpen ? "block" : "hidden sm:flex"
+            }`}
+          >
+            <div className="flex flex-wrap gap-3 sm:contents">
+              {filterFields.map((field) => {
+                const selectedCount = field.kinds.reduce(
+                  (count, kind) => count + filters.selected[kind].size,
+                  0,
+                );
+                const isActive = activeFilterPanel === field.id;
+                const labelTone = filterLabelToneById[field.id] ?? "";
+                return (
+                  <button
+                    key={field.id}
+                    type="button"
+                    onClick={() => togglePanel(field.id)}
+                    className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
+                      isActive ? "text-white" : "text-zinc-300 hover:text-white"
+                    }`}
+                    aria-expanded={isActive}
+                  >
+                    <span className={labelTone}>{t(field.labelKey)}</span>
+                    {selectedCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
+                        {selectedCount}
+                      </span>
+                    ) : null}
+                    <span
+                      className={`text-lg text-zinc-400 transition-transform ${
+                        isActive ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▾
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => togglePanel("budget")}
+                className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
+                  activeFilterPanel === "budget"
+                    ? "text-white"
+                    : "text-zinc-300 hover:text-white"
+                }`}
+                aria-expanded={activeFilterPanel === "budget"}
+              >
+                <span className={filterLabelToneById.budget}>
+                  {t("portfolio.filters.budget")}
+                </span>
+                {filters.budgetMinIndex !== 0 ||
+                filters.budgetMaxIndex !== budgetLevels.length - 1 ? (
+                  <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
+                    1
+                  </span>
+                ) : null}
+                <span
+                  className={`text-lg text-zinc-400 transition-transform ${
+                    activeFilterPanel === "budget" ? "rotate-180" : ""
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => togglePanel("duration")}
+                className={`relative flex items-center gap-2 px-1 py-1 text-sm font-medium transition ${
+                  activeFilterPanel === "duration"
+                    ? "text-white"
+                    : "text-zinc-300 hover:text-white"
+                }`}
+                aria-expanded={activeFilterPanel === "duration"}
+              >
+                <span className={filterLabelToneById.duration}>
+                  {t("portfolio.filters.duration")}
+                </span>
+                {filters.durationMinIndex !== 0 ||
+                filters.durationMaxIndex !== durationLevels.length - 1 ? (
+                  <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 px-2 py-0.5 text-[10px] font-semibold text-zinc-900 shadow">
+                    1
+                  </span>
+                ) : null}
+                <span
+                  className={`text-lg text-zinc-400 transition-transform ${
+                    activeFilterPanel === "duration" ? "rotate-180" : ""
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 sm:ml-auto sm:flex-nowrap">
+              <button
+                className="px-1 py-2 text-xs font-semibold text-zinc-300 hover:text-white sm:self-center"
+                type="button"
+                onClick={() => setFilters(newDefaultFilters())}
+              >
+                {t("portfolio.filters.reset")}
+              </button>
+              <button
+                className={`relative inline-flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold leading-none transition sm:w-auto ${
+                  aiSearchOpen
+                    ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100"
+                    : "border-white/15 bg-white/5 text-zinc-200 hover:bg-white/10"
+                }`}
+                type="button"
+                onClick={() => {
+                  setActiveFilterPanel(null);
+                  setAiSearchOpen((prev) => !prev);
+                }}
+                aria-expanded={aiSearchOpen}
+              >
+                {t("portfolio.filters.ai")}
+                <span className="rounded-full bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-900">
+                  AI
+                </span>
+              </button>
+            </div>
           </div>
 
           <div
             className={`overflow-hidden transition-all duration-200 ease-out ${
               aiSearchOpen ? "mt-4 max-h-48 opacity-100" : "max-h-0 opacity-0"
-            }`}
+            } ${mobileFiltersOpen ? "" : "sm:block hidden"}`}
           >
             <div className={aiSearchOpen ? "pointer-events-auto" : "pointer-events-none"}>
               <form
@@ -1203,18 +1232,18 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
           </div>
 
           {filterFields.map((field) => {
-            const isActive = activeFilterPanel === field.id;
-            const options = mergeTaxonomiesByKinds(groupedTaxonomies, field.kinds);
-            return (
-              <div
-                key={field.id}
-                className={`overflow-hidden transition-all duration-200 ease-out ${
-                  isActive ? "mt-4 max-h-72 opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className={isActive ? "pointer-events-auto" : "pointer-events-none"}>
-                  {options.length === 0 ? (
-                    <div className="text-sm text-zinc-400">Aucune option.</div>
+              const isActive = activeFilterPanel === field.id;
+              const options = mergeTaxonomiesByKinds(groupedTaxonomies, field.kinds);
+              return (
+                <div
+                  key={field.id}
+                  className={`overflow-hidden transition-all duration-200 ease-out ${
+                    isActive ? "mt-4 max-h-72 opacity-100" : "max-h-0 opacity-0"
+                  } ${mobileFiltersOpen ? "" : "sm:block hidden"}`}
+                >
+                  <div className={isActive ? "pointer-events-auto" : "pointer-events-none"}>
+                    {options.length === 0 ? (
+                      <div className="text-sm text-zinc-400">Aucune option.</div>
                   ) : (
                     <div className="max-h-60 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
@@ -1246,7 +1275,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
           <div
             className={`overflow-hidden transition-all duration-200 ease-out ${
               activeFilterPanel === "budget" ? "mt-4 max-h-40 opacity-100" : "max-h-0 opacity-0"
-            }`}
+            } ${mobileFiltersOpen ? "" : "sm:block hidden"}`}
           >
             <div
               className={`w-full max-w-full px-2 sm:max-w-[25%] ${
@@ -1308,7 +1337,7 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
               activeFilterPanel === "duration"
                 ? "mt-4 max-h-40 opacity-100"
                 : "max-h-0 opacity-0"
-            }`}
+            } ${mobileFiltersOpen ? "" : "sm:block hidden"}`}
           >
             <div
               className={`w-full max-w-full px-2 sm:max-w-[25%] ${
@@ -1515,7 +1544,10 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
                 <span>{popoverMessage}</span>
                 {popoverStatus === "success" && popoverSuccessProjectId ? (
                   <Link
-                    href={`/projects?project=${popoverSuccessProjectId}`}
+                    href={withLocaleHref(
+                      locale,
+                      `/projects?project=${popoverSuccessProjectId}`,
+                    )}
                     className="text-xs font-semibold text-emerald-200 hover:text-emerald-100"
                   >
                     Voir le projet

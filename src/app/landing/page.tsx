@@ -4,8 +4,10 @@ import type { Metadata } from "next";
 
 import { HomeClientsSection } from "@/components/HomeClientsSection";
 import { LandingFeaturedGrid } from "@/components/LandingFeaturedGrid";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
+import { headers } from "next/headers";
 
 import heroBg from "../../../assets/bg/bg_a_propos.jpg";
 import batisse from "../../../assets/batisse.jpg";
@@ -85,6 +87,7 @@ const portfolioItems = [
 ];
 
 export default async function LandingPage() {
+  const locale = normalizeLocale(headers().get("x-locale"));
   const headerOffset = 120;
   let featuredVideos: Video[] = [];
 
@@ -173,13 +176,13 @@ export default async function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
-                href="/request"
+                href={withLocaleHref(locale, "/request")}
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
               >
                 Demande de soumission
               </Link>
               <Link
-                href="/portfolio"
+                href={withLocaleHref(locale, "/portfolio")}
                 className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:text-emerald-200"
               >
                 Explorer le portfolio
@@ -267,7 +270,7 @@ export default async function LandingPage() {
               </h2>
             </div>
             <Link
-              href="/request"
+              href={withLocaleHref(locale, "/request")}
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-200 transition hover:text-emerald-100"
             >
               D&#233;marrez votre projet <span aria-hidden="true">&#8594;</span>
@@ -303,7 +306,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <Link
-              href="/portfolio"
+              href={withLocaleHref(locale, "/portfolio")}
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-200 transition hover:text-emerald-100"
             >
               Voir tous les projets <span aria-hidden="true">&#8594;</span>
@@ -348,13 +351,13 @@ export default async function LandingPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/request"
+              href={withLocaleHref(locale, "/request")}
               className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
             >
               Remplir le formulaire
             </Link>
             <Link
-              href="/portfolio"
+              href={withLocaleHref(locale, "/portfolio")}
               className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:text-emerald-200"
             >
               Explorer nos r&#233;alisations

@@ -6,9 +6,9 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Zero Eight",
+  title: "Zéro huit",
   description: "High-end video production agency on Montreal's South Shore.",
-  applicationName: "Zero Eight",
+  applicationName: "Zéro huit",
   robots: {
     index: true,
     follow: true,
@@ -17,20 +17,20 @@ export const metadata: Metadata = {
     canonical: "/en",
   },
   icons: {
-    icon: "/zero_huit_favico.jpg",
-    apple: "/zero_huit_favico.jpg",
+    icon: "/assets/zero_huit_favico.jpg",
+    apple: "/assets/zero_huit_favico.jpg",
   },
   openGraph: {
     type: "website",
     url: "/en",
-    title: "Zero Eight",
+    title: "Zéro huit",
     description: "High-end video production agency on Montreal's South Shore.",
-    siteName: "Zero Eight",
+    siteName: "Zéro huit",
     locale: "en_CA",
   },
   twitter: {
     card: "summary",
-    title: "Zero Eight",
+    title: "Zéro huit",
     description: "High-end video production agency on Montreal's South Shore.",
   },
 };

@@ -12,12 +12,13 @@ import type {
   ProjectObjective,
   Video,
 } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppFooter } from "./AppFooter";
 import { AuthModal } from "./AuthModal";
 import { VideoCard } from "./VideoCard";
 import { VideoModal } from "./VideoModal";
+import { stripLocalePrefix, withLocaleHref } from "@/lib/i18n/shared";
 
 type Props = {
   initialVideos: Video[];
@@ -89,6 +90,8 @@ function toggleArrayValue<T extends string>(list: T[], value: T) {
 }
 
 export function ProjectsApp({ initialVideos }: Props) {
+  const pathname = usePathname();
+  const locale = stripLocalePrefix(pathname).locale;
   const supabase = useSupabaseClient();
   const searchParams = useSearchParams();
 
@@ -610,7 +613,10 @@ export function ProjectsApp({ initialVideos }: Props) {
                           </div>
                           {activeProject ? (
                             <Link
-                              href={`/request?project=${activeProject.id}`}
+                              href={withLocaleHref(
+                                locale,
+                                `/request?project=${activeProject.id}`,
+                              )}
                               className="rounded-full border border-amber-300/40 bg-amber-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-200 transition hover:border-amber-300/70 hover:bg-amber-300/20"
                             >
                               Demander une soumission

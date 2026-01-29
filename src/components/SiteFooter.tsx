@@ -45,6 +45,9 @@ const socialLinks = [
 
 export function SiteFooter() {
   const { locale, t } = useI18n();
+  const privacyHref = locale === "en" ? "/en/privacy" : "/politique-de-confidentialite";
+  const privacyLabel = locale === "en" ? "Privacy policy" : "Politique de confidentialité";
+  const consentLabel = locale === "en" ? "Manage consent" : "Gérer le consentement";
   return (
     <footer className="bg-zinc-950 text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16">
@@ -60,10 +63,10 @@ export function SiteFooter() {
           </Link>
         </div>
         <div className="mt-6 border-t border-white/10" />
-        <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-10 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4">
           <div>
             <div className="text-base font-semibold">{t("footer.social.label")}</div>
-            <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
+            <div className="mt-4 flex items-center justify-center gap-4 text-sm text-white/80 sm:justify-start">
               {socialLinks.map((link) => (
                 <a
                   key={link.label}
@@ -157,6 +160,16 @@ export function SiteFooter() {
               >
                 {t("footer.contact.map")}
               </Link>
+              <Link href={privacyHref} className="block text-white/80 hover:text-white">
+                {privacyLabel}
+              </Link>
+              <button
+                type="button"
+                className="text-left text-white/60 hover:text-white"
+                onClick={() => window.dispatchEvent(new CustomEvent("consent:open"))}
+              >
+                {consentLabel}
+              </button>
             </div>
           </div>
         </div>

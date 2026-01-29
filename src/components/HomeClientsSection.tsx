@@ -45,7 +45,7 @@ export function HomeClientsSection() {
     <section className="bg-zinc-950 py-20 text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 sm:px-6">
         <div className="grid w-full gap-12 lg:grid-cols-[1fr_2.5fr] lg:items-center">
-          <h2 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
+          <h2 className="text-4xl font-semibold leading-tight text-white sm:text-5xl text-center lg:text-left">
             {t("home.clients.title.prefix")}{" "}
             <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
               {t("home.clients.title.highlight")}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/SiteShell";
+import { AnalyticsManager } from "@/components/AnalyticsManager";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale } from "@/lib/i18n/shared";
@@ -24,8 +25,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/zero_huit_favico.jpg",
-    apple: "/zero_huit_favico.jpg",
+    icon: "/assets/zero_huit_favico.jpg",
+    apple: "/assets/zero_huit_favico.jpg",
   },
   openGraph: {
     type: "website",
@@ -58,6 +59,7 @@ export default async function RootLayout({
         <I18nProvider locale={locale} dictionary={dictionary}>
           <SiteShell>{children}</SiteShell>
         </I18nProvider>
+        <AnalyticsManager />
       </body>
     </html>
   );

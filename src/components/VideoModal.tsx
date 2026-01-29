@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cloudflareIframeSrc } from "@/lib/cloudflare";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
+import { stripLocalePrefix, withLocaleHref } from "@/lib/i18n/shared";
 
 type Props = {
   video: Video | null;
@@ -31,6 +33,8 @@ function formatDuration(seconds: number | null) {
 
 export function VideoModal({ video, open, onClose }: Props) {
   if (!open || !video) return null;
+  const pathname = usePathname();
+  const locale = stripLocalePrefix(pathname).locale;
   const byKind: Record<TaxonomyKind, Taxonomy[]> = {
     type: [],
     objectif: [],
@@ -90,7 +94,10 @@ export function VideoModal({ video, open, onClose }: Props) {
             <div className="mt-1 text-sm text-zinc-400">Durée: {durationText}</div>
             <div className="mt-4">
               <Link
-                href={`/request?referenceId=${encodeURIComponent(video.id)}`}
+                href={withLocaleHref(
+                  locale,
+                  `/request?referenceId=${encodeURIComponent(video.id)}`,
+                )}
                 className="inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
               >
                 Faire une demande de soumission
