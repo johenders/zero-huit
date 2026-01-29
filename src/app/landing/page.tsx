@@ -87,7 +87,8 @@ const portfolioItems = [
 ];
 
 export default async function LandingPage() {
-  const locale = normalizeLocale(headers().get("x-locale"));
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   const headerOffset = 120;
   let featuredVideos: Video[] = [];
 
