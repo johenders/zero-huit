@@ -2,9 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { fallbackArticles } from "@/lib/articles";
 import { getUiDictionary } from "@/lib/i18n/server";
-import { withLocaleHref } from "@/lib/i18n/shared";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article } from "@/lib/types";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,9 @@ function getInitials(name: string) {
   return `${first}${last}`.toUpperCase() || "—";
 }
 
-export async function NouvellesPage({ locale }: { locale: "fr" | "en" }) {
+export default async function NouvellesPage() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   let articles: DisplayArticle[] = [];
   const dictionary = await getUiDictionary(locale);
   const t = (key: string) => dictionary[key] ?? key;
@@ -186,8 +189,4 @@ export async function NouvellesPage({ locale }: { locale: "fr" | "en" }) {
       </section>
     </div>
   );
-}
-
-export default async function NouvellesPageDefault() {
-  return NouvellesPage({ locale: "fr" });
 }

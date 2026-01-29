@@ -5,10 +5,11 @@ import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHero } from "@/components/HomeHero";
 import { fallbackArticles } from "@/lib/articles";
 import { applyTaxonomyTranslations, getUiDictionary } from "@/lib/i18n/server";
-import { withLocaleHref } from "@/lib/i18n/shared";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article, Taxonomy, Video } from "@/lib/types";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,9 @@ function getInitials(name: string) {
   return `${first}${last}`.toUpperCase() || "—";
 }
 
-export async function HomePage({ locale }: { locale: "fr" | "en" }) {
+export default async function Home() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   let featuredVideos: Video[] = [];
   let latestArticles: DisplayArticle[] = [];
   const dictionary = await getUiDictionary(locale);
@@ -277,8 +280,4 @@ export async function HomePage({ locale }: { locale: "fr" | "en" }) {
       </section>
     </div>
   );
-}
-
-export default async function Home() {
-  return HomePage({ locale: "fr" });
 }

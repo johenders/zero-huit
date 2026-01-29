@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
-import { withLocaleHref } from "@/lib/i18n/shared";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
+import { headers } from "next/headers";
 
 import bg from "../../../assets/bg/bg_a_propos.jpg";
 import cedric from "../../../assets/team/ced.jpeg";
@@ -29,8 +30,10 @@ export const metadata: Metadata = {
   },
 };
 
-export async function AboutPage({ locale }: { locale: "fr" | "en" }) {
+export default async function AboutPage() {
   const headerOffset = 120;
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   const dictionary = await getUiDictionary(locale);
   const t = (key: string) => dictionary[key] ?? key;
 
@@ -144,8 +147,4 @@ export async function AboutPage({ locale }: { locale: "fr" | "en" }) {
       </section>
     </div>
   );
-}
-
-export default async function AboutPageDefault() {
-  return AboutPage({ locale: "fr" });
 }

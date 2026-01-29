@@ -1,7 +1,8 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
-import { withLocaleHref } from "@/lib/i18n/shared";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
+import { headers } from "next/headers";
 
 import batisse from "../../../assets/batisse.jpg";
 
@@ -21,8 +22,10 @@ export const metadata: Metadata = {
   },
 };
 
-export async function ContactPage({ locale }: { locale: "fr" | "en" }) {
+export default async function ContactPage() {
   const headerOffset = 120;
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   const dictionary = await getUiDictionary(locale);
   const t = (key: string) => dictionary[key] ?? key;
 
@@ -94,8 +97,4 @@ export async function ContactPage({ locale }: { locale: "fr" | "en" }) {
       </div>
     </section>
   );
-}
-
-export default async function ContactPageDefault() {
-  return ContactPage({ locale: "fr" });
 }

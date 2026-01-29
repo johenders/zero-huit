@@ -3,6 +3,8 @@ import type { Taxonomy, Video } from "@/lib/types";
 import { PortfolioApp } from "@/components/PortfolioApp";
 import type { Metadata } from "next";
 import { applyTaxonomyTranslations } from "@/lib/i18n/server";
+import { normalizeLocale } from "@/lib/i18n/shared";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +24,9 @@ export const metadata: Metadata = {
   },
 };
 
-export async function PortfolioPage({ locale }: { locale: "fr" | "en" }) {
+export default async function Portfolio() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -137,8 +141,4 @@ export async function PortfolioPage({ locale }: { locale: "fr" | "en" }) {
       taxonomies={translatedTaxonomies}
     />
   );
-}
-
-export default async function Portfolio() {
-  return PortfolioPage({ locale: "fr" });
 }

@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
-import { withLocaleHref } from "@/lib/i18n/shared";
+import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
+import { headers } from "next/headers";
 
 import bg from "../../../assets/bg/bg_services.jpg";
 import planification from "../../../assets/services/planification.jpg";
@@ -25,8 +26,10 @@ export const metadata: Metadata = {
   },
 };
 
-export async function ServicesPage({ locale }: { locale: "fr" | "en" }) {
+export default async function ServicesPage() {
   const headerOffset = 120;
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
   const dictionary = await getUiDictionary(locale);
   const t = (key: string) => dictionary[key] ?? key;
 
@@ -171,8 +174,4 @@ export async function ServicesPage({ locale }: { locale: "fr" | "en" }) {
       </section>
     </div>
   );
-}
-
-export default async function ServicesPageDefault() {
-  return ServicesPage({ locale: "fr" });
 }
