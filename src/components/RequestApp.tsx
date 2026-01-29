@@ -631,6 +631,7 @@ export function RequestApp() {
   const [submissionStatus, setSubmissionStatus] = useState<
     "idle" | "sending" | "sent"
   >("idle");
+  const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
   const [referenceDebug, setReferenceDebug] = useState<{
     objectives?: string[];
     audiences?: string[];
@@ -1921,9 +1922,51 @@ export function RequestApp() {
               <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center">
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (submissionStatus === "sending") return;
                     setSubmissionStatus("sending");
-                    setTimeout(() => setSubmissionStatus("sent"), 600);
+                    setSubmissionMessage(null);
+                    try {
+                      const payload = {
+                        locale,
+                        name,
+                        company,
+                        email,
+                        phone,
+                        objectives,
+                        audiences,
+                        diffusions,
+                        description: projectDescription,
+                        locations: shootingLocations,
+                        deliverables: {
+                          counts: deliverables,
+                          formats: deliverableFormatsByKey,
+                          unknown: deliverableUnknown,
+                        },
+                        needsSubtitles,
+                        upsells,
+                        budget: budgetChoice || null,
+                        timeline: timelineChoice || null,
+                        referral: referralChoice || null,
+                        referenceIds: Array.from(selectedReferenceIds),
+                        projectId: project?.id ?? null,
+                        projectTitle: project?.title ?? null,
+                      };
+                      const response = await fetch("/api/quote-requests", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                      });
+                      if (!response.ok) {
+                        throw new Error("submit_failed");
+                      }
+                      setSubmissionStatus("sent");
+                    } catch (error) {
+                      setSubmissionStatus("idle");
+                      setSubmissionMessage(
+                        error instanceof Error ? error.message : "submit_failed",
+                      );
+                    }
                   }}
                   className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
                 >
@@ -1932,6 +1975,11 @@ export function RequestApp() {
                 <p className="text-sm text-zinc-400">
                   {t("request.step12.subtitle")}
                 </p>
+                {submissionMessage ? (
+                  <p className="text-xs text-rose-200">
+                    Une erreur s’est produite. Réessaie ou écris-nous.
+                  </p>
+                ) : null}
               </div>
               <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 text-left md:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-black/30 p-4">

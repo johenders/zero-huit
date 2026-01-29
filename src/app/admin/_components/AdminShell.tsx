@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/reglages-references", label: "Réglages références" },
   { href: "/admin/taxonomies", label: "Taxonomies" },
   { href: "/admin/traductions", label: "Traductions" },
+  { href: "/admin/demandes", label: "Demandes" },
   { href: "/admin/auteurs", label: "Auteurs" },
   { href: "/admin/articles", label: "Articles" },
   { href: "/admin/images", label: "Images" },
