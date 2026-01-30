@@ -15,6 +15,7 @@ import type {
 } from "@/lib/types";
 import { AuthModal } from "./AuthModal";
 import levPhoto from "../../assets/Lev.jpg";
+import logoSymbol from "../../assets/zero_huit_symbole.png";
 
 type ObjectiveOption = {
   id: ProjectObjective;
@@ -28,6 +29,7 @@ type ProjectPrefill = Pick<Project, "id" | "title" | "objectives">;
 type Audience =
   | "clients_potentiels"
   | "clients_actuels"
+  | "grand_public"
   | "interne"
   | "evenement"
   | "autre";
@@ -264,6 +266,28 @@ const audienceOptions: AudienceOption[] = [
         <path d="M5 20a7 7 0 0 1 14 0" />
         <path d="M17 4l2 2" />
         <path d="M21 8l-2 2" />
+      </svg>
+    ),
+  },
+  {
+    id: "grand_public",
+    labelKey: "request.audience.grand_public.label",
+    descriptionKey: "request.audience.grand_public.desc",
+    icon: (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M7 11a3 3 0 1 1 6 0" />
+        <path d="M4 20a6 6 0 0 1 10 0" />
+        <path d="M16 9a3 3 0 1 1 0 6" />
+        <path d="M18.5 20a4.5 4.5 0 0 0-3.5-4.4" />
       </svg>
     ),
   },
@@ -880,6 +904,53 @@ export function RequestApp() {
   const canGoNext =
     step === 0 ? Boolean(name.trim() && company.trim() && email.trim()) : true;
 
+  async function submitRequest() {
+    if (submissionStatus === "sending") return;
+    setSubmissionStatus("sending");
+    setSubmissionMessage(null);
+    try {
+      const payload = {
+        locale,
+        name,
+        company,
+        email,
+        phone,
+        objectives,
+        audiences,
+        diffusions,
+        description: projectDescription,
+        locations: shootingLocations,
+        deliverables: {
+          counts: deliverables,
+          formats: deliverableFormatsByKey,
+          unknown: deliverableUnknown,
+        },
+        needsSubtitles,
+        upsells,
+        budget: budgetChoice || null,
+        timeline: timelineChoice || null,
+        referral: referralChoice || null,
+        referenceIds: Array.from(selectedReferenceIds),
+        projectId: project?.id ?? null,
+        projectTitle: project?.title ?? null,
+      };
+      const response = await fetch("/api/quote-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("submit_failed");
+      }
+      setSubmissionStatus("sent");
+    } catch (error) {
+      setSubmissionStatus("idle");
+      setSubmissionMessage(
+        error instanceof Error ? error.message : "submit_failed",
+      );
+    }
+  }
+
   return (
     <div className="min-h-screen text-zinc-100">
       <main className="relative flex min-h-screen flex-col overflow-hidden px-4 pb-24 pt-10 lg:px-10">
@@ -897,7 +968,11 @@ export function RequestApp() {
               const ok = confirm(t("request.exit.confirm"));
               if (!ok) return;
             }
-            router.push(withLocaleHref(locale, "/"));
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push(withLocaleHref(locale, "/"));
+            }
           }}
         >
           <svg
@@ -958,10 +1033,6 @@ export function RequestApp() {
             <>
               <div className="mb-6 flex flex-wrap items-center justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500">
                 <span>{t("request.title")}</span>
-                <span className="h-px w-6 bg-white/10" />
-                <span>
-                  {t("request.step.label")} {step + 1} / 12
-                </span>
               </div>
 
           {project ? (
@@ -1270,6 +1341,18 @@ export function RequestApp() {
                     className="w-full bg-transparent text-lg font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShootingLocations("");
+                      setStep(5);
+                    }}
+                    className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
+                  >
+                    Je ne sais pas
+                  </button>
+                </div>
               </div>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
@@ -1298,54 +1381,7 @@ export function RequestApp() {
               </p>
               <div className="mx-auto mt-6 w-full max-w-4xl space-y-4 text-left">
                 {deliverableOptions.map((option) => {
-                  if (option.id === "incertain") {
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => {
-                          setDeliverableUnknown((prev) => {
-                            const next = !prev;
-                            if (next) {
-                              setDeliverables({
-                                courte_video: 0,
-                                publicite: 0,
-                                film_publicitaire: 0,
-                                mini_documentaire: 0,
-                              });
-                              setDeliverableFormatsByKey({});
-                            }
-                            return next;
-                          });
-                        }}
-                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border p-5 transition ${
-                          deliverableUnknown
-                            ? "border-amber-300/60 bg-amber-300/10 text-amber-100"
-                            : "border-white/10 bg-black/30 text-zinc-200 hover:border-white/30"
-                        }`}
-                      >
-                        <div>
-                          <div className="text-lg font-semibold">
-                            {t(option.labelKey)}
-                          </div>
-                          <div className="mt-1 text-sm text-zinc-400">
-                            {t(option.descriptionKey)}
-                          </div>
-                        </div>
-                        <div
-                          className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.2em] ${
-                            deliverableUnknown
-                              ? "border-amber-300/60 text-amber-100"
-                              : "border-white/10 text-zinc-500"
-                          }`}
-                        >
-                          {deliverableUnknown
-                            ? t("request.step6.unknown.selected")
-                            : t("request.step6.unknown.option")}
-                        </div>
-                      </button>
-                    );
-                  }
+                  if (option.id === "incertain") return null;
 
                   const deliverableKey = option.id as Exclude<
                     DeliverableKey,
@@ -1462,6 +1498,25 @@ export function RequestApp() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="mt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeliverableUnknown(true);
+                    setDeliverables({
+                      courte_video: 0,
+                      publicite: 0,
+                      film_publicitaire: 0,
+                      mini_documentaire: 0,
+                    });
+                    setDeliverableFormatsByKey({});
+                    setStep(6);
+                  }}
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
+                >
+                  Je ne sais pas
+                </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
@@ -1722,7 +1777,42 @@ export function RequestApp() {
                                 className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
                                 loading="lazy"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white/80 backdrop-blur">
+                                  <svg
+                                    aria-hidden
+                                    className="h-4 w-4 translate-x-[1px]"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                  >
+                                    <path d="M8 5.5v13l11-6.5-11-6.5z" />
+                                  </svg>
+                                </div>
+                              </div>
                               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/0 opacity-80" />
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setSelectedReferenceIds((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(video.id)) {
+                                      next.delete(video.id);
+                                    } else {
+                                      next.add(video.id);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className={`absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border text-xs transition ${
+                                  isSelected
+                                    ? "border-emerald-300/70 bg-emerald-300/30 text-emerald-100"
+                                    : "border-white/30 bg-black/40 text-white/70 hover:border-white/60"
+                                }`}
+                                aria-label={isSelected ? t("request.step9.selected") : t("request.step9.choose")}
+                              >
+                                {isSelected ? "✓" : ""}
+                              </button>
                             </div>
                             <div className="p-3">
                               <div className="text-sm font-semibold text-zinc-100">
@@ -1736,32 +1826,6 @@ export function RequestApp() {
                               ) : null}
                             </div>
                           </button>
-                          <div className="flex items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-xs text-zinc-400">
-                            <span>{t("request.step9.choose")}</span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSelectedReferenceIds((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(video.id)) {
-                                    next.delete(video.id);
-                                  } else {
-                                    next.add(video.id);
-                                  }
-                                  return next;
-                                })
-                              }
-                              className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
-                                isSelected
-                                  ? "border-emerald-300/70 bg-emerald-300/20 text-emerald-100"
-                                  : "border-white/10 text-zinc-400 hover:border-white/30"
-                              }`}
-                            >
-                              {isSelected
-                                ? t("request.step9.selected")
-                                : t("request.step9.choose")}
-                            </button>
-                          </div>
                         </div>
                       );
                     })}
@@ -1922,52 +1986,7 @@ export function RequestApp() {
               <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center">
                 <button
                   type="button"
-                  onClick={async () => {
-                    if (submissionStatus === "sending") return;
-                    setSubmissionStatus("sending");
-                    setSubmissionMessage(null);
-                    try {
-                      const payload = {
-                        locale,
-                        name,
-                        company,
-                        email,
-                        phone,
-                        objectives,
-                        audiences,
-                        diffusions,
-                        description: projectDescription,
-                        locations: shootingLocations,
-                        deliverables: {
-                          counts: deliverables,
-                          formats: deliverableFormatsByKey,
-                          unknown: deliverableUnknown,
-                        },
-                        needsSubtitles,
-                        upsells,
-                        budget: budgetChoice || null,
-                        timeline: timelineChoice || null,
-                        referral: referralChoice || null,
-                        referenceIds: Array.from(selectedReferenceIds),
-                        projectId: project?.id ?? null,
-                        projectTitle: project?.title ?? null,
-                      };
-                      const response = await fetch("/api/quote-requests", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                      });
-                      if (!response.ok) {
-                        throw new Error("submit_failed");
-                      }
-                      setSubmissionStatus("sent");
-                    } catch (error) {
-                      setSubmissionStatus("idle");
-                      setSubmissionMessage(
-                        error instanceof Error ? error.message : "submit_failed",
-                      );
-                    }
-                  }}
+                  onClick={submitRequest}
                   className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
                 >
                   {t("request.step12.submit")}
@@ -2147,11 +2166,25 @@ export function RequestApp() {
                 >
                   {t("request.nav.back")}
                 </button>
+                <button
+                  type="button"
+                  onClick={submitRequest}
+                  className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
+                >
+                  {t("request.step12.submit")}
+                </button>
               </div>
             </div>
           )}
             </>
           )}
+        </div>
+        <div className="absolute inset-x-0 bottom-4 z-10 flex items-center justify-center">
+          <Image
+            src={logoSymbol}
+            alt="Zéro huit"
+            className="h-6 w-auto opacity-60"
+          />
         </div>
       </main>
 

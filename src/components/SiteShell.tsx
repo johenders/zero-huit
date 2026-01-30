@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 
 import { HomeHeader } from "@/components/HomeHeader";
+import { MinimalHeader } from "@/components/MinimalHeader";
 import { CookieBanner } from "@/components/CookieBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { stripLocalePrefix } from "@/lib/i18n/shared";
@@ -16,6 +17,8 @@ export function SiteShell({ children }: Props) {
   const normalizedPath = stripLocalePrefix(pathname).pathname;
   const isHome = normalizedPath === "/";
   const isRequest = normalizedPath.startsWith("/request");
+  const isMinimalHeader = normalizedPath === "/production-video-rive-sud-mtl";
+  const hideFooter = normalizedPath === "/production-video-rive-sud-mtl";
   const hideShell =
     normalizedPath === "/login" ||
     normalizedPath.startsWith("/auth/callback") ||
@@ -24,13 +27,15 @@ export function SiteShell({ children }: Props) {
 
   if (isRequest || hideShell) return <>{children}</>;
 
+  const shouldOffset = !isHome && !isMinimalHeader;
+
   return (
     <>
-      <HomeHeader />
-      <div style={!isHome ? { paddingTop: `${headerOffset}px` } : undefined}>
+      {isMinimalHeader ? <MinimalHeader /> : <HomeHeader />}
+      <div style={shouldOffset ? { paddingTop: `${headerOffset}px` } : undefined}>
         {children}
       </div>
-      <SiteFooter />
+      {!hideFooter ? <SiteFooter /> : null}
       <CookieBanner />
     </>
   );

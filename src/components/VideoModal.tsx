@@ -100,7 +100,7 @@ export function VideoModal({ video, open, onClose }: Props) {
                 )}
                 className="inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
               >
-                Faire une demande de soumission
+                Demande de soumission
               </Link>
             </div>
           </div>

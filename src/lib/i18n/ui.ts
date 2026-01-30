@@ -30,11 +30,11 @@ export const uiEntries: UiEntry[] = [
   { key: "home.hero.bg", fr: "Video de fond", section: "ui" },
   { key: "home.hero.main", fr: "Video principale", section: "ui" },
 
-  { key: "home.latest.label", fr: "Quoi de neuf", section: "content" },
-  { key: "home.latest.title", fr: "Les derniers articles du blog.", section: "content" },
+  { key: "home.latest.label", fr: "Nouvelles", section: "content" },
+  { key: "home.latest.title", fr: "Quoi de neuf", section: "content" },
   {
     key: "home.latest.subtitle",
-    fr: "Conseils stratégiques, tendances et retours d'expérience pour améliorer vos vidéos corporatives.",
+    fr: "Conseils stratégiques, tendances et nouvelles de notre équipe",
     section: "content",
   },
   { key: "home.latest.cta", fr: "Voir les nouvelles", section: "ui" },
@@ -42,7 +42,7 @@ export const uiEntries: UiEntry[] = [
   { key: "home.latest.by", fr: "par", section: "ui" },
 
   { key: "news.label", fr: "Nouvelles", section: "content" },
-  { key: "news.title", fr: "Articles, idées et stratégies qui font avancer vos vidéos.", section: "content" },
+  { key: "news.title", fr: "Articles, idées et nouvelles de notre équipe.", section: "content" },
   {
     key: "news.subtitle",
     fr: "Découvrez nos analyses, inspirations et conseils pour vos projets corporatifs, RH et marketing.",
@@ -193,7 +193,7 @@ export const uiEntries: UiEntry[] = [
   { key: "contact.image.alt", fr: "Bâtisse Zéro huit", section: "ui" },
 
   { key: "portfolio.header.kicker", fr: "PORTFOLIO", section: "content" },
-  { key: "portfolio.header.title", fr: "Des références vidéo qui", section: "content" },
+  { key: "portfolio.header.title", fr: "Des productions vidéos qui", section: "content" },
   { key: "portfolio.header.title.highlight", fr: "parlent", section: "content" },
   {
     key: "portfolio.header.body",
@@ -274,6 +274,8 @@ export const uiEntries: UiEntry[] = [
   { key: "request.audience.clients_potentiels.desc", fr: "Attirer de nouveaux clients.", section: "content" },
   { key: "request.audience.clients_actuels.label", fr: "Clients actuels", section: "ui" },
   { key: "request.audience.clients_actuels.desc", fr: "Fidéliser et informer.", section: "content" },
+  { key: "request.audience.grand_public.label", fr: "Grand public", section: "ui" },
+  { key: "request.audience.grand_public.desc", fr: "Communautaire, sensibilisation, etc.", section: "content" },
   { key: "request.audience.interne.label", fr: "Interne", section: "ui" },
   { key: "request.audience.interne.desc", fr: "Équipes, formation, culture.", section: "content" },
   { key: "request.audience.evenement.label", fr: "Diffusion lors d'un événement", section: "ui" },

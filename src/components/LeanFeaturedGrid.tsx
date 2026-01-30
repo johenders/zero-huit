@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import type { Video } from "@/lib/types";
+import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useI18n } from "@/lib/i18n/client";
-import { withLocaleHref } from "@/lib/i18n/shared";
 
 type Props = {
-  featuredVideos: Video[];
+  videos: Video[];
 };
 
 function FeaturedVideoCard({
@@ -71,9 +69,8 @@ function FeaturedVideoCard({
   );
 }
 
-export function HomeFeaturedSection({ featuredVideos }: Props) {
+export function LeanFeaturedGrid({ videos }: Props) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
-  const { locale, t } = useI18n();
 
   useEffect(() => {
     const urls = ["https://videodelivery.net", "https://iframe.videodelivery.net"];
@@ -94,42 +91,28 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
     };
   }, []);
 
+  if (videos.length === 0) return null;
+
   return (
-    <section className="bg-white py-20 text-zinc-900">
-      <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:py-12">
-        <p className="text-left text-xs font-bold uppercase tracking-[0.4em] text-[#8acd5f]">
-          {t("home.featured.kicker")}
-        </p>
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_2fr]">
-          <div>
-            <h2 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
-              <span className="block">{t("home.featured.title.line1")}</span>
-              <span className="block">
-                {t("home.featured.title.line2")}{" "}
-                <span className="font-normal italic text-zinc-700">
-                  {t("home.featured.title.lean")}
-                </span>
-              </span>
-            </h2>
-            <Link
-              href={withLocaleHref(locale, "/about")}
-              className="mt-6 inline-flex items-center gap-2 self-start rounded-full py-1 pr-3 pl-0 text-left text-sm font-semibold tracking-[0.05em] text-zinc-900 transition hover:text-[#8acd5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8acd5f]/60"
-            >
-              {t("home.featured.cta")}
-              <span aria-hidden className="text-lg">
-                &#8594;
-              </span>
-            </Link>
-          </div>
-          <div className="space-y-4 text-sm leading-7 text-zinc-600">
-            <p>{t("home.featured.body.1")}</p>
-            <p>{t("home.featured.body.2")}</p>
-          </div>
-        </div>
+    <section className="relative overflow-hidden bg-white py-20 text-zinc-900">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-16 h-64 w-64 rounded-full bg-rose-400/15 blur-3xl" />
+        <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-amber-300/12 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
       </div>
-      <div className="mx-auto mt-16 w-full max-w-none px-[10vw]">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-8 text-center sm:py-12">
+        <h2 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
+          <span className="whitespace-nowrap">
+            Nous sommes une agence{" "}
+            <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
+              lean
+            </span>
+          </span>
+        </h2>
+      </div>
+      <div className="relative z-10 mx-auto mt-8 w-full max-w-none px-[10vw]">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredVideos.slice(0, 6).map((video, index) => (
+          {videos.slice(0, 6).map((video, index) => (
             <FeaturedVideoCard
               key={video.id}
               video={video}
@@ -138,14 +121,6 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
             />
           ))}
         </div>
-      </div>
-      <div className="mx-auto mt-10 flex w-full max-w-6xl justify-center px-6">
-        <a
-          href={withLocaleHref(locale, "/portfolio")}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-3 text-sm font-semibold tracking-[0.05em] text-white transition hover:-translate-y-0.5"
-        >
-          {t("home.featured.cta.projects")}
-        </a>
       </div>
       {activeVideo ? (
         <div
@@ -167,7 +142,7 @@ export function HomeFeaturedSection({ featuredVideos }: Props) {
                 onClick={() => setActiveVideo(null)}
                 type="button"
               >
-                {t("home.featured.modal.close")}
+                Fermer
               </button>
             </div>
             <div className="aspect-video w-full">

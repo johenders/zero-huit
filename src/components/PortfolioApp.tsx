@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
-import bg from "../../assets/bg/bg_services.jpg";
+import bg from "../../assets/bg/bg_portfolio.jpg";
 import type {
   Project,
   ProjectDiffusion,

@@ -15,6 +15,7 @@ type Props = {
   logoAlt?: string;
   position?: "sticky" | "absolute";
   headerClassName?: string;
+  variant?: "full" | "minimal";
 };
 
 function navItemClass(isActive: boolean) {
@@ -31,11 +32,13 @@ export function AppHeader({
   logoAlt = "Logo",
   position = "sticky",
   headerClassName,
+  variant = "full",
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { locale, t } = useI18n();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMinimal = variant === "minimal";
   const headerPosition = position === "absolute" ? "absolute left-0 right-0" : "sticky";
   const normalizedPath = stripLocalePrefix(pathname).pathname;
   const localeSwitchHref =
@@ -81,74 +84,83 @@ export function AppHeader({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <nav className="hidden items-center gap-2 sm:flex">
-            <Link href={withLocaleHref(locale, "/")} className={navItemClass(isActive("/"))}>
-              {t("nav.home")}
-            </Link>
-            <Link
-              href={withLocaleHref(locale, "/about")}
-              className={navItemClass(isActive("/about"))}
-            >
-              {t("nav.about")}
-            </Link>
-            <Link
-              href={withLocaleHref(locale, "/services")}
-              className={navItemClass(isActive("/services"))}
-            >
-              {t("nav.services")}
-            </Link>
-            <Link
-              href={withLocaleHref(locale, "/portfolio")}
-              className={navItemClass(isActive("/portfolio"))}
-            >
-              {t("nav.portfolio")}
-            </Link>
-            <Link
-              href={withLocaleHref(locale, "/contact")}
-              className={navItemClass(isActive("/contact"))}
-            >
-              {t("nav.contact")}
-            </Link>
-          </nav>
+          {!isMinimal && (
+            <nav className="hidden items-center gap-2 sm:flex">
+              <Link href={withLocaleHref(locale, "/")} className={navItemClass(isActive("/"))}>
+                {t("nav.home")}
+              </Link>
+              <Link
+                href={withLocaleHref(locale, "/about")}
+                className={navItemClass(isActive("/about"))}
+              >
+                {t("nav.about")}
+              </Link>
+              <Link
+                href={withLocaleHref(locale, "/services")}
+                className={navItemClass(isActive("/services"))}
+              >
+                {t("nav.services")}
+              </Link>
+              <Link
+                href={withLocaleHref(locale, "/portfolio")}
+                className={navItemClass(isActive("/portfolio"))}
+              >
+                {t("nav.portfolio")}
+              </Link>
+              <Link
+                href={withLocaleHref(locale, "/contact")}
+                className={navItemClass(isActive("/contact"))}
+              >
+                {t("nav.contact")}
+              </Link>
+            </nav>
+          )}
           <Link
             href={withLocaleHref(locale, "/request")}
-            className="hidden items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 sm:flex"
+            className={`items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 ${
+              isMinimal ? "inline-flex" : "hidden sm:flex"
+            }`}
           >
             {t("nav.cta")}
           </Link>
           <Link
             href={localeSwitchHref}
             onClick={handleLocaleSwitch}
-            className="hidden items-center gap-2 rounded-full border border-white/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/10 sm:flex"
+            className={`items-center gap-2 rounded-full border border-white/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/10 ${
+              isMinimal ? "inline-flex" : "hidden sm:flex"
+            }`}
             aria-label={`Switch language to ${localeSwitchLabel}`}
           >
             {localeSwitchLabel}
           </Link>
-          <button
-            type="button"
-            aria-label={
-              isMobileMenuOpen ? t("nav.menu.close") : t("nav.menu.open")
-            }
-            aria-expanded={isMobileMenuOpen}
-            onClick={() => setIsMobileMenuOpen((open) => !open)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 sm:hidden"
-          >
-            <span className="sr-only">{t("nav.menu.label")}</span>
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="h-0.5 w-5 rounded-full bg-white" />
-              <span className="h-0.5 w-4 rounded-full bg-white" />
-              <span className="h-0.5 w-5 rounded-full bg-white" />
-            </div>
-          </button>
+          {!isMinimal && (
+            <button
+              type="button"
+              aria-label={
+                isMobileMenuOpen ? t("nav.menu.close") : t("nav.menu.open")
+              }
+              aria-expanded={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 sm:hidden"
+            >
+              <span className="sr-only">{t("nav.menu.label")}</span>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="h-0.5 w-5 rounded-full bg-white" />
+                <span className="h-0.5 w-4 rounded-full bg-white" />
+                <span className="h-0.5 w-5 rounded-full bg-white" />
+              </div>
+            </button>
+          )}
         </div>
       </div>
-      <div
-        className={`absolute left-0 right-0 top-full z-50 border-t border-white/10 bg-zinc-950/95 px-4 py-4 shadow-lg shadow-black/40 backdrop-blur transition-all duration-300 ease-out sm:hidden ${
-          isMobileMenuOpen
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-2 opacity-0 pointer-events-none"
-        }`}
-      >
+      {!isMinimal && (
+        <div
+          className={`absolute left-0 right-0 top-full z-50 border-t border-white/10 bg-zinc-950/95 px-4 py-4 shadow-lg shadow-black/40 backdrop-blur transition-all duration-300 ease-out sm:hidden ${
+            isMobileMenuOpen
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-2 opacity-0 pointer-events-none"
+          }`}
+        >
           <nav className="flex flex-col items-stretch gap-2">
             <Link
               href={withLocaleHref(locale, "/")}
@@ -205,6 +217,7 @@ export function AppHeader({
             </Link>
           </nav>
         </div>
+      )}
     </header>
   );
 }

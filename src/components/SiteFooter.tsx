@@ -50,7 +50,7 @@ export function SiteFooter() {
   const consentLabel = locale === "en" ? "Manage consent" : "Gérer le consentement";
   return (
     <footer className="bg-zinc-950 text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16 pb-24">
         <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
           <h2 className="text-4xl font-semibold sm:text-5xl lg:text-6xl">
             {t("footer.cta.label")}
@@ -154,23 +154,21 @@ export function SiteFooter() {
               <div>74 rue St-Laurent</div>
               <div>Beauharnois</div>
               <div>Qu&#233;bec, J6N 1V6</div>
-              <Link
-                href={withLocaleHref(locale, "/contact")}
-                className="inline-block text-white hover:text-white/80"
-              >
-                {t("footer.contact.map")}
-              </Link>
-              <Link href={privacyHref} className="block text-white/80 hover:text-white">
-                {privacyLabel}
-              </Link>
-              <button
-                type="button"
-                className="text-left text-white/60 hover:text-white"
-                onClick={() => window.dispatchEvent(new CustomEvent("consent:open"))}
-              >
-                {consentLabel}
-              </button>
             </div>
+          </div>
+        </div>
+        <div className="pointer-events-none absolute bottom-6 right-6 text-[11px] text-white/50">
+          <div className="flex items-center gap-4">
+            <Link href={privacyHref} className="pointer-events-auto hover:text-white/80">
+              {privacyLabel}
+            </Link>
+            <button
+              type="button"
+              className="pointer-events-auto hover:text-white/80"
+              onClick={() => window.dispatchEvent(new CustomEvent("consent:open"))}
+            >
+              {consentLabel}
+            </button>
           </div>
         </div>
       </div>
