@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
     <main className="mx-auto w-full max-w-3xl space-y-8 px-6 py-16 text-white">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">Politique de confidentialité</h1>
-        <p className="text-sm text-white/70">Dernière mise à jour : 29 janvier 2026</p>
+        <p className="text-sm text-white/70">Dernière mise à jour : 2 février 2026</p>
       </header>
 
       <section className="space-y-3 text-sm text-white/80">
@@ -52,6 +52,16 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="space-y-2 text-sm text-white/80">
+        <h2 className="text-lg font-semibold text-white">Fournisseurs</h2>
+        <p>
+          Nous utilisons des fournisseurs de confiance pour héberger et traiter les
+          données, notamment Vercel (hébergement), Supabase (base de données), Resend
+          (envoi de courriels) et Cloudflare Stream (diffusion vidéo). Ces fournisseurs
+          peuvent traiter des données à l’extérieur du Canada, notamment aux États-Unis.
+        </p>
+      </section>
+
+      <section className="space-y-2 text-sm text-white/80">
         <h2 className="text-lg font-semibold text-white">Cookies et Google Analytics</h2>
         <p>
           Nous utilisons Google Analytics uniquement si vous y consentez. Ce service
@@ -70,8 +80,9 @@ export default function PrivacyPolicyPage() {
       <section className="space-y-2 text-sm text-white/80">
         <h2 className="text-lg font-semibold text-white">Conservation</h2>
         <p>
-          Les renseignements sont conservés uniquement pour la durée nécessaire à la
-          réalisation des finalités décrites ci-dessus, puis supprimés ou anonymisés.
+          Les renseignements sont conservés pour la durée nécessaire aux finalités
+          ci-dessus, et généralement jusqu’à 24 mois après la dernière interaction,
+          sauf obligation légale. Ils sont ensuite supprimés ou anonymisés.
         </p>
       </section>
 

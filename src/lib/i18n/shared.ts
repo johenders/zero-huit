@@ -4,7 +4,7 @@ export const defaultLocale: Locale = "fr";
 
 const localizedRoutes = [
   { canonical: "/about", fr: "/a-propos", en: "/about" },
-  { canonical: "/projects", fr: "/projets", en: "/projects" },
+  { canonical: "/terms", fr: "/conditions-d-utilisation", en: "/terms" },
   { canonical: "/request", fr: "/demande", en: "/request" },
 ] as const;
 

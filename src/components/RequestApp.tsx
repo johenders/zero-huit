@@ -3,17 +3,15 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cloudflareIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
-import { useSupabaseClient } from "@/lib/supabase/useClient";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
 import type {
-  Project,
   ProjectDiffusion,
   ProjectObjective,
 } from "@/lib/types";
-import { AuthModal } from "./AuthModal";
 import levPhoto from "../../assets/Lev.jpg";
 import logoSymbol from "../../assets/zero_huit_symbole.png";
 
@@ -23,8 +21,6 @@ type ObjectiveOption = {
   descriptionKey: string;
   icon: React.ReactNode;
 };
-
-type ProjectPrefill = Pick<Project, "id" | "title" | "objectives">;
 
 type Audience =
   | "clients_potentiels"
@@ -609,13 +605,12 @@ function toggleArrayValue<T extends string>(list: T[], value: T) {
 }
 
 export function RequestApp() {
-  const supabase = useSupabaseClient();
   const { locale, t } = useI18n();
+  const privacyHref = locale === "en" ? "/en/privacy" : "/politique-de-confidentialite";
   const searchParams = useSearchParams();
   const router = useRouter();
   const preselectedReferenceId = searchParams.get("referenceId");
   const preselectAppliedRef = useRef(false);
-  const projectId = searchParams.get("project");
 
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -648,6 +643,7 @@ export function RequestApp() {
   const [referralChoice, setReferralChoice] = useState<ReferralOptionId | "">(
     "",
   );
+  const [website, setWebsite] = useState("");
   const [referenceStatus, setReferenceStatus] = useState<
     "idle" | "loading" | "error"
   >("idle");
@@ -686,12 +682,6 @@ export function RequestApp() {
     open: boolean;
     video: { id: string; title: string; cloudflare_uid: string } | null;
   }>({ open: false, video: null });
-  const [project, setProject] = useState<ProjectPrefill | null>(null);
-  const [projectStatus, setProjectStatus] = useState<
-    "idle" | "loading" | "error"
-  >("idle");
-  const [projectMessage, setProjectMessage] = useState<string | null>(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const hasStarted =
     Boolean(
@@ -716,45 +706,6 @@ export function RequestApp() {
         referralChoice ||
         selectedReferenceIds.size > 0,
     ) || step > 0;
-
-  useEffect(() => {
-    if (!projectId) {
-      setProject(null);
-      setProjectStatus("idle");
-      setProjectMessage(null);
-      return;
-    }
-
-    let ignore = false;
-    async function loadProject() {
-      setProjectStatus("loading");
-      setProjectMessage(null);
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id,title,objectives")
-        .eq("id", projectId)
-        .maybeSingle();
-      if (ignore) return;
-      if (error || !data) {
-        setProject(null);
-        setProjectStatus("error");
-        setProjectMessage(
-          error?.message ?? t("request.project.error"),
-        );
-        return;
-      }
-      setProject(data as ProjectPrefill);
-      if (Array.isArray(data.objectives) && data.objectives.length > 0) {
-        setObjectives(data.objectives as ProjectObjective[]);
-      }
-      setProjectStatus("idle");
-    }
-
-    void loadProject();
-    return () => {
-      ignore = true;
-    };
-  }, [projectId, supabase, t]);
 
   useEffect(() => {
     const selectedDurations = Object.entries(deliverables)
@@ -931,8 +882,7 @@ export function RequestApp() {
         timeline: timelineChoice || null,
         referral: referralChoice || null,
         referenceIds: Array.from(selectedReferenceIds),
-        projectId: project?.id ?? null,
-        projectTitle: project?.title ?? null,
+        website,
       };
       const response = await fetch("/api/quote-requests", {
         method: "POST",
@@ -1034,18 +984,6 @@ export function RequestApp() {
               <div className="mb-6 flex flex-wrap items-center justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500">
                 <span>{t("request.title")}</span>
               </div>
-
-          {project ? (
-            <div className="mb-8 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs uppercase tracking-[0.18em] text-amber-200">
-              {t("request.prefill")} {project.title}
-            </div>
-          ) : null}
-
-          {projectStatus === "error" && projectMessage ? (
-            <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-              {projectMessage}
-            </div>
-          ) : null}
 
           {step === 0 ? (
             <form
@@ -1994,6 +1932,32 @@ export function RequestApp() {
                 <p className="text-sm text-zinc-400">
                   {t("request.step12.subtitle")}
                 </p>
+                <p className="text-xs text-zinc-500">
+                  {locale === "en"
+                    ? "By submitting, you agree to be contacted about your request. "
+                    : "En soumettant, vous acceptez d’être contacté au sujet de votre demande. "}
+                  <Link
+                    href={privacyHref}
+                    className="underline underline-offset-2"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {locale === "en"
+                      ? "Privacy policy"
+                      : "Politique de confidentialité"}
+                  </Link>
+                  .
+                </p>
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(event) => setWebsite(event.target.value)}
+                  className="hidden"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
                 {submissionMessage ? (
                   <p className="text-xs text-rose-200">
                     Une erreur s’est produite. Réessaie ou écris-nous.
@@ -2224,7 +2188,6 @@ export function RequestApp() {
         </div>
       ) : null}
 
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }

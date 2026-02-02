@@ -8,6 +8,7 @@ type QuoteRequestPayload = {
   company: string;
   email: string;
   phone?: string;
+  website?: string;
   objectives?: string[];
   audiences?: string[];
   diffusions?: string[];
@@ -23,6 +24,30 @@ type QuoteRequestPayload = {
   projectId?: string | null;
   projectTitle?: string | null;
 };
+
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+const rateLimitByIp = new Map<string, number[]>();
+
+function getClientIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function isRateLimited(ip: string) {
+  const now = Date.now();
+  const timestamps = (rateLimitByIp.get(ip) ?? []).filter(
+    (time) => now - time < RATE_LIMIT_WINDOW_MS,
+  );
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    rateLimitByIp.set(ip, timestamps);
+    return true;
+  }
+  timestamps.push(now);
+  rateLimitByIp.set(ip, timestamps);
+  return false;
+}
 
 function normalizeArray(value?: string[]) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -60,7 +85,15 @@ function buildEmailText(payload: QuoteRequestPayload) {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const body = (await request.json()) as QuoteRequestPayload;
+  if (body.website?.trim()) {
+    return NextResponse.json({ error: "spam" }, { status: 400 });
+  }
   const name = body.name?.trim();
   const company = body.company?.trim();
   const email = body.email?.trim().toLowerCase();

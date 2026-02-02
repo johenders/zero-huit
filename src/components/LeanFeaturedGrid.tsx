@@ -109,6 +109,10 @@ export function LeanFeaturedGrid({ videos }: Props) {
             </span>
           </span>
         </h2>
+        <p className="mt-4 text-sm leading-6 text-zinc-600">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+          incididunt ut labore et dolore magna aliqua.
+        </p>
       </div>
       <div className="relative z-10 mx-auto mt-8 w-full max-w-none px-[10vw]">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

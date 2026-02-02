@@ -2,24 +2,18 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { budgetLevels, formatCad } from "@/lib/budget";
 import { cloudflarePreviewIframeSrc } from "@/lib/cloudflare";
 import Link from "next/link";
-import { useSupabaseClient } from "@/lib/supabase/useClient";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
 import bg from "../../assets/bg/bg_portfolio.jpg";
 import type {
-  Project,
-  ProjectDiffusion,
-  ProjectObjective,
   Taxonomy,
   TaxonomyKind,
   Video,
 } from "@/lib/types";
 import { AppFooter } from "./AppFooter";
-import { AuthModal } from "./AuthModal";
 import { VideoCard } from "./VideoCard";
 import { VideoModal } from "./VideoModal";
 
@@ -34,16 +28,6 @@ type Filters = {
   budgetMaxIndex: number;
   durationMinIndex: number;
   durationMaxIndex: number;
-};
-
-type ProjectDraft = {
-  title: string;
-  description: string;
-  budget: string;
-  videoType: string;
-  objectives: ProjectObjective[];
-  diffusions: ProjectDiffusion[];
-  timeline: string;
 };
 
 const taxonomyKinds: { kind: TaxonomyKind; label: string }[] = [
@@ -108,18 +92,6 @@ function newDefaultFilters(): Filters {
   };
 }
 
-function newProjectDraft(): ProjectDraft {
-  return {
-    title: "",
-    description: "",
-    budget: "",
-    videoType: "",
-    objectives: [],
-    diffusions: [],
-    timeline: "",
-  };
-}
-
 function toggleArrayValue<T extends string>(list: T[], value: T) {
   return list.includes(value)
     ? list.filter((item) => item !== value)
@@ -173,7 +145,6 @@ function parseBudgetValues(prompt: string) {
 }
 
 export function PortfolioApp({ initialVideos, taxonomies }: Props) {
-  const supabase = useSupabaseClient();
   const { locale, t } = useI18n();
 
   const [filters, setFilters] = useState<Filters>(() => newDefaultFilters());
@@ -194,39 +165,6 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
     open: boolean;
     video: Video | null;
   }>({ open: false, video: null });
-
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [pendingFavoriteVideoId, setPendingFavoriteVideoId] = useState<
-    string | null
-  >(null);
-  const [pendingFavoriteAnchor, setPendingFavoriteAnchor] = useState<{
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [projects, setProjects] = useState<Project[]>([]);
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-  const [favoritePopover, setFavoritePopover] = useState<{
-    open: boolean;
-    video: Video | null;
-    top: number;
-    left: number;
-  }>({ open: false, video: null, top: 0, left: 0 });
-  const [newProjectOpen, setNewProjectOpen] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [popoverStatus, setPopoverStatus] = useState<
-    "idle" | "saving" | "error" | "success"
-  >("idle");
-  const [popoverMessage, setPopoverMessage] = useState<string | null>(null);
-  const [popoverSuccessProjectId, setPopoverSuccessProjectId] = useState<
-    string | null
-  >(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "error">("idle");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
@@ -689,283 +627,6 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
       window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [activeDurationHandle, updateDurationFromPointer]);
-
-  useEffect(() => {
-    if (!supabase) return;
-    let ignore = false;
-    async function loadSession() {
-      const { data } = await supabase.auth.getSession();
-      if (ignore) return;
-      setSessionEmail(data.session?.user.email ?? null);
-    }
-    void loadSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, nextSession: Session | null) => {
-        setSessionEmail(nextSession?.user.email ?? null);
-      },
-    );
-
-    return () => {
-      ignore = true;
-      listener.subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    if (!supabase) return;
-    let ignore = false;
-    async function loadFavorites() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session?.user) {
-        setFavorites(new Set());
-        return;
-      }
-
-      const { data } = await supabase.from("favorites").select("video_id");
-      if (ignore) return;
-      const rows = (data ?? []) as { video_id: string }[];
-      setFavorites(new Set(rows.map((r) => r.video_id)));
-    }
-    void loadFavorites();
-    return () => {
-      ignore = true;
-    };
-  }, [sessionEmail, supabase]);
-
-  useEffect(() => {
-    if (!supabase) return;
-    let ignore = false;
-    async function loadProjects() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session?.user) {
-        setProjects([]);
-        return;
-      }
-      const projectsResult = await supabase
-        .from("projects")
-        .select(
-          "id,user_id,title,description,budget,video_type,objectives,diffusions,timeline,created_at",
-        )
-        .order("created_at", { ascending: false });
-      if (ignore) return;
-      setProjects((projectsResult.data ?? []) as Project[]);
-    }
-    void loadProjects();
-    return () => {
-      ignore = true;
-    };
-  }, [sessionEmail, supabase]);
-
-  useEffect(() => {
-    if (!favoritePopover.open) return;
-    function handlePointerDown(event: MouseEvent) {
-      const target = event.target as Node | null;
-      if (!target || !popoverRef.current) return;
-      if (!popoverRef.current.contains(target)) {
-        setFavoritePopover({ open: false, video: null, top: 0, left: 0 });
-      }
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-    };
-  }, [favoritePopover.open]);
-
-  const parseBudgetValue = useCallback((value: string) => {
-    const cleaned = value.replace(/[^\d]/g, "");
-    if (!cleaned) return null;
-    const parsed = Number.parseInt(cleaned, 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  }, []);
-
-  const createProject = useCallback(
-    async (draft: ProjectDraft) => {
-      if (!supabase) return null;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return null;
-      const payload = {
-        user_id: userId,
-        title: draft.title.trim(),
-        description: draft.description.trim() || null,
-        budget: parseBudgetValue(draft.budget),
-        video_type: draft.videoType.trim() || null,
-        objectives: draft.objectives,
-        diffusions: draft.diffusions,
-        timeline: draft.timeline.trim() || null,
-      };
-      if (!payload.title) return null;
-      const { data, error } = await supabase
-        .from("projects")
-        .insert(payload)
-        .select(
-          "id,user_id,title,description,budget,video_type,objectives,diffusions,timeline,created_at",
-        )
-        .single();
-      if (error || !data) return null;
-      const nextProject = data as Project;
-      setProjects((prev) => [nextProject, ...prev]);
-      return nextProject;
-    },
-    [parseBudgetValue, supabase],
-  );
-
-  const addVideoToProject = useCallback(
-    async (projectId: string, videoId: string) => {
-      if (!supabase) return false;
-      const { error } = await supabase.from("project_videos").upsert(
-        { project_id: projectId, video_id: videoId },
-        { onConflict: "project_id,video_id" },
-      );
-      if (error) return false;
-      return true;
-    },
-    [supabase],
-  );
-
-  const ensureFavorite = useCallback(
-    async (videoId: string) => {
-      if (!supabase) return false;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return false;
-      if (favorites.has(videoId)) return true;
-      const next = new Set(favorites);
-      next.add(videoId);
-      setFavorites(next);
-      await supabase.from("favorites").insert({ user_id: userId, video_id: videoId });
-      return true;
-    },
-    [favorites, supabase],
-  );
-
-  const openFavoritePopover = useCallback(
-    (
-      video: Video,
-      anchorRect?: {
-        top: number;
-        left: number;
-        right: number;
-        bottom: number;
-        width: number;
-        height: number;
-      },
-    ) => {
-      const popoverWidth = 320;
-      const padding = 12;
-      let left = window.innerWidth - popoverWidth - padding;
-      let top = 100;
-      if (anchorRect) {
-        left = Math.min(
-          Math.max(padding, anchorRect.left),
-          window.innerWidth - popoverWidth - padding,
-        );
-        top = Math.min(anchorRect.bottom + 8, window.innerHeight - 240);
-      }
-      setFavoritePopover({ open: true, video, top, left });
-      setNewProjectOpen(false);
-      setNewProjectName("");
-      setPopoverStatus("idle");
-      setPopoverMessage(null);
-      setPopoverSuccessProjectId(null);
-    },
-    [],
-  );
-
-  const handleAddToProject = useCallback(
-    async (projectId: string) => {
-      if (!favoritePopover.video) return;
-      setPopoverStatus("saving");
-      setPopoverMessage(null);
-      setPopoverSuccessProjectId(null);
-      const favoriteOk = await ensureFavorite(favoritePopover.video.id);
-      const videoOk = await addVideoToProject(projectId, favoritePopover.video.id);
-      if (!favoriteOk || !videoOk) {
-        setPopoverStatus("error");
-        setPopoverMessage("Impossible d'ajouter la vidéo au projet.");
-        return;
-      }
-      setPopoverStatus("success");
-      setPopoverMessage("Vidéo ajoutée au projet.");
-      setPopoverSuccessProjectId(projectId);
-    },
-    [addVideoToProject, ensureFavorite, favoritePopover.video],
-  );
-
-  const handleCreateProjectAndRedirect = useCallback(async () => {
-    if (!favoritePopover.video) return;
-    const title = newProjectName.trim();
-    if (!title) {
-      setPopoverStatus("error");
-      setPopoverMessage("Ajoute un nom de projet.");
-      return;
-    }
-    setPopoverStatus("saving");
-    setPopoverMessage(null);
-    setPopoverSuccessProjectId(null);
-    const draft = newProjectDraft();
-    draft.title = title;
-    const project = await createProject(draft);
-    if (!project) {
-      setPopoverStatus("error");
-      setPopoverMessage("Impossible de créer le projet.");
-      return;
-    }
-    const favoriteOk = await ensureFavorite(favoritePopover.video.id);
-    const videoOk = await addVideoToProject(project.id, favoritePopover.video.id);
-    if (!favoriteOk || !videoOk) {
-      setPopoverStatus("error");
-      setPopoverMessage("Impossible d'ajouter la vidéo au projet.");
-      return;
-    }
-    setPopoverStatus("success");
-    setPopoverMessage("Projet créé et vidéo ajoutée.");
-    setPopoverSuccessProjectId(project.id);
-    setNewProjectOpen(false);
-    setNewProjectName("");
-  }, [
-    addVideoToProject,
-    createProject,
-    ensureFavorite,
-    favoritePopover.video,
-    newProjectName,
-  ]);
-
-  async function toggleFavorite(
-    videoId: string,
-    event?: React.MouseEvent<HTMLButtonElement>,
-  ) {
-    const rect = event?.currentTarget?.getBoundingClientRect();
-    const anchorRect = rect
-      ? {
-          top: rect.top,
-          left: rect.left,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-        }
-      : null;
-    if (!supabase) {
-      setPendingFavoriteAnchor(anchorRect);
-      setPendingFavoriteVideoId(videoId);
-      setAuthModalOpen(true);
-      return;
-    }
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session?.user) {
-      setPendingFavoriteAnchor(anchorRect);
-      setPendingFavoriteVideoId(videoId);
-      setAuthModalOpen(true);
-      return;
-    }
-    const userId = sessionData.session.user.id;
-
-    const video = videoById.get(videoId) ?? null;
-    if (video) openFavoritePopover(video, anchorRect ?? undefined);
-  }
 
 
   return (
@@ -1466,109 +1127,6 @@ export function PortfolioApp({ initialVideos, taxonomies }: Props) {
         open={videoModal.open}
         video={videoModal.video}
         onClose={() => setVideoModal({ open: false, video: null })}
-      />
-      {favoritePopover.open ? (
-        <div
-          ref={popoverRef}
-          className="fixed z-50 w-80 rounded-2xl border border-white/10 bg-zinc-950/95 p-3 shadow-2xl shadow-black/40 backdrop-blur"
-          style={{ top: favoritePopover.top, left: favoritePopover.left }}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-semibold text-white">Enregistrer dans…</div>
-            <button
-              type="button"
-              className="rounded-md px-2 py-1 text-xs text-zinc-300 hover:bg-white/10"
-              onClick={() =>
-                setFavoritePopover({ open: false, video: null, top: 0, left: 0 })
-              }
-            >
-              Fermer
-            </button>
-          </div>
-          <div className="mt-3 space-y-2">
-            {projects.length === 0 ? (
-              <div className="rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-zinc-400">
-                Aucun projet pour le moment.
-              </div>
-            ) : (
-              projects.map((project) => (
-                <button
-                  key={project.id}
-                  type="button"
-                  className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-white/10"
-                  onClick={() => void handleAddToProject(project.id)}
-                  disabled={popoverStatus === "saving"}
-                >
-                  <span className="truncate">{project.title}</span>
-                  <span className="text-xs text-zinc-500">Privée</span>
-                </button>
-              ))
-            )}
-          </div>
-          <div className="mt-3">
-            {!newProjectOpen ? (
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-200 hover:bg-white/10"
-                onClick={() => setNewProjectOpen(true)}
-              >
-                + Nouveau projet
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
-                  placeholder="Nom du projet"
-                  value={newProjectName}
-                  onChange={(event) => setNewProjectName(event.target.value)}
-                />
-                <button
-                  type="button"
-                  className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                  disabled={popoverStatus === "saving"}
-                  onClick={() => void handleCreateProjectAndRedirect()}
-                >
-                  {popoverStatus === "saving" ? "Création…" : "Créer le projet"}
-                </button>
-              </div>
-            )}
-            {popoverMessage ? (
-              <div
-                className={`mt-2 flex items-center gap-2 text-xs ${
-                  popoverStatus === "success" ? "text-emerald-300" : "text-red-400"
-                }`}
-              >
-                {popoverStatus === "success" ? <span>✓</span> : null}
-                <span>{popoverMessage}</span>
-                {popoverStatus === "success" && popoverSuccessProjectId ? (
-                  <Link
-                    href={withLocaleHref(
-                      locale,
-                      `/projects?project=${popoverSuccessProjectId}`,
-                    )}
-                    className="text-xs font-semibold text-emerald-200 hover:text-emerald-100"
-                  >
-                    Voir le projet
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-      <AuthModal
-        open={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onSignedIn={async () => {
-          if (!pendingFavoriteVideoId) return;
-          const videoId = pendingFavoriteVideoId;
-          setPendingFavoriteVideoId(null);
-          const video = videoById.get(videoId) ?? null;
-          if (video) openFavoritePopover(video, pendingFavoriteAnchor ?? undefined);
-          setPendingFavoriteAnchor(null);
-        }}
       />
       <AppFooter />
     </div>

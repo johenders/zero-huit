@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { fallbackArticles } from "@/lib/articles";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
+import { useSupabaseClient } from "@/lib/supabase/useClient";
 
 const socialLinks = [
   {
@@ -45,9 +48,61 @@ const socialLinks = [
 
 export function SiteFooter() {
   const { locale, t } = useI18n();
+  const supabase = useSupabaseClient();
+  const [latestArticles, setLatestArticles] = useState<
+    Array<{ title: string; slug: string }> | null
+  >(null);
   const privacyHref = locale === "en" ? "/en/privacy" : "/politique-de-confidentialite";
   const privacyLabel = locale === "en" ? "Privacy policy" : "Politique de confidentialité";
+  const termsHref = locale === "en" ? "/en/terms" : "/conditions-d-utilisation";
+  const termsLabel = locale === "en" ? "Terms of use" : "Conditions d'utilisation";
   const consentLabel = locale === "en" ? "Manage consent" : "Gérer le consentement";
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadLatestArticles() {
+      if (
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("articles")
+        .select("title,slug,published_at,is_published")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false })
+        .limit(4);
+
+      if (!isActive || error || !data || data.length === 0) return;
+
+      setLatestArticles(
+        data.map((article) => ({
+          title: article.title,
+          slug: article.slug,
+        })),
+      );
+    }
+
+    void loadLatestArticles();
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale, supabase]);
+
+  const articleLinks = latestArticles
+    ? latestArticles.map((article) => ({
+        title: article.title,
+        href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
+      }))
+    : fallbackArticles.slice(0, 4).map((article) => ({
+        title: article.title,
+        href: withLocaleHref(locale, article.href),
+      }));
+
   return (
     <footer className="bg-zinc-950 text-white">
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16 pb-24">
@@ -114,32 +169,13 @@ export function SiteFooter() {
           <div>
             <div className="text-base font-semibold">{t("footer.articles.label")}</div>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
-              <li>
-                <Link href="/articles/combien-coute-une-production-video" className="hover:text-white">
-                  Combien coûte une production vidéo
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/articles/comment-bien-realiser-une-video-corporative"
-                  className="hover:text-white"
-                >
-                  Comment bien réaliser une vidéo corporative
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/articles/les-videos-pour-se-demarquer-sur-les-reseaux-sociaux"
-                  className="hover:text-white"
-                >
-                  Se démarquer sur les réseaux sociaux avec la vidéo
-                </Link>
-              </li>
-              <li>
-                <Link href="/articles/production-video-montreal" className="hover:text-white">
-                  Production vidéo Montréal : choisir le bon partenaire
-                </Link>
-              </li>
+              {articleLinks.map((article) => (
+                <li key={article.href}>
+                  <Link href={article.href} className="hover:text-white">
+                    {article.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           <div>
@@ -161,6 +197,9 @@ export function SiteFooter() {
           <div className="flex items-center gap-4">
             <Link href={privacyHref} className="pointer-events-auto hover:text-white/80">
               {privacyLabel}
+            </Link>
+            <Link href={termsHref} className="pointer-events-auto hover:text-white/80">
+              {termsLabel}
             </Link>
             <button
               type="button"

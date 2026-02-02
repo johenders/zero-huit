@@ -46,6 +46,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
+  const requiresAdmin =
+    pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+
+  if (!requiresAdmin) {
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   const { url, anonKey } = getSupabaseEnv();
   const supabase = createServerClient(url, anonKey, {

@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { withLocaleHref } from "@/lib/i18n/shared";
+import { useI18n } from "@/lib/i18n/client";
 
 import a30Logo from "../../assets/clients/a30.png";
 import braqueLogo from "../../assets/clients/braque.png";
@@ -149,6 +152,7 @@ export function ClientsMarqueeSection() {
   const secondRow = logos.slice(8);
   const [isMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const { locale } = useI18n();
   const heroVideoSrc = `${heroVideoBaseSrc}&autoplay=true&muted=${
     isMuted ? "true" : "false"
   }&loop=${isPlaying ? "false" : "true"}&controls=${isPlaying ? "true" : "false"}`;
@@ -190,12 +194,12 @@ export function ClientsMarqueeSection() {
           <p className="mt-4 text-sm text-zinc-400">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio.
           </p>
-          <button
+          <Link
+            href={withLocaleHref(locale, "/request")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
-            type="button"
           >
             Demande de soumission
-          </button>
+          </Link>
         </div>
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl">
           <div className="relative aspect-video w-full">

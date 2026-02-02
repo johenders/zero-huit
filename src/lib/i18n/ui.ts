@@ -177,7 +177,7 @@ export const uiEntries: UiEntry[] = [
     fr: "On est en face de la Patate Mallette, une bonne raison de passer nous voir ;)",
     section: "content",
   },
-  { key: "contact.info.title", fr: "Coordonnées", section: "content" },
+  { key: "contact.info.title", fr: "Consultation gratuite", section: "content" },
   {
     key: "contact.info.address",
     fr: "74 rue St-Laurent, Beauharnois, Québec, J6N 1V6",

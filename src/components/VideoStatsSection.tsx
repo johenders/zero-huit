@@ -76,14 +76,18 @@ function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
 
   return (
     <div className="border-b border-zinc-200 pb-6">
-      <div className="text-4xl font-semibold text-zinc-900 sm:text-5xl">
-        {formatted}
-        {stat.suffix}
+      <div className="flex items-end justify-between gap-6">
+        <div>
+          <div className="text-sm font-semibold uppercase tracking-[0.1em] text-emerald-600">
+            {stat.label}
+          </div>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">{stat.description}</p>
+        </div>
+        <div className="text-6xl font-semibold text-zinc-900 sm:text-7xl">
+          {formatted}
+          {stat.suffix}
+        </div>
       </div>
-      <div className="mt-3 text-sm font-semibold uppercase tracking-[0em] text-emerald-600">
-        {stat.label}
-      </div>
-      <p className="mt-4 text-sm leading-6 text-zinc-600">{stat.description}</p>
     </div>
   );
 }
@@ -109,7 +113,7 @@ export function VideoStatsSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-white py-20 text-zinc-900">
+    <section ref={sectionRef} className="bg-white py-28 text-zinc-900">
       <div className="mx-auto w-full max-w-6xl px-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-600">
           SUCCESS IN NUMBERS
@@ -121,8 +125,8 @@ export function VideoStatsSection() {
           Statistiques marketing (placeholders) &#8212; on ajuste ensemble.
         </p>
       </div>
-      <div className="mx-auto mt-12 w-full max-w-6xl px-6">
-        <div className="grid gap-8 md:grid-cols-2">
+      <div className="mx-auto mt-12 w-full max-w-none px-[10vw]">
+        <div className="grid gap-16 md:grid-cols-2">
           {stats.map((stat) => (
             <AnimatedStat key={stat.label} stat={stat} start={start} />
           ))}

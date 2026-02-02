@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HomeClientsSection } from "@/components/HomeClientsSection";
-import { HomeBtsSection } from "@/components/HomeBtsSection";
 import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHero } from "@/components/HomeHero";
 import { fallbackArticles } from "@/lib/articles";
@@ -204,7 +203,6 @@ export default async function Home() {
       <HomeHero />
       <HomeFeaturedSection featuredVideos={featuredVideos} />
       <HomeClientsSection />
-      <HomeBtsSection />
       <section className="bg-[#fefefe] py-20 text-slate-900">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
