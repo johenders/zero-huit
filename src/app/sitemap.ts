@@ -148,8 +148,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .order("published_at", { ascending: false });
 
   const articles = (data ?? []) as ArticleRow[];
-  const articleRoutes = articles.flatMap((article) => {
-    const lastModified = article.updated_at ?? article.published_at ?? now.toISOString();
+  const articleRoutes: MetadataRoute.Sitemap = articles.flatMap((article) => {
+    const lastModified = article.updated_at ?? article.published_at ?? now;
     return [
       {
         url: `${siteUrl}/nouvelles/${article.slug}`,
