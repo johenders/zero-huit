@@ -390,7 +390,7 @@ export const uiEntries: UiEntry[] = [
   { key: "request.referral.amis", fr: "Amis", section: "ui" },
   { key: "request.referral.seo", fr: "Autre", section: "ui" },
 
-  { key: "request.step12.title", fr: "Récapitulatif", section: "content" },
+  { key: "request.step12.title", fr: "C'est presque fini !", section: "content" },
   { key: "request.step12.submit", fr: "Envoyer la soumission", section: "ui" },
   { key: "request.step12.subtitle", fr: "Vérifie tes choix avant d'envoyer la soumission.", section: "content" },
   { key: "request.step12.identity.title", fr: "Identité", section: "ui" },

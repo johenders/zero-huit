@@ -852,8 +852,8 @@ export function RequestApp() {
     }
   }
 
-  const canGoNext =
-    step === 0 ? Boolean(name.trim() && company.trim() && email.trim()) : true;
+  const canGoNext = step === 0 ? Boolean(name.trim() && company.trim()) : true;
+  const canSubmit = Boolean(name.trim() && company.trim() && email.trim());
 
   async function submitRequest() {
     if (submissionStatus === "sending") return;
@@ -1016,32 +1016,6 @@ export function RequestApp() {
                     value={company}
                     onChange={(event) => setCompany(event.target.value)}
                     placeholder={t("request.step1.company.placeholder")}
-                    className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
-                  />
-                </label>
-                <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
-                  <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step1.email.label")}
-                  </span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder={t("request.step1.email.placeholder")}
-                    autoComplete="email"
-                    className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
-                  />
-                </label>
-                <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
-                  <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step1.phone.label")}
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    placeholder={t("request.step1.phone.placeholder")}
-                    autoComplete="tel"
                     className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
                   />
                 </label>
@@ -1922,17 +1896,50 @@ export function RequestApp() {
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step12.title")}
               </h1>
+              <div className="mx-auto mt-2 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
+                <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
+                  <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    {t("request.step1.email.label")}
+                  </span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder={t("request.step1.email.placeholder")}
+                    autoComplete="email"
+                    className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
+                  />
+                </label>
+                <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
+                  <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    {t("request.step1.phone.label")}
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder={t("request.step1.phone.placeholder")}
+                    autoComplete="tel"
+                    className="w-full bg-transparent text-xl font-semibold text-zinc-100 outline-none placeholder:text-zinc-600"
+                  />
+                </label>
+              </div>
               <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4 text-center">
                 <button
                   type="button"
                   onClick={submitRequest}
-                  className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
+                  disabled={!canSubmit || submissionStatus === "sending"}
+                  className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {t("request.step12.submit")}
                 </button>
-                <p className="text-sm text-zinc-400">
-                  {t("request.step12.subtitle")}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep(10)}
+                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                >
+                  {t("request.nav.back")}
+                </button>
                 <p className="text-xs text-zinc-500">
                   {locale === "en"
                     ? "By submitting, you agree to be contacted about your request. "
@@ -1964,180 +1971,6 @@ export function RequestApp() {
                     Une erreur s’est produite. Réessaie ou écris-nous.
                   </p>
                 ) : null}
-              </div>
-              <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 text-left md:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.identity.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    <div>
-                      {t("request.step12.identity.name")}: {name || "—"}
-                    </div>
-                    <div>
-                      {t("request.step12.identity.company")}: {company || "—"}
-                    </div>
-                    <div>
-                      {t("request.step12.identity.email")}: {email || "—"}
-                    </div>
-                    <div>
-                      {t("request.step12.identity.phone")}: {phone || "—"}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.objectives.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    <div>
-                      {t("request.step12.objectives.label")}:{" "}
-                      {objectives
-                        .map(
-                          (id) =>
-                            t(
-                              objectiveOptions.find((o) => o.id === id)?.labelKey ??
-                                id,
-                            ),
-                        )
-                        .join(", ") || "—"}
-                    </div>
-                    <div className="mt-1">
-                      {t("request.step12.audience.label")}:{" "}
-                      {audiences
-                        .map(
-                          (id) =>
-                            t(
-                              audienceOptions.find((o) => o.id === id)?.labelKey ??
-                                id,
-                            ),
-                        )
-                        .join(", ") || "—"}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.budget.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    <div>
-                      {t("request.step12.budget.label")}:{" "}
-                      {budgetChoice
-                        ? t(
-                            budgetOptions.find((b) => b.id === budgetChoice)
-                              ?.labelKey ?? budgetChoice,
-                          )
-                        : "—"}
-                    </div>
-                    <div className="mt-1">
-                      {t("request.step12.durations.label")}:{" "}
-                      {(deliverableUnknown
-                        ? [t("request.step12.durations.unknown")]
-                        : Object.entries(deliverables)
-                            .filter(([, quantity]) => quantity > 0)
-                            .map(([key]) => {
-                              const option = deliverableOptions.find(
-                                (item) => item.id === key,
-                              );
-                              return t(option?.labelKey ?? key);
-                            })
-                      ).join(", ") || "—"}
-                    </div>
-                    <div className="mt-1">
-                      {t("request.step12.subtitles.label")}:{" "}
-                      {needsSubtitles === null
-                        ? "—"
-                        : needsSubtitles
-                          ? t("request.yes")
-                          : t("request.no")}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.diffusion.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    <div>
-                      {t("request.step12.diffusion.label")}:{" "}
-                      {diffusions
-                        .map(
-                          (id) =>
-                            t(
-                              diffusionOptions.find((o) => o.id === id)?.labelKey ??
-                                id,
-                            ),
-                        )
-                        .join(", ") || "—"}
-                    </div>
-                    <div className="mt-1">
-                      {t("request.step12.timeline.label")}:{" "}
-                      {timelineChoice
-                        ? t(
-                            timelineOptions.find((t) => t.id === timelineChoice)
-                              ?.labelKey ?? timelineChoice,
-                          )
-                        : "—"}
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.description.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    {projectDescription.trim() || "—"}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.locations.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    {shootingLocations.trim() || "—"}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.references.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    {referenceVideos
-                      .filter((video) => selectedReferenceIds.has(video.id))
-                      .map((video) => video.title)
-                      .join(", ") || "—"}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 md:col-span-2">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {t("request.step12.referral.title")}
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-200">
-                    {referralChoice
-                      ? t(
-                          referralOptions.find((r) => r.id === referralChoice)
-                            ?.labelKey ?? referralChoice,
-                        )
-                      : "—"}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(10)}
-                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-                >
-                  {t("request.nav.back")}
-                </button>
-                <button
-                  type="button"
-                  onClick={submitRequest}
-                  className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
-                >
-                  {t("request.step12.submit")}
-                </button>
               </div>
             </div>
           )}
