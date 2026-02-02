@@ -2,6 +2,13 @@ export const metadata = {
   title: "Politique de confidentialité — Zéro huit",
   description:
     "Politique de confidentialité de Zéro huit, incluant l’utilisation de cookies et Google Analytics.",
+  alternates: {
+    canonical: "/politique-de-confidentialite",
+    languages: {
+      "fr-CA": "/politique-de-confidentialite",
+      "en-CA": "/en/privacy",
+    },
+  },
 };
 
 export default function PrivacyPolicyPage() {

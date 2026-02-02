@@ -1,6 +1,13 @@
 export const metadata = {
   title: "Terms of Use — Zéro huit",
   description: "Terms of use for the Zéro huit website.",
+  alternates: {
+    canonical: "/en/terms",
+    languages: {
+      "fr-CA": "/conditions-d-utilisation",
+      "en-CA": "/en/terms",
+    },
+  },
 };
 
 export default function TermsEnPage() {

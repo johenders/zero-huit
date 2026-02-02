@@ -1,5 +1,1 @@
-import RequestPage from "@/app/request/page";
-
-export default function RequestEn() {
-  return <RequestPage />;
-}
+export { default, generateMetadata } from "@/app/request/page";

@@ -1,7 +1,1 @@
-import NouvellesDetailClient from "@/app/nouvelles/[slug]/NouvellesDetailClient";
-
-export const dynamic = "force-dynamic";
-
-export default function NouvellesDetailEn() {
-  return <NouvellesDetailClient />;
-}
+export { default, generateMetadata, dynamic } from "@/app/nouvelles/[slug]/page";

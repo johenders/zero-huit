@@ -2,6 +2,13 @@ export const metadata = {
   title: "Conditions d'utilisation — Zéro huit",
   description:
     "Conditions d'utilisation du site web de Zéro huit.",
+  alternates: {
+    canonical: "/conditions-d-utilisation",
+    languages: {
+      "fr-CA": "/conditions-d-utilisation",
+      "en-CA": "/en/terms",
+    },
+  },
 };
 
 export default function TermsPage() {

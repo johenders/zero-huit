@@ -8,26 +8,22 @@ import { applyTaxonomyTranslations, getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article, Taxonomy, Video } from "@/lib/types";
-import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Zéro huit — Production vidéo sur la Rive-Sud",
-  description:
-    "Agence de production vidéo haut de gamme pour entreprises et organismes de la Rive-Sud de Montréal. Une équipe lean pour des projets sur mesure.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/",
     title: "Zéro huit — Production vidéo sur la Rive-Sud",
     description:
       "Agence de production vidéo haut de gamme pour entreprises et organismes de la Rive-Sud de Montréal. Une équipe lean pour des projets sur mesure.",
-  },
-  twitter: {
-    title: "Zéro huit — Production vidéo sur la Rive-Sud",
-    description:
-      "Agence de production vidéo haut de gamme pour entreprises et organismes de la Rive-Sud de Montréal. Une équipe lean pour des projets sur mesure.",
-  },
-};
+  });
+}
 
 type DisplayArticle = {
   title: string;
@@ -198,6 +194,29 @@ export default async function Home() {
     }));
   }
 
+  const featuredVideoJsonLd =
+    featuredVideos.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          itemListElement: featuredVideos.map((video, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            item: {
+              "@type": "VideoObject",
+              name: video.title,
+              thumbnailUrl: `https://videodelivery.net/${encodeURIComponent(
+                video.cloudflare_uid,
+              )}/thumbnails/thumbnail.jpg`,
+              embedUrl: `https://iframe.videodelivery.net/${encodeURIComponent(
+                video.cloudflare_uid,
+              )}`,
+              uploadDate: video.created_at,
+            },
+          })),
+        }
+      : null;
+
   return (
     <div className="min-h-screen text-zinc-100">
       <HomeHero />
@@ -232,18 +251,22 @@ export default async function Home() {
                 href={article.href}
                 className="group overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60"
               >
-                <div className="relative">
+                <div className="relative h-64">
                   {article.imageUrl ? (
-                    <img
+                    <Image
                       src={article.imageUrl}
                       alt={article.title}
-                      className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <Image
                       src={article.image ?? fallbackArticles[0].image}
                       alt={article.title}
-                      className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
                   )}
                   <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700 shadow-sm">
@@ -254,9 +277,11 @@ export default async function Home() {
                   <div className="text-xs text-slate-500">{article.dateLabel}</div>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
                     {article.authorAvatarUrl ? (
-                      <img
+                      <Image
                         src={article.authorAvatarUrl}
                         alt={article.author}
+                        width={24}
+                        height={24}
                         className="h-6 w-6 rounded-full object-cover"
                       />
                     ) : (
@@ -278,6 +303,13 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      {featuredVideoJsonLd ? (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(featuredVideoJsonLd) }}
+        />
+      ) : null}
     </div>
   );
 }

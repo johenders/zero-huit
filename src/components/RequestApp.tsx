@@ -1706,14 +1706,15 @@ export function RequestApp() {
                             }
                           >
                             <div className="relative aspect-video w-full overflow-hidden">
-                              <img
+                              <Image
                                 src={cloudflareThumbnailSrc(
                                   video.cloudflare_uid,
                                   video.thumbnail_time_seconds,
                                 )}
                                 alt=""
-                                className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
-                                loading="lazy"
+                                fill
+                                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                                className="object-cover opacity-90 transition group-hover:opacity-100"
                               />
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white/80 backdrop-blur">

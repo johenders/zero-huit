@@ -1,5 +1,1 @@
-import LandingPage from "@/app/landing/page";
-
-export default function LandingEn() {
-  return <LandingPage />;
-}
+export { default, dynamic, generateMetadata } from "@/app/landing/page";

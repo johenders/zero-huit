@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/SiteShell";
 import { AnalyticsManager } from "@/components/AnalyticsManager";
+import { SiteJsonLd } from "@/components/SiteJsonLd";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale } from "@/lib/i18n/shared";
@@ -60,6 +61,7 @@ export default async function RootLayout({
           <SiteShell>{children}</SiteShell>
         </I18nProvider>
         <AnalyticsManager />
+        <SiteJsonLd />
       </body>
     </html>
   );

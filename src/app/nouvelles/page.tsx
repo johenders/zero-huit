@@ -6,8 +6,21 @@ import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article } from "@/lib/types";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/nouvelles",
+    title: "Nouvelles — Zéro huit",
+    description:
+      "Articles, idées et nouvelles de notre équipe de production vidéo.",
+  });
+}
 
 type DisplayArticle = {
   title: string;
@@ -142,12 +155,14 @@ export default async function NouvellesPage() {
               href={article.href}
               className="group overflow-hidden rounded-3xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60"
             >
-              <div className="relative">
+              <div className="relative h-64">
                 {article.imageUrl ? (
-                  <img
+                  <Image
                     src={article.imageUrl}
                     alt={article.title}
-                    className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover transition duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <Image
@@ -164,9 +179,11 @@ export default async function NouvellesPage() {
                 <div className="text-xs text-slate-500">{article.dateLabel}</div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   {article.authorAvatarUrl ? (
-                    <img
+                    <Image
                       src={article.authorAvatarUrl}
                       alt={article.author}
+                      width={24}
+                      height={24}
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   ) : (

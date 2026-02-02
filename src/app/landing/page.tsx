@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 
 import { HomeClientsSection } from "@/components/HomeClientsSection";
 import { LandingFeaturedGrid } from "@/components/LandingFeaturedGrid";
@@ -8,27 +7,24 @@ import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 import heroBg from "../../../assets/bg/bg_a_propos.jpg";
 import batisse from "../../../assets/batisse.jpg";
 import production from "../../../assets/services/production.jpg";
 import postProduction from "../../../assets/services/post_production.jpg";
 
-export const metadata: Metadata = {
-  title: "Landing \u2014 Zéro huit",
-  description:
-    "Production vidéo haut de gamme sur la Rive-Sud. Demandez une soumission ou découvrez nos projets.",
-  openGraph: {
-    title: "Zéro huit \u2014 Production vidéo sur la Rive-Sud",
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/landing",
+    title: "Landing — Zéro huit",
     description:
-      "Découvrez une équipe lean et créative. Demandez une soumission ou explorez notre portfolio.",
-  },
-  twitter: {
-    title: "Zéro huit \u2014 Production vidéo sur la Rive-Sud",
-    description:
-      "Découvrez une équipe lean et créative. Demandez une soumission ou explorez notre portfolio.",
-  },
-};
+      "Production vidéo haut de gamme sur la Rive-Sud. Demandez une soumission ou découvrez nos projets.",
+  });
+}
 
 export const dynamic = "force-dynamic";
 

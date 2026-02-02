@@ -1,30 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 import bg from "../../../assets/bg/bg_services.jpg";
 import planification from "../../../assets/services/planification.jpg";
 import postProduction from "../../../assets/services/post_production.jpg";
 import production from "../../../assets/services/production.jpg";
 
-export const metadata: Metadata = {
-  title: "Services — Zéro huit",
-  description:
-    "Solution vidéo complète: planification, production, post-production, montage, motion design et colorisation.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/services",
     title: "Services — Zéro huit",
     description:
       "Solution vidéo complète: planification, production, post-production, montage, motion design et colorisation.",
-  },
-  twitter: {
-    title: "Services — Zéro huit",
-    description:
-      "Solution vidéo complète: planification, production, post-production, montage, motion design et colorisation.",
-  },
-};
+  });
+}
 
 export default async function ServicesPage() {
   const headerOffset = 120;

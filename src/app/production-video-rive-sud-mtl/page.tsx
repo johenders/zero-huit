@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { headers } from "next/headers";
 
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
@@ -9,26 +8,23 @@ import { LeanFeaturedGrid } from "@/components/LeanFeaturedGrid";
 import { VideoStatsSection } from "@/components/VideoStatsSection";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
+import { buildPageMetadata } from "@/lib/seo";
 
 import heroImage from "../../../assets/bts/zero_huit_production_video.jpg";
 import ctaBg from "../../../assets/bts/IMG_2410.jpg";
 import zerohuitLogo from "../../../assets/zerohuit_blanc.png";
 
-export const metadata: Metadata = {
-  title: "Production vidéo Rive-Sud — Zéro huit",
-  description:
-    "Des histoires qui comptent. Des vidéos qui marquent. Production vidéo sur la Rive-Sud de Montréal.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/production-video-rive-sud-mtl",
     title: "Production vidéo Rive-Sud — Zéro huit",
     description:
       "Des histoires qui comptent. Des vidéos qui marquent. Production vidéo sur la Rive-Sud de Montréal.",
-  },
-  twitter: {
-    title: "Production vidéo Rive-Sud — Zéro huit",
-    description:
-      "Des histoires qui comptent. Des vidéos qui marquent. Production vidéo sur la Rive-Sud de Montréal.",
-  },
-};
+  });
+}
 
 export default async function ProductionVideoRiveSudPage() {
   const requestHeaders = await headers();

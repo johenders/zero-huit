@@ -1,26 +1,22 @@
 import Image from "next/image";
-import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 import batisse from "../../../assets/batisse.jpg";
 
-export const metadata: Metadata = {
-  title: "Contact — Zéro huit",
-  description:
-    "Parlez-nous de votre projet vidéo. Coordonnées à Beauharnois et formulaire de demande de soumission.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/contact",
     title: "Contact — Zéro huit",
     description:
       "Parlez-nous de votre projet vidéo. Coordonnées à Beauharnois et formulaire de demande de soumission.",
-  },
-  twitter: {
-    title: "Contact — Zéro huit",
-    description:
-      "Parlez-nous de votre projet vidéo. Coordonnées à Beauharnois et formulaire de demande de soumission.",
-  },
-};
+  });
+}
 
 export default async function ContactPage() {
   const headerOffset = 120;

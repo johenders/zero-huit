@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "videodelivery.net",
       },
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
     ],
   },
   async headers() {

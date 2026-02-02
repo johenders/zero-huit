@@ -1,28 +1,24 @@
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
 import { PortfolioApp } from "@/components/PortfolioApp";
-import type { Metadata } from "next";
 import { applyTaxonomyTranslations } from "@/lib/i18n/server";
 import { normalizeLocale } from "@/lib/i18n/shared";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Portfolio — Zéro huit",
-  description:
-    "Découvrez nos projets vidéo: publicités, captations, vidéos corporatives, images aériennes et plus.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/portfolio",
     title: "Portfolio — Zéro huit",
     description:
       "Découvrez nos projets vidéo: publicités, captations, vidéos corporatives, images aériennes et plus.",
-  },
-  twitter: {
-    title: "Portfolio — Zéro huit",
-    description:
-      "Découvrez nos projets vidéo: publicités, captations, vidéos corporatives, images aériennes et plus.",
-  },
-};
+  });
+}
 
 export default async function Portfolio() {
   const requestHeaders = await headers();

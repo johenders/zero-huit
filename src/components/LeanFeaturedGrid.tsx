@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import type { Video } from "@/lib/types";
 import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useI18n } from "@/lib/i18n/client";
@@ -34,19 +35,19 @@ function FeaturedVideoCard({
       onBlur={() => setIsHovered(false)}
     >
       <div className="relative aspect-video w-full">
-        <img
+        <Image
           src={cloudflareThumbnailSrc(
             video.cloudflare_uid,
             video.thumbnail_time_seconds ?? 1,
             1200,
           )}
           alt={video.title}
-          className={`h-full w-full object-cover transition duration-700 ${
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+          priority={priority}
+          className={`object-cover transition duration-700 ${
             isHovered ? "opacity-0" : "opacity-100"
           }`}
-          loading="eager"
-          decoding="async"
-          fetchPriority={priority ? "high" : "auto"}
         />
         {isHovered ? (
           <iframe

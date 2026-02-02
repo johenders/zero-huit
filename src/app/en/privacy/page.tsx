@@ -2,6 +2,13 @@ export const metadata = {
   title: "Privacy Policy — Zéro huit",
   description:
     "Privacy policy of Zéro huit, including cookie usage and Google Analytics.",
+  alternates: {
+    canonical: "/en/privacy",
+    languages: {
+      "fr-CA": "/politique-de-confidentialite",
+      "en-CA": "/en/privacy",
+    },
+  },
 };
 
 export default function PrivacyPolicyEnPage() {

@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 import { getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { headers } from "next/headers";
+import { buildPageMetadata } from "@/lib/seo";
 
 import bg from "../../../assets/bg/bg_a_propos.jpg";
 import cedric from "../../../assets/team/ced.jpeg";
@@ -14,21 +14,17 @@ import max from "../../../assets/team/max.jpeg";
 import will from "../../../assets/team/will.jpeg";
 import xav from "../../../assets/team/xav.jpeg";
 
-export const metadata: Metadata = {
-  title: "À propos — Zéro huit",
-  description:
-    "Coalition de créatifs passionnés issue de Création Webson et Beavr. Mission: démocratiser la production vidéo haut de gamme.",
-  openGraph: {
+export async function generateMetadata() {
+  const requestHeaders = await headers();
+  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  return buildPageMetadata({
+    locale,
+    path: "/about",
     title: "À propos — Zéro huit",
     description:
       "Coalition de créatifs passionnés issue de Création Webson et Beavr. Mission: démocratiser la production vidéo haut de gamme.",
-  },
-  twitter: {
-    title: "À propos — Zéro huit",
-    description:
-      "Coalition de créatifs passionnés issue de Création Webson et Beavr. Mission: démocratiser la production vidéo haut de gamme.",
-  },
-};
+  });
+}
 
 export default async function AboutPage() {
   const headerOffset = 120;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
@@ -176,9 +177,11 @@ export default function NouvellesDetailClient() {
             <span>{formatDateLabel(article.published_at, locale)}</span>
             <span className="flex items-center gap-2">
               {authorAvatar ? (
-                <img
+                <Image
                   src={authorAvatar}
                   alt={authorName}
+                  width={24}
+                  height={24}
                   className="h-6 w-6 rounded-full object-cover"
                 />
               ) : (
@@ -193,11 +196,15 @@ export default function NouvellesDetailClient() {
 
         {article.cover_image_url ? (
           <div className="mx-auto w-full max-w-5xl px-6">
-            <img
-              src={article.cover_image_url}
-              alt={article.title}
-              className="h-[360px] w-full rounded-3xl object-cover shadow-lg shadow-slate-200/60"
-            />
+            <div className="relative h-[360px] w-full overflow-hidden rounded-3xl shadow-lg shadow-slate-200/60">
+              <Image
+                src={article.cover_image_url}
+                alt={article.title}
+                fill
+                sizes="(min-width: 1024px) 768px, 100vw"
+                className="object-cover"
+              />
+            </div>
           </div>
         ) : null}
 
@@ -210,9 +217,11 @@ export default function NouvellesDetailClient() {
           />
           <div className="mt-10 flex items-center gap-4 border-t border-slate-200 pt-6">
             {authorAvatar ? (
-              <img
+              <Image
                 src={authorAvatar}
                 alt={authorName}
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
