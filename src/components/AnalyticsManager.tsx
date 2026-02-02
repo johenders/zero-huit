@@ -6,7 +6,9 @@ import { getAnalyticsConsent } from "@/lib/consent";
 
 export function AnalyticsManager() {
   const [enabled, setEnabled] = useState(false);
-  const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const measurementId =
+    process.env.NEXT_PUBLIC_GA_ID ??
+    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   useEffect(() => {
     const sync = () => {
