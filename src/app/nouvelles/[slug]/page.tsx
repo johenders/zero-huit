@@ -25,10 +25,15 @@ async function fetchArticle(slug: string) {
   return data ?? null;
 }
 
-export async function generateMetadata({ params }: { params: { slug?: string } }) {
+type PageProps = {
+  params: Promise<{ slug?: string }>;
+};
+
+export async function generateMetadata({ params }: PageProps) {
+  const resolvedParams = await params;
   const requestHeaders = await headers();
   const locale = normalizeLocale(requestHeaders.get("x-locale"));
-  const slug = params.slug ?? "";
+  const slug = resolvedParams.slug ?? "";
   const article = slug ? await fetchArticle(slug) : null;
   const title = article?.title ?? "Article — Zéro huit";
   const description =
@@ -42,12 +47,9 @@ export async function generateMetadata({ params }: { params: { slug?: string } }
   });
 }
 
-export default async function NouvellesDetailPage({
-  params,
-}: {
-  params: { slug?: string };
-}) {
-  const slug = params.slug ?? "";
+export default async function NouvellesDetailPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug ?? "";
   const article = slug ? await fetchArticle(slug) : null;
   const jsonLd = article
     ? {
