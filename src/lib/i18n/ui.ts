@@ -242,6 +242,7 @@ export const uiEntries: UiEntry[] = [
   { key: "request.nav.nextStep", fr: "Prochaine étape", section: "ui" },
   { key: "request.yes", fr: "Oui", section: "ui" },
   { key: "request.no", fr: "Non", section: "ui" },
+  { key: "request.unknown", fr: "Je ne sais pas", section: "ui" },
   { key: "request.project.error", fr: "Impossible de récupérer le projet.", section: "ui" },
   { key: "request.ai.error", fr: "Erreur AI", section: "ui" },
 

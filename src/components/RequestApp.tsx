@@ -40,10 +40,6 @@ type DeliverableKey =
   | "mini_documentaire"
   | "incertain";
 
-type Upsell =
-  | "photos_professionnelles"
-  | "animation_logo"
-  | "non_merci";
 
 type BudgetOptionId =
   | "2000-5000"
@@ -83,12 +79,6 @@ type DeliverableOption = {
   descriptionKey: string;
 };
 
-type UpsellOption = {
-  id: Upsell;
-  labelKey: string;
-  descriptionKey: string;
-  icon: React.ReactNode;
-};
 
 type BudgetOption = {
   id: BudgetOptionId;
@@ -492,71 +482,6 @@ const deliverableOptions: DeliverableOption[] = [
   },
 ];
 
-const upsellOptions: UpsellOption[] = [
-  {
-    id: "photos_professionnelles",
-    labelKey: "request.upsell.photos_professionnelles.label",
-    descriptionKey: "request.upsell.photos_professionnelles.desc",
-    icon: (
-      <svg
-        aria-hidden
-        className="h-6 w-6"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 7h4l2-2h4l2 2h4" />
-        <rect x="3" y="7" width="18" height="12" rx="2" />
-        <circle cx="12" cy="13" r="3" />
-      </svg>
-    ),
-  },
-  {
-    id: "animation_logo",
-    labelKey: "request.upsell.animation_logo.label",
-    descriptionKey: "request.upsell.animation_logo.desc",
-    icon: (
-      <svg
-        aria-hidden
-        className="h-6 w-6"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3l7 4v6c0 4-3 7-7 8-4-1-7-4-7-8V7z" />
-        <path d="M12 8l3 3-3 3-3-3z" />
-      </svg>
-    ),
-  },
-  {
-    id: "non_merci",
-    labelKey: "request.upsell.non_merci.label",
-    descriptionKey: "request.upsell.non_merci.desc",
-    icon: (
-      <svg
-        aria-hidden
-        className="h-6 w-6"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M8 8l8 8" />
-        <path d="M16 8l-8 8" />
-      </svg>
-    ),
-  },
-];
-
 const budgetOptions: BudgetOption[] = [
   { id: "2000-5000", labelKey: "request.budget.2000-5000" },
   { id: "5000-10000", labelKey: "request.budget.5000-10000" },
@@ -633,7 +558,6 @@ export function RequestApp() {
   >({});
   const [deliverableUnknown, setDeliverableUnknown] = useState(false);
   const [needsSubtitles, setNeedsSubtitles] = useState<null | boolean>(null);
-  const [upsells, setUpsells] = useState<Upsell[]>([]);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOptionId | "">("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -700,7 +624,6 @@ export function RequestApp() {
         ) ||
         deliverableUnknown ||
         needsSubtitles !== null ||
-        upsells.length ||
         budgetChoice ||
         timelineChoice ||
         referralChoice ||
@@ -877,7 +800,6 @@ export function RequestApp() {
           unknown: deliverableUnknown,
         },
         needsSubtitles,
-        upsells,
         budget: budgetChoice || null,
         timeline: timelineChoice || null,
         referral: referralChoice || null,
@@ -1262,7 +1184,7 @@ export function RequestApp() {
                     }}
                     className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
                   >
-                    Je ne sais pas
+                    {t("request.unknown")}
                   </button>
                 </div>
               </div>
@@ -1427,7 +1349,7 @@ export function RequestApp() {
                   }}
                   className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
                 >
-                  Je ne sais pas
+                  {t("request.unknown")}
                 </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -1448,76 +1370,6 @@ export function RequestApp() {
               </div>
             </div>
           ) : step === 6 ? (
-            <div className="w-full space-y-8">
-              <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                {t("request.step7.title")}
-              </h1>
-              <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                {t("request.step7.subtitle")}
-              </p>
-              <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
-                {upsellOptions.map((option) => {
-                  const selected = upsells.includes(option.id);
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() =>
-                        setUpsells((prev) => {
-                          if (option.id === "non_merci") {
-                            return prev.includes("non_merci")
-                              ? []
-                              : ["non_merci"];
-                          }
-                          const next = toggleArrayValue(prev, option.id);
-                          return next.filter((item) => item !== "non_merci");
-                        })
-                      }
-                      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition ${
-                        selected
-                          ? "border-sky-300/60 bg-sky-300/10 text-sky-100"
-                          : "border-white/10 bg-black/30 text-zinc-200 hover:border-white/30"
-                      }`}
-                    >
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition ${
-                          selected
-                            ? "border-sky-300/60 bg-sky-300/20 text-sky-200"
-                            : "border-white/10 bg-white/5 text-zinc-300 group-hover:border-white/30"
-                        }`}
-                      >
-                        {option.icon}
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold">
-                          {t(option.labelKey)}
-                        </div>
-                        <div className="mt-1 text-sm text-zinc-400">
-                          {t(option.descriptionKey)}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(5)}
-                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-                >
-                  {t("request.nav.back")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(7)}
-                  className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
-                >
-                  {t("request.nav.next")}
-                </button>
-              </div>
-            </div>
-          ) : step === 7 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step8.title")}
@@ -1547,21 +1399,21 @@ export function RequestApp() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(6)}
+                  onClick={() => setStep(5)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(8)}
+                  onClick={() => setStep(7)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
             </div>
-          ) : step === 8 ? (
+          ) : step === 7 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step9.title")}
@@ -1743,7 +1595,7 @@ export function RequestApp() {
                       );
                     })}
                   </div>
-                  <div className="flex justify-center">
+                  <div className="flex flex-col items-center gap-3">
                     <button
                       type="button"
                       onClick={() => void handleLoadMoreReferences()}
@@ -1754,27 +1606,34 @@ export function RequestApp() {
                         ? t("request.step9.loading")
                         : t("request.step9.loadMore")}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setStep(8)}
+                      className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
+                    >
+                      {t("request.unknown")}
+                    </button>
                   </div>
                 </div>
               ) : null}
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(7)}
+                  onClick={() => setStep(6)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(9)}
+                  onClick={() => setStep(8)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
             </div>
-          ) : step === 9 ? (
+          ) : step === 8 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step10.title")}
@@ -1832,21 +1691,21 @@ export function RequestApp() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(8)}
+                  onClick={() => setStep(7)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(10)}
+                  onClick={() => setStep(9)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
             </div>
-          ) : step === 10 ? (
+          ) : step === 9 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step11.title")}
@@ -1876,14 +1735,14 @@ export function RequestApp() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(9)}
+                  onClick={() => setStep(8)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(11)}
+                  onClick={() => setStep(10)}
                   disabled={!referralChoice}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/60"
                 >
@@ -1935,7 +1794,7 @@ export function RequestApp() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(10)}
+                  onClick={() => setStep(9)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}

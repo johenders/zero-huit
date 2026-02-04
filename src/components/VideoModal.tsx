@@ -66,8 +66,12 @@ export function VideoModal({ video, open, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
       role="dialog"
       aria-modal="true"
+      onClick={onClose}
     >
-      <div className="w-full max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+      <div
+        className="w-full max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex items-center justify-between gap-4 bg-zinc-950 px-4 py-3">
           <div className="truncate text-sm font-medium text-white">{video.title}</div>
           <button
@@ -98,7 +102,7 @@ export function VideoModal({ video, open, onClose }: Props) {
                   locale,
                   `/request?referenceId=${encodeURIComponent(video.id)}`,
                 )}
-                className="inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
+                className="inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2 text-xs font-semibold tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
               >
                 Demande de soumission
               </Link>
