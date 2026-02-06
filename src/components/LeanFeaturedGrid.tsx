@@ -111,8 +111,9 @@ export function LeanFeaturedGrid({ videos }: Props) {
           </span>
         </h2>
         <p className="mt-4 text-sm leading-6 text-zinc-600">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-          incididunt ut labore et dolore magna aliqua.
+          Être une agence lean, c’est concentrer nos efforts sur ce qui génère réellement de la valeur. 
+          Moins de lourdeur, moins d’intermédiaires, plus de clarté, plus d’impact. 
+          Chaque projet est structuré pour servir vos objectifs d’affaires, sans complexité inutile.
         </p>
       </div>
       <div className="relative z-10 mx-auto mt-8 w-full max-w-none px-[10vw]">

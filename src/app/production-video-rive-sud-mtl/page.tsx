@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
+import { ApproachSection } from "@/components/ApproachSection";
 import { ClientsMarqueeSection } from "@/components/ClientsMarqueeSection";
 import { LeanFeaturedGrid } from "@/components/LeanFeaturedGrid";
 import { VideoStatsSection } from "@/components/VideoStatsSection";
@@ -148,6 +149,7 @@ export default async function ProductionVideoRiveSudPage() {
     <LeanFeaturedGrid videos={featuredVideos} />
     <ClientsMarqueeSection />
     <VideoStatsSection />
+    <ApproachSection />
     <section className="relative overflow-hidden">
       <div className="relative min-h-[85vh] w-full overflow-hidden rounded-none">
         <Image

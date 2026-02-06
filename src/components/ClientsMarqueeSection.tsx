@@ -181,24 +181,23 @@ export function ClientsMarqueeSection() {
       <div className="relative z-10 mx-auto mt-20 grid w-full max-w-none items-center gap-12 px-[6vw] lg:grid-cols-[1fr_1.15fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-200">
-            TEXTE RANDOM
+            VOTRE AVANTAGE
           </p>
           <h3 className="mt-6 text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            Lorem ipsum dolor sit amet consectetur.
+            Une expertise qui cadre vos projets vidéo.
           </h3>
           <p className="mt-6 text-base leading-7 text-zinc-300">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-            nostrud exercitation ullamco laboris.
+            On ne se contente pas de produire. On vous aide à structurer le projet, à clarifier le message et à livrer des vidéos pensées pour soutenir vos objectifs d’affaires.
+
           </p>
           <p className="mt-4 text-sm text-zinc-400">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio.
+            Chaque projet est structuré pour servir vos objectifs d’affaires, sans complexité inutile.
           </p>
           <Link
             href={withLocaleHref(locale, "/request")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
           >
-            Demande de soumission
+            Planifier une consultation gratuite
           </Link>
         </div>
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl">
