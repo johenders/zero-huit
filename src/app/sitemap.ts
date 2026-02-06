@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_ENV === "production"
-    ? "https://www.zerohuit.ca"
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000");
+const ensureAbsoluteUrl = (value: string) =>
+  value.startsWith("http://") || value.startsWith("https://")
+    ? value
+    : `https://${value}`;
+
+const siteUrl = (() => {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (envUrl) return ensureAbsoluteUrl(envUrl);
+  if (process.env.VERCEL_ENV === "production") return "https://www.zerohuit.ca";
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+})();
 
 type ArticleRow = {
   slug: string;
