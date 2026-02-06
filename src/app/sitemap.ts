@@ -3,7 +3,11 @@ import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  (process.env.VERCEL_ENV === "production"
+    ? "https://www.zerohuit.ca"
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
 
 type ArticleRow = {
   slug: string;
