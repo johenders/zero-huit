@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { withLocaleHref } from "@/lib/i18n/shared";
 import { useI18n } from "@/lib/i18n/client";
@@ -22,12 +22,8 @@ import saqLogo from "../../assets/clients/saq.png";
 import skyspaLogo from "../../assets/clients/skyspa.png";
 import valleyfieldLogo from "../../assets/clients/valleyfield.png";
 import zelLogo from "../../assets/clients/zel.png";
-import btsOne from "../../assets/bts/DSCF2233.jpg";
-import btsTwo from "../../assets/bts/DSCF7468.jpg";
-import btsThree from "../../assets/bts/IMG_7132.jpg";
-
 const videoId = "0c63337d4f672f4dd6e39853d1d94301";
-const heroVideoBaseSrc = `https://iframe.videodelivery.net/${videoId}?preload=true&quality=1080`;
+const heroVideoSrc = `https://iframe.videodelivery.net/${videoId}?preload=true&quality=1080&autoplay=true&muted=true&loop=true&controls=true`;
 
 const logos = [
   { src: a30Logo, alt: "A30 Express" },
@@ -150,157 +146,81 @@ function MarqueeRow({ direction, items }: MarqueeRowProps) {
 export function ClientsMarqueeSection() {
   const firstRow = logos.slice(0, 8);
   const secondRow = logos.slice(8);
-  const [isMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const { locale } = useI18n();
-  const heroVideoSrc = `${heroVideoBaseSrc}&autoplay=true&muted=${
-    isMuted ? "true" : "false"
-  }&loop=${isPlaying ? "false" : "true"}&controls=${isPlaying ? "true" : "false"}`;
 
   return (
-    <section className="relative overflow-hidden bg-black pt-20 pb-0 text-white">
+    <section className="relative overflow-hidden bg-black pt-10 pb-0 text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-6 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="absolute left-1/3 bottom-0 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
       </div>
-      <div className="mx-auto w-full max-w-6xl px-6 text-center">
-        <h2 className="text-3xl font-semibold sm:text-4xl">
-          Ils nous ont fait{" "}
-          <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-            confiance
-          </span>
-          .
-        </h2>
-      </div>
-      <div className="mt-10 space-y-6">
+      <div className="mt-6 space-y-6">
         <MarqueeRow direction="left" items={firstRow} />
         <MarqueeRow direction="right" items={secondRow} />
       </div>
 
-      <div className="relative z-10 mx-auto mt-20 grid w-full max-w-none items-center gap-12 px-[6vw] lg:grid-cols-[1fr_1.15fr]">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-200">
-            VOTRE AVANTAGE
-          </p>
-          <h3 className="mt-6 text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            Une expertise qui cadre vos projets vidéo.
-          </h3>
-          <p className="mt-6 text-base leading-7 text-zinc-300">
-            On ne se contente pas de produire. On vous aide à structurer le projet, à clarifier le message et à livrer des vidéos pensées pour soutenir vos objectifs d’affaires.
-
-          </p>
-          <p className="mt-4 text-sm text-zinc-400">
-            Chaque projet est structuré pour servir vos objectifs d’affaires, sans complexité inutile.
-          </p>
-          <Link
-            href={withLocaleHref(locale, "/request")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
-          >
-            Planifier une consultation gratuite
-          </Link>
-        </div>
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl">
-          <div className="relative aspect-video w-full">
-            <iframe
-              key={heroVideoSrc}
-              className="absolute inset-0 h-full w-full"
-              src={heroVideoSrc}
-              title="Zéro huit — Démo"
-              allow="autoplay; fullscreen"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-            {!isPlaying ? (
-              <button
-                className="absolute inset-0 flex items-center justify-center"
-                type="button"
-                aria-label="Lire la vidéo"
-                onClick={() => {
-                  setIsPlaying(true);
-                }}
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white transition hover:scale-105">
-                  <svg
-                    aria-hidden
-                    className="h-6 w-6 translate-x-[1px]"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M8 5v14l11-7-11-7z" />
-                  </svg>
+      <div className="mt-20 bg-white text-black">
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
+            <div className="order-2 lg:order-1 flex flex-col lg:pr-6">
+              <h3 className="text-[2.35rem] font-semibold leading-[1.1] text-black sm:text-[2.95rem]">
+                Nous sommes une agence{" "}
+                <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-bold text-transparent">
+                  lean
                 </span>
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </div>
+              </h3>
 
-      <div className="relative z-10 mt-24 bg-[#0f1f1b] py-20 text-white">
-        <div className="mx-auto w-full max-w-none px-[9vw]">
-          <div className="mx-auto max-w-4xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-200">
-              MADE TO FLEX
-            </p>
-            <h3 className="mt-4 text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">
-              Supertalentueux. Super rapide. Hyper r&#233;actif. Une &#233;quipe faite pour suivre
-              votre rythme.
-            </h3>
-          </div>
-          <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {[
-            {
-              image: btsOne,
-              title: "créatifs",
-              description:
-                "Un accès direct à des talents seniors et une direction artistique claire pour chaque projet.",
-              panelClass: "bg-[#5cc3d7] text-[#0f1f1b]",
-            },
-            {
-              image: btsTwo,
-              title: "rapide",
-              description:
-                "Une méthode agile pour livrer vite, sans compromis sur la qualit&#233; ou la coh&#233;rence.",
-              panelClass: "bg-[#39c193] text-[#0f1f1b]",
-            },
-            {
-              image: btsThree,
-              title: "flexible",
-              description:
-                "On s'adapte à votre cadence, vos besoins et votre calendrier de production.",
-              panelClass: "bg-[#8acd5f] text-[#0f1f1b]",
-            },
-          ].map((card) => (
-            <div
-              key={card.title}
-              className="group relative overflow-hidden rounded-3xl bg-white"
-            >
-              <div className="relative aspect-[3/4] w-full overflow-hidden">
-                <Image
-                  src={card.image}
-                  alt=""
-                  fill
-                  className="object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
-              </div>
-              <div className="absolute inset-0 flex items-end">
-                <div
-                  className={`flex h-[25%] w-full flex-col justify-start px-6 py-5 transition-transform duration-700 ease-in-out ${card.panelClass} translate-y-[30%] group-hover:translate-y-0`}
-                >
-                  <h4 className="text-3xl text-black/90">
-                    <span className="font-normal">On est </span>
-                    <span className="font-bold italic">{card.title}</span>
-                  </h4>
-                  <p className="mt-3 max-h-0 overflow-hidden text-base opacity-0 transition-all duration-300 group-hover:max-h-28 group-hover:opacity-100">
-                    {card.description}
-                  </p>
+              <div className="mt-6">
+                <div className="flex items-start gap-4 rounded-xl border border-emerald-300/60 bg-white px-5 py-4">
+                  <span className="self-stretch w-2 rounded-full bg-gradient-to-b from-[#5cc3d7] to-[#8acd5f]" />
+                  <div>
+                    <p className="inline-block text-sm font-normal italic text-black">
+                      Lean management
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-zinc-700">
+                      Modèle de gestion centré sur la création de valeur réelle, visant à réduire
+                      la lourdeur et les intermédiaires afin d'offrir des processus plus clairs,
+                      efficaces et alignés sur les objectifs d’affaires, sans complexité inutile.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            <div className="order-1 lg:order-2">
+              <div className="relative overflow-hidden rounded-xl shadow-[0_18px_40px_rgba(0,0,0,0.12)]">
+                <div className="relative aspect-video w-full">
+                  <iframe
+                    className="absolute inset-0 h-full w-full"
+                    src={heroVideoSrc}
+                    title="Zéro huit — Démo"
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-black/15" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-col items-center gap-6 text-center">
+            <p className="max-w-3xl text-[1.25rem] leading-[1.35] text-zinc-700">
+              Avec notre équipe, on se concentre sur ce qui compte vraiment,{" "}
+              <span className="font-semibold text-black">
+                votre message
+              </span>
+              .
+            </p>
+            <Link
+              href={withLocaleHref(locale, "/request")}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
+            >
+              Planifier ma consultation gratuite
+            </Link>
+          </div>
         </div>
       </div>
+
     </section>
   );
 }

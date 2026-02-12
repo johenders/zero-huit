@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { Video } from "@/lib/types";
 import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useI18n } from "@/lib/i18n/client";
+import { withLocaleHref } from "@/lib/i18n/shared";
 
 type Props = {
   videos: Video[];
@@ -26,7 +28,7 @@ function FeaturedVideoCard({
   return (
     <button
       key={video.id}
-      className="group relative overflow-hidden rounded-2xl bg-zinc-100 text-left shadow-lg"
+      className="group relative overflow-hidden rounded-2xl bg-black/40 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
       type="button"
       onClick={() => onOpen(video)}
       onMouseEnter={() => setIsHovered(true)}
@@ -57,7 +59,7 @@ function FeaturedVideoCard({
             title={video.title}
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
         <div className="absolute inset-x-6 bottom-6 text-center text-white">
           <div className="text-xs uppercase tracking-[0.3em] text-white/80">
             {video.taxonomies.find((taxonomy) => taxonomy.kind === "type")?.label ??
@@ -72,6 +74,7 @@ function FeaturedVideoCard({
 
 export function LeanFeaturedGrid({ videos }: Props) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
+  const { locale } = useI18n();
 
   useEffect(() => {
     const urls = ["https://videodelivery.net", "https://iframe.videodelivery.net"];
@@ -95,28 +98,17 @@ export function LeanFeaturedGrid({ videos }: Props) {
   if (videos.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-white py-20 text-zinc-900">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 top-16 h-64 w-64 rounded-full bg-rose-400/15 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-amber-300/12 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
-      </div>
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-8 text-center sm:py-12">
-        <h2 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
-          <span className="whitespace-nowrap">
-            Nous sommes une agence{" "}
-            <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-              lean
-            </span>
-          </span>
+    <section className="relative overflow-hidden bg-black py-28 text-white">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 text-center">
+        <h2 className="text-[2.7rem] font-semibold leading-tight sm:text-[3.4rem]">
+          Notre{" "}
+          <span className="font-bold italic text-white">
+            portfolio
+          </span>{" "}
+          parle pour nous
         </h2>
-        <p className="mt-4 text-sm leading-6 text-zinc-600">
-          Être une agence lean, c’est concentrer nos efforts sur ce qui génère réellement de la valeur. 
-          Moins de lourdeur, moins d’intermédiaires, plus de clarté, plus d’impact. 
-          Chaque projet est structuré pour servir vos objectifs d’affaires, sans complexité inutile.
-        </p>
       </div>
-      <div className="relative z-10 mx-auto mt-8 w-full max-w-none px-[10vw]">
+      <div className="relative z-10 mx-auto mt-14 w-full max-w-6xl px-6">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {videos.slice(0, 6).map((video, index) => (
             <FeaturedVideoCard
@@ -126,6 +118,25 @@ export function LeanFeaturedGrid({ videos }: Props) {
               priority={index < 3}
             />
           ))}
+        </div>
+      </div>
+      <div className="relative z-10 mx-auto mt-14 w-full max-w-6xl px-6">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <p className="text-[1.44rem] leading-7 text-white/80">
+            L’ensemble de notre{" "}
+            <span className="font-semibold text-white">
+              portfolio
+            </span>{" "}
+            est disponible sur notre site web
+            <br />
+            Le détour vaut définitivement la peine
+          </p>
+          <Link
+            href={withLocaleHref(locale, "/portfolio")}
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
+          >
+            Consulter
+          </Link>
         </div>
       </div>
       {activeVideo ? (

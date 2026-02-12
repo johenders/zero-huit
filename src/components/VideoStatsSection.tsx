@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { withLocaleHref } from "@/lib/i18n/shared";
+import { useI18n } from "@/lib/i18n/client";
 
 type Stat = {
   value: number;
@@ -78,7 +81,7 @@ function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
     <div className="border-b border-zinc-200 pb-6">
       <div className="flex items-end justify-between gap-6">
         <div>
-          <div className="text-sm font-semibold uppercase tracking-[0.1em] text-emerald-600">
+          <div className="text-sm font-extrabold uppercase tracking-[0.1em] text-zinc-900">
             {stat.label}
           </div>
           <p className="mt-3 text-sm leading-6 text-zinc-600">{stat.description}</p>
@@ -95,6 +98,7 @@ function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
 export function VideoStatsSection() {
   const [start, setStart] = useState(false);
   const sectionRef = useRef<HTMLDivElement | null>(null);
+  const { locale } = useI18n();
 
   useEffect(() => {
     const target = sectionRef.current;
@@ -113,24 +117,26 @@ export function VideoStatsSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-white py-28 text-zinc-900">
+    <section ref={sectionRef} className="bg-white py-24 text-zinc-900">
       <div className="mx-auto w-full max-w-6xl px-6 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-600">
-          SUCCESS IN NUMBERS
-        </p>
-        <h2 className="mt-4 text-3xl font-semibold sm:text-4xl">
-          Des r&#233;sultats qui parlent pour la vid&#233;o.
+        <h2 className="text-[3.45rem] font-bold leading-tight text-black sm:text-[4.3rem]">
+          Les <span className="font-bold italic text-black">r&#233;sultats</span> disent tout
         </h2>
-        <p className="mt-4 text-sm text-zinc-600">
-          Statistiques marketing (placeholders) &#8212; on ajuste ensemble.
-        </p>
       </div>
-      <div className="mx-auto mt-12 w-full max-w-none px-[10vw]">
-        <div className="grid gap-16 md:grid-cols-2">
+      <div className="mx-auto mt-12 w-full max-w-6xl px-6">
+        <div className="grid gap-12 md:grid-cols-2">
           {stats.map((stat) => (
             <AnimatedStat key={stat.label} stat={stat} start={start} />
           ))}
         </div>
+      </div>
+      <div className="mx-auto mt-10 flex w-full max-w-6xl justify-center px-6">
+        <Link
+          href={withLocaleHref(locale, "/request")}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
+        >
+          Demander une soumission
+        </Link>
       </div>
     </section>
   );

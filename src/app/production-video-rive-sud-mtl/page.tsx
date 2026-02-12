@@ -6,6 +6,7 @@ import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
 import { ApproachSection } from "@/components/ApproachSection";
 import { ClientsMarqueeSection } from "@/components/ClientsMarqueeSection";
 import { LeanFeaturedGrid } from "@/components/LeanFeaturedGrid";
+import { MadeToFlexSection } from "@/components/MadeToFlexSection";
 import { VideoStatsSection } from "@/components/VideoStatsSection";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
@@ -99,36 +100,28 @@ export default async function ProductionVideoRiveSudPage() {
         sizes="100vw"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-black/75" />
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-none flex-col justify-center px-6 pb-16 pt-28">
-        <div className="w-full pl-[10%]">
-          <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-            <span className="block">
-              Des histoires qui{" "}
-              <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-                comptent
+        <div className="w-full pl-[10%] origin-left scale-[1.1] transform">
+          <h1 className="font-['Montserrat'] text-[2.6rem] font-normal leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">
+            <span className="block font-bold">Des vidéos</span>
+            <span className="block font-bold">
+              au service de votre{" "}
+              <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
+                <span className="word-slider flex flex-col">
+                  {["message", "campagne", "projet", "idée"].map((word) => (
+                    <span
+                      key={word}
+                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-extrabold italic text-transparent"
+                      style={{ height: "1.4em", lineHeight: "1.4" }}
+                    >
+                      {word}
+                    </span>
+                  ))}
+                </span>
               </span>
-              .
-            </span>
-            <span className="block">
-              Des vidéos qui{" "}
-              <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text text-transparent">
-                marquent
-              </span>
-              .
             </span>
           </h1>
-          <p className="mt-6 text-xl text-zinc-100 sm:text-2xl">
-            On crée du contenu qui{" "}
-            <span className="relative inline-flex h-[1.2em] overflow-hidden align-baseline pr-[0.2em]">
-              <span className="word-slider flex flex-col font-bold italic text-white">
-                <span className="word-item">communique</span>
-                <span className="word-item">touche</span>
-                <span className="word-item">parle</span>
-                <span className="word-item">mobilise</span>
-              </span>
-            </span>
-          </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href={withLocaleHref(locale, "/portfolio")}
@@ -140,15 +133,16 @@ export default async function ProductionVideoRiveSudPage() {
               href={withLocaleHref(locale, "/request")}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
             >
-              Demande de soumission
+              Créer ma campagne
             </Link>
           </div>
         </div>
       </div>
     </section>
-    <LeanFeaturedGrid videos={featuredVideos} />
     <ClientsMarqueeSection />
+    <LeanFeaturedGrid videos={featuredVideos} />
     <VideoStatsSection />
+    <MadeToFlexSection />
     <ApproachSection />
     <section className="relative overflow-hidden">
       <div className="relative min-h-[85vh] w-full overflow-hidden rounded-none">
@@ -172,7 +166,7 @@ export default async function ProductionVideoRiveSudPage() {
             href={withLocaleHref(locale, "/request")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-2.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
           >
-            Demande de soumission
+            Créer ma campagne
           </Link>
         </div>
         <div className="pointer-events-none absolute bottom-8 left-8 hidden flex-col items-start gap-2 pl-12 text-white/80 md:flex">
