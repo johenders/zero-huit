@@ -162,16 +162,16 @@ export default async function ProductionVideoRiveSudPage() {
       <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-black/75" />
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-none flex-col justify-center px-6 pb-16 pt-28">
         <div className="w-full pl-[10%] origin-left scale-[1.1] transform">
-          <h1 className="font-['Montserrat'] text-[2.6rem] font-normal leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">
-            <span className="block font-bold">Des vidéos</span>
-            <span className="block font-bold">
+          <h1 className="font-['Montserrat'] text-[2.6rem] font-semibold leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">
+            <span className="block">Des vidéos</span>
+            <span className="block">
               au service de votre{" "}
               <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
                 <span className="word-slider flex flex-col">
                   {["message", "campagne", "projet", "idée"].map((word) => (
                     <span
                       key={word}
-                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-bold not-italic text-transparent"
+                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-semibold not-italic text-transparent"
                       style={{ height: "1.4em", lineHeight: "1.4" }}
                     >
                       {word}

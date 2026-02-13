@@ -16,6 +16,7 @@
   color-scheme: dark;
 }
 
+html,
 body {
   background: radial-gradient(1200px 800px at 20% 0%, #1a1f2b 0%, #070a10 45%, #05070b 100%);
   color: #e4e4e7;
