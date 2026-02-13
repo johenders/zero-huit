@@ -8,13 +8,33 @@ import { ClientsMarqueeSection } from "@/components/ClientsMarqueeSection";
 import { LeanFeaturedGrid } from "@/components/LeanFeaturedGrid";
 import { MadeToFlexSection } from "@/components/MadeToFlexSection";
 import { VideoStatsSection } from "@/components/VideoStatsSection";
+import { fallbackArticles } from "@/lib/articles";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
-import type { Taxonomy, Video } from "@/lib/types";
+import type { Article, Taxonomy, Video } from "@/lib/types";
 import { buildPageMetadata } from "@/lib/seo";
 
 import heroImage from "../../../assets/bts/zero_huit_production_video.jpg";
 import ctaBg from "../../../assets/bts/IMG_2410.jpg";
 import zerohuitLogo from "../../../assets/zerohuit_blanc.png";
+
+type DisplayArticle = {
+  title: string;
+  excerpt: string;
+  author: string;
+  dateLabel: string;
+  href: string;
+  imageUrl?: string | null;
+  image?: (typeof fallbackArticles)[number]["image"];
+};
+
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+}
 
 export async function generateMetadata() {
   const requestHeaders = await headers();
@@ -32,14 +52,18 @@ export default async function ProductionVideoRiveSudPage() {
   const requestHeaders = await headers();
   const locale = normalizeLocale(requestHeaders.get("x-locale"));
   let featuredVideos: Video[] = [];
+  let latestArticles: DisplayArticle[] = [];
 
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ) {
     const supabase = getSupabasePublicServerClient();
-    const [{ data: videos, error: videosError }, { data: taxonomies, error: taxonomiesError }] =
-      await Promise.all([
+    const [
+      { data: videos, error: videosError },
+      { data: taxonomies, error: taxonomiesError },
+      { data: articles, error: articlesError },
+    ] = await Promise.all([
         supabase
           .from("videos")
           .select(
@@ -49,6 +73,14 @@ export default async function ProductionVideoRiveSudPage() {
           .order("created_at", { ascending: false })
           .limit(6),
         supabase.from("taxonomies").select("id,kind,label"),
+        supabase
+          .from("articles")
+          .select(
+            "id,title,slug,excerpt,cover_image_url,author,published_at,is_published",
+          )
+          .eq("is_published", true)
+          .order("published_at", { ascending: false })
+          .limit(3),
       ]);
 
     if (!videosError && !taxonomiesError) {
@@ -87,10 +119,37 @@ export default async function ProductionVideoRiveSudPage() {
         .filter((video) => !video.cloudflare_uid.startsWith("pending:"))
         .slice(0, 6);
     }
+
+    if (!articlesError && (articles ?? []).length > 0) {
+      const rows = articles as Pick<
+        Article,
+        "title" | "slug" | "excerpt" | "cover_image_url" | "author" | "published_at"
+      >[];
+
+      latestArticles = rows.map((article) => ({
+        title: article.title,
+        excerpt: article.excerpt ?? "",
+        author: article.author ?? "Zéro huit",
+        dateLabel: formatDateLabel(article.published_at),
+        href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
+        imageUrl: article.cover_image_url,
+      }));
+    }
+  }
+
+  if (latestArticles.length === 0) {
+    latestArticles = fallbackArticles.slice(0, 3).map((article) => ({
+      title: article.title,
+      excerpt: article.excerpt,
+      author: article.author,
+      dateLabel: article.dateLabel,
+      href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
+      image: article.image,
+    }));
   }
 
   return (
-    <>
+    <div className="font-['Montserrat']">
     <section className="relative min-h-screen w-full overflow-hidden text-white">
       <Image
         src={heroImage}
@@ -112,7 +171,7 @@ export default async function ProductionVideoRiveSudPage() {
                   {["message", "campagne", "projet", "idée"].map((word) => (
                     <span
                       key={word}
-                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-extrabold italic text-transparent"
+                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-bold not-italic text-transparent"
                       style={{ height: "1.4em", lineHeight: "1.4" }}
                     >
                       {word}
@@ -144,6 +203,72 @@ export default async function ProductionVideoRiveSudPage() {
     <VideoStatsSection />
     <MadeToFlexSection />
     <ApproachSection />
+    <section className="bg-[#0c0b0b] pb-24 pt-14 text-zinc-100">
+      <div className="mx-auto w-full max-w-7xl px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-[2.7rem] font-bold leading-[1.05] tracking-tight text-white sm:text-[3.4rem]">
+              Comprendre avant de produire
+            </h2>
+          </div>
+          <Link
+            href={withLocaleHref(locale, "/nouvelles")}
+            className="inline-flex items-center justify-center rounded-full border border-white/20 px-5 py-2 text-[0.84rem] font-semibold text-zinc-100 transition hover:border-white/40"
+          >
+            Voir les nouvelles
+          </Link>
+        </div>
+
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          {latestArticles.map((article) => (
+            <Link
+              key={article.href}
+              href={article.href}
+              className="group relative block min-h-[30rem] overflow-hidden rounded-2xl border border-white/10 transition-colors hover:border-white/20"
+            >
+              {article.imageUrl ? (
+                <Image
+                  src={article.imageUrl}
+                  alt={article.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              ) : (
+                <Image
+                  src={article.image ?? fallbackArticles[0].image}
+                  alt={article.title}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              )}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.99) 0%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,0.58) 75%, rgba(0,0,0,0.08) 100%)",
+                }}
+              />
+              <span className="absolute right-3 top-3 z-10 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-100">
+                Blog
+              </span>
+              <div className="absolute inset-x-0 bottom-0 z-10 space-y-2 px-4 pb-5">
+                <div className="text-[11px] text-zinc-300">
+                  {article.dateLabel} <span className="mx-1 text-zinc-500">•</span> par {article.author}
+                </div>
+                <h3 className="line-clamp-2 text-lg font-bold leading-7 tracking-tight text-white">
+                  {article.title}
+                </h3>
+                <p className="mt-5 line-clamp-3 text-[0.84rem] leading-6 text-zinc-200">
+                  {article.excerpt}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
     <section className="relative overflow-hidden">
       <div className="relative min-h-[85vh] w-full overflow-hidden rounded-none">
         <Image
@@ -232,6 +357,6 @@ export default async function ProductionVideoRiveSudPage() {
         </div>
       </div>
     </section>
-    </>
+    </div>
   );
 }

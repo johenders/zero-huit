@@ -117,7 +117,7 @@ export function VideoStatsSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-white py-24 text-zinc-900">
+    <section ref={sectionRef} className="bg-white pb-12 pt-24 text-zinc-900">
       <div className="mx-auto w-full max-w-6xl px-6 text-center">
         <h2 className="text-[3.45rem] font-bold leading-tight text-black sm:text-[4.3rem]">
           Les <span className="font-bold italic text-black">r&#233;sultats</span> disent tout

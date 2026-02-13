@@ -98,7 +98,15 @@ export function LeanFeaturedGrid({ videos }: Props) {
   if (videos.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-black py-28 text-white">
+    <section className="relative overflow-hidden bg-[#0c0b0b] py-28 text-white">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-10"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E\")",
+          backgroundSize: "180px 180px",
+        }}
+      />
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6 text-center">
         <h2 className="text-[2.7rem] font-semibold leading-tight sm:text-[3.4rem]">
           Notre{" "}
@@ -121,15 +129,13 @@ export function LeanFeaturedGrid({ videos }: Props) {
         </div>
       </div>
       <div className="relative z-10 mx-auto mt-14 w-full max-w-6xl px-6">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-6">
           <p className="text-[1.44rem] leading-7 text-white/80">
             L’ensemble de notre{" "}
             <span className="font-semibold text-white">
               portfolio
             </span>{" "}
             est disponible sur notre site web
-            <br />
-            Le détour vaut définitivement la peine
           </p>
           <Link
             href={withLocaleHref(locale, "/portfolio")}

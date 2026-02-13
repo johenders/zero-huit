@@ -26,20 +26,15 @@ export function ApproachSection() {
     <section className="relative overflow-hidden bg-white py-20 text-zinc-900">
       <div className="relative mx-auto w-full max-w-7xl px-6 sm:px-10">
         <div className="max-w-none">
-          <h2 className="text-[2.9rem] font-semibold leading-tight sm:text-[3.6rem]">
-            Notre{" "}
-            <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-extrabold text-transparent">
-              approche
-            </span>
+          <h2 className="text-[2.9rem] font-bold leading-tight sm:text-[3.6rem]">
+            Notre approche
           </h2>
           <p className="mt-5 max-w-6xl text-xs text-zinc-700 sm:text-sm leading-relaxed">
-            Tout commence par{" "}
-            <span className="font-semibold text-emerald-500">vos objectifs d&apos;affaires</span>.
-            On cherche d&apos;abord à comprendre ce que vous voulez atteindre,
+            Tout commence par vos objectifs d&apos;affaires. On cherche d&apos;abord à comprendre ce que vous voulez atteindre,
             puis on bâtit la vidéo autour de ça.
           </p>
           <p className="mt-2 max-w-6xl text-xs text-zinc-700 sm:text-sm leading-relaxed">
-            <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-extrabold text-transparent">
+            <span className="font-bold text-black">
               Résultat
             </span>{" "}
             : des contenus clairs, cohérents et faciles à utiliser dans votre réalité.
