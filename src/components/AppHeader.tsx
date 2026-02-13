@@ -55,6 +55,9 @@ export function AppHeader({
     router.push(localeSwitchHref);
     router.refresh();
   };
+  const logoImageClass = isMinimal
+    ? "h-11 w-auto max-w-[42vw] object-contain sm:h-24 sm:max-w-none"
+    : "h-16 w-auto object-contain sm:h-24";
 
   return (
     <header
@@ -62,13 +65,13 @@ export function AppHeader({
         headerClassName ? ` ${headerClassName}` : ""
       }`}
     >
-      <div className="mx-auto flex w-full max-w-none items-center justify-between gap-4 px-4 py-3 lg:px-6">
+      <div className="mx-auto flex w-full max-w-none items-center justify-between gap-3 px-4 py-3 lg:px-6">
         {logoSrc ? (
-          <Link href={withLocaleHref(locale, "/")} className="flex items-center">
+          <Link href={withLocaleHref(locale, "/")} className="flex shrink-0 items-center">
             <Image
               src={logoSrc}
               alt={logoAlt}
-              className="h-24 w-auto"
+              className={logoImageClass}
               priority
             />
           </Link>
@@ -83,7 +86,7 @@ export function AppHeader({
             </span>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMinimal ? "shrink-0" : ""}`}>
           {!isMinimal && (
             <nav className="hidden items-center gap-2 sm:flex">
               <Link href={withLocaleHref(locale, "/")} className={navItemClass(isActive("/"))}>
@@ -117,8 +120,10 @@ export function AppHeader({
           )}
           <Link
             href={withLocaleHref(locale, "/request")}
-            className={`items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 ${
-              isMinimal ? "inline-flex" : "hidden sm:flex"
+            className={`items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 ${
+              isMinimal
+                ? "inline-flex whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:text-sm"
+                : "hidden px-4 py-2 text-sm sm:flex"
             }`}
           >
             {t("nav.cta")}
