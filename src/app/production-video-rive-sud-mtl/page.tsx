@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
+import { getUiDictionary } from "@/lib/i18n/server";
 import { ApproachSection } from "@/components/ApproachSection";
 import { ClientsMarqueeSection } from "@/components/ClientsMarqueeSection";
 import { LeanFeaturedGrid } from "@/components/LeanFeaturedGrid";
@@ -39,18 +40,21 @@ function formatDateLabel(value: string) {
 export async function generateMetadata() {
   const requestHeaders = await headers();
   const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
   return buildPageMetadata({
     locale,
     path: "/production-video-rive-sud-mtl",
-    title: "Production vidéo Rive-Sud — Zéro huit",
-    description:
-      "Des histoires qui comptent. Des vidéos qui marquent. Production vidéo sur la Rive-Sud de Montréal.",
+    title: t("rive.meta.title"),
+    description: t("rive.meta.description"),
   });
 }
 
 export default async function ProductionVideoRiveSudPage() {
   const requestHeaders = await headers();
   const locale = normalizeLocale(requestHeaders.get("x-locale"));
+  const dictionary = await getUiDictionary(locale);
+  const t = (key: string) => dictionary[key] ?? key;
   let featuredVideos: Video[] = [];
   let latestArticles: DisplayArticle[] = [];
 
@@ -129,7 +133,7 @@ export default async function ProductionVideoRiveSudPage() {
       latestArticles = rows.map((article) => ({
         title: article.title,
         excerpt: article.excerpt ?? "",
-        author: article.author ?? "Zéro huit",
+        author: article.author ?? t("news.detail.author.fallback"),
         dateLabel: formatDateLabel(article.published_at),
         href: withLocaleHref(locale, `/nouvelles/${article.slug}`),
         imageUrl: article.cover_image_url,
@@ -153,7 +157,7 @@ export default async function ProductionVideoRiveSudPage() {
     <section className="relative min-h-screen w-full overflow-hidden text-white">
       <Image
         src={heroImage}
-        alt="Production vidéo Zéro huit"
+        alt={t("rive.hero.image.alt")}
         fill
         priority
         sizes="100vw"
@@ -163,12 +167,17 @@ export default async function ProductionVideoRiveSudPage() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-none flex-col justify-center px-6 pb-16 pt-28">
         <div className="w-full pl-[10%] origin-left scale-[1.1] transform">
           <h1 className="font-['Montserrat'] text-[2.6rem] font-semibold leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">
-            <span className="block">Des vidéos</span>
+            <span className="block">{t("rive.hero.title.line1")}</span>
             <span className="block">
-              au service de votre{" "}
+              {t("rive.hero.title.line2")}{" "}
               <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
                 <span className="word-slider flex flex-col">
-                  {["message", "campagne", "projet", "idée"].map((word) => (
+                  {[
+                    t("rive.hero.word.1"),
+                    t("rive.hero.word.2"),
+                    t("rive.hero.word.3"),
+                    t("rive.hero.word.4"),
+                  ].map((word) => (
                     <span
                       key={word}
                       className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-semibold not-italic text-transparent"
@@ -186,13 +195,13 @@ export default async function ProductionVideoRiveSudPage() {
               href={withLocaleHref(locale, "/portfolio")}
               className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/60 hover:text-emerald-200"
             >
-              Portfolio
+              {t("rive.hero.cta.portfolio")}
             </Link>
             <Link
               href={withLocaleHref(locale, "/request")}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
             >
-              Créer ma campagne
+              {t("rive.hero.cta.create")}
             </Link>
           </div>
         </div>
@@ -208,14 +217,14 @@ export default async function ProductionVideoRiveSudPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-[2.7rem] font-bold leading-[1.05] tracking-tight text-white sm:text-[3.4rem]">
-              Comprendre avant de produire
+              {t("rive.blog.title")}
             </h2>
           </div>
           <Link
             href={withLocaleHref(locale, "/nouvelles")}
             className="inline-flex items-center justify-center rounded-full border border-white/20 px-5 py-2 text-[0.84rem] font-semibold text-zinc-100 transition hover:border-white/40"
           >
-            Voir les nouvelles
+            {t("home.latest.cta")}
           </Link>
         </div>
 
@@ -251,11 +260,12 @@ export default async function ProductionVideoRiveSudPage() {
                 }}
               />
               <span className="absolute right-3 top-3 z-10 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-100">
-                Blog
+                {t("home.latest.badge")}
               </span>
               <div className="absolute inset-x-0 bottom-0 z-10 space-y-2 px-4 pb-5">
                 <div className="text-[11px] text-zinc-300">
-                  {article.dateLabel} <span className="mx-1 text-zinc-500">•</span> par {article.author}
+                  {article.dateLabel} <span className="mx-1 text-zinc-500">•</span>{" "}
+                  {t("home.latest.by")} {article.author}
                 </div>
                 <h3 className="line-clamp-2 text-lg font-bold leading-7 tracking-tight text-white">
                   {article.title}
@@ -273,7 +283,7 @@ export default async function ProductionVideoRiveSudPage() {
       <div className="relative min-h-[85vh] w-full overflow-hidden rounded-none">
         <Image
           src={ctaBg}
-          alt="Zéro huit"
+          alt={t("rive.cta.image.alt")}
           fill
           className="object-cover"
           sizes="100vw"
@@ -282,26 +292,26 @@ export default async function ProductionVideoRiveSudPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
         <div className="relative z-10 mx-auto flex min-h-[85vh] w-full max-w-6xl flex-col items-center justify-center px-6 text-center text-white">
           <h2 className="text-4xl font-semibold sm:text-5xl lg:text-6xl">
-            Laissez-nous raconter votre histoire
+            {t("footer.cta.label")}
           </h2>
           <p className="mt-4 text-sm uppercase tracking-[0.1em] text-white/80">
-            Consultation gratuite
+            {t("rive.cta.subtitle")}
           </p>
           <Link
             href={withLocaleHref(locale, "/request")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-2.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
           >
-            Créer ma campagne
+            {t("rive.hero.cta.create")}
           </Link>
         </div>
         <div className="pointer-events-none absolute bottom-8 left-8 hidden flex-col items-start gap-2 pl-12 text-white/80 md:flex">
           <Image
             src={zerohuitLogo}
-            alt="Zéro huit"
+            alt={t("rive.cta.image.alt")}
             className="h-[84px] w-auto"
           />
           <div className="pl-6 text-xs text-white/70">
-            © 2026 Zéro huit. Tous droits r&#233;serv&#233;s. 
+            {t("rive.footer.copy")}
           </div>
         </div>
         <div className="absolute bottom-8 right-8 hidden items-center gap-3 pr-12 md:flex">

@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/client";
 
 import btsOne from "../../assets/bts/DSCF2233.jpg";
 import btsTwo from "../../assets/bts/DSCF7468.jpg";
@@ -7,53 +10,52 @@ import btsThree from "../../assets/bts/IMG_7132.jpg";
 const cards = [
   {
     image: btsOne,
-    title: "créatif",
-    description:
-      "Une direction artistique solide pour créer des contenus justes, pertinents et pensés pour vos enjeux de communication.",
+    titleKey: "rive.flex.card1.title",
+    descriptionKey: "rive.flex.card1.description",
     panelClass: "bg-[#5cc3d7]",
-    alt: "Équipe en tournage sur le terrain",
+    altKey: "rive.flex.card1.alt",
   },
   {
     image: btsTwo,
-    title: "rapide",
-    description:
-      "Des processus efficaces et une équipe agile pour livrer rapidement, sans compromettre la qualité ni la stratégie.",
+    titleKey: "rive.flex.card2.title",
+    descriptionKey: "rive.flex.card2.description",
     panelClass: "bg-[#39c193]",
-    alt: "Équipe en réunion autour d'une table",
+    altKey: "rive.flex.card2.alt",
   },
   {
     image: btsThree,
-    title: "flexible",
-    description:
-      "Une structure légère qui s’adapte à vos réalités, vos échéanciers et l’évolution constante de vos projets.",
+    titleKey: "rive.flex.card3.title",
+    descriptionKey: "rive.flex.card3.description",
     panelClass: "bg-[#8acd5f]",
-    alt: "Discussion client en environnement de travail",
+    altKey: "rive.flex.card3.alt",
   },
 ] as const;
 
 export function MadeToFlexSection() {
+  const { t } = useI18n();
+
   return (
     <section className="relative z-10 bg-[#0f1f1b] py-24 text-white">
       <div className="mx-auto w-full max-w-6xl px-6">
         <h3 className="text-center text-[2.5rem] font-semibold leading-tight text-white sm:text-[3.1rem] lg:text-[4rem]">
-          Pens&#233; pour suivre l&#8217;&#233;lan de
+          {t("rive.flex.title.line1")}
           <br />
           <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-extrabold text-transparent">
-            vos projets
+            {t("rive.flex.title.line2")}
           </span>
         </h3>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {cards.map((card) => (
             <article
-              key={card.title}
+              key={card.titleKey}
               tabIndex={0}
               className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
               <div className="relative aspect-[4/5] w-full">
                 <Image
                   src={card.image}
-                  alt={card.alt}
+                  alt={t(card.altKey)}
                   fill
                   className="object-cover"
                 />
@@ -65,15 +67,15 @@ export function MadeToFlexSection() {
               >
                 <div className="flex items-center justify-between px-6 py-4">
                   <h4 className="text-2xl sm:text-3xl">
-                    <span className="font-normal">On est </span>
-                    <span className="font-bold italic">{card.title}</span>
+                    <span className="font-normal">{t("rive.flex.card.prefix")} </span>
+                    <span className="font-bold italic">{t(card.titleKey)}</span>
                   </h4>
                   <span className="ml-4 text-2xl">
                     ⌃
                   </span>
                 </div>
                 <p className="px-6 pb-5 text-sm leading-6 text-white/95 md:max-h-0 md:overflow-hidden md:opacity-0 md:transition-all md:duration-300 md:group-hover:max-h-28 md:group-hover:opacity-100 md:group-focus-within:max-h-28 md:group-focus-within:opacity-100">
-                  {card.description}
+                  {t(card.descriptionKey)}
                 </p>
               </div>
             </article>

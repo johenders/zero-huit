@@ -146,7 +146,7 @@ function MarqueeRow({ direction, items }: MarqueeRowProps) {
 export function ClientsMarqueeSection() {
   const firstRow = logos.slice(0, 8);
   const secondRow = logos.slice(8);
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
 
   return (
     <section className="relative overflow-hidden bg-black pt-10 pb-0 text-white">
@@ -165,9 +165,9 @@ export function ClientsMarqueeSection() {
           <div className="grid gap-12 lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
             <div className="order-2 lg:order-1 flex flex-col lg:pr-6">
               <h3 className="text-[2.35rem] font-semibold leading-[1.1] text-black sm:text-[2.95rem]">
-                Nous sommes une agence{" "}
+                {t("rive.clients.title.prefix")}{" "}
                 <span className="bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-bold text-transparent">
-                  lean
+                  {t("rive.clients.title.highlight")}
                 </span>
               </h3>
 
@@ -176,12 +176,10 @@ export function ClientsMarqueeSection() {
                   <span className="self-stretch w-2 rounded-full bg-gradient-to-b from-[#5cc3d7] to-[#8acd5f]" />
                   <div>
                     <p className="inline-block text-sm font-normal italic text-black">
-                      Lean management
+                      {t("rive.clients.lean.label")}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-zinc-700">
-                      Modèle de gestion centré sur la création de valeur réelle, visant à réduire
-                      la lourdeur et les intermédiaires afin d'offrir des processus plus clairs,
-                      efficaces et alignés sur les objectifs d’affaires, sans complexité inutile.
+                      {t("rive.clients.lean.body")}
                     </p>
                   </div>
                 </div>
@@ -193,7 +191,7 @@ export function ClientsMarqueeSection() {
                   <iframe
                     className="absolute inset-0 h-full w-full"
                     src={heroVideoSrc}
-                    title="Zéro huit — Démo"
+                    title={t("rive.clients.video.title")}
                     allow="autoplay; fullscreen"
                     allowFullScreen
                   />
@@ -205,17 +203,17 @@ export function ClientsMarqueeSection() {
 
           <div className="mt-12 flex flex-col items-center gap-6 text-center">
             <p className="max-w-3xl text-[1.25rem] leading-[1.35] text-zinc-700">
-              Avec notre équipe, on se concentre sur ce qui compte vraiment,{" "}
+              {t("rive.clients.message.prefix")}{" "}
               <span className="font-semibold text-black">
-                votre message
+                {t("rive.clients.message.highlight")}
               </span>
-              .
+              {t("rive.clients.message.suffix")}
             </p>
             <Link
               href={withLocaleHref(locale, "/request")}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
             >
-              Planifier ma consultation gratuite
+              {t("rive.clients.cta")}
             </Link>
           </div>
         </div>

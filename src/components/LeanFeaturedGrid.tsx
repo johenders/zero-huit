@@ -74,7 +74,7 @@ function FeaturedVideoCard({
 
 export function LeanFeaturedGrid({ videos }: Props) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
 
   useEffect(() => {
     const urls = ["https://videodelivery.net", "https://iframe.videodelivery.net"];
@@ -109,11 +109,11 @@ export function LeanFeaturedGrid({ videos }: Props) {
       />
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6 text-center">
         <h2 className="text-[2.7rem] font-semibold leading-tight sm:text-[3.4rem]">
-          Notre{" "}
+          {t("rive.portfolio.title.prefix")}{" "}
           <span className="font-bold italic text-white">
-            portfolio
+            {t("rive.portfolio.title.highlight")}
           </span>{" "}
-          parle pour nous
+          {t("rive.portfolio.title.suffix")}
         </h2>
       </div>
       <div className="relative z-10 mx-auto mt-14 w-full max-w-6xl px-6">
@@ -131,17 +131,17 @@ export function LeanFeaturedGrid({ videos }: Props) {
       <div className="relative z-10 mx-auto mt-14 w-full max-w-6xl px-6">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <p className="text-[1.44rem] leading-7 text-white/80">
-            L’ensemble de notre{" "}
+            {t("rive.portfolio.body.prefix")}{" "}
             <span className="font-semibold text-white">
-              portfolio
+              {t("rive.portfolio.body.highlight")}
             </span>{" "}
-            est disponible sur notre site web
+            {t("rive.portfolio.body.suffix")}
           </p>
           <Link
             href={withLocaleHref(locale, "/portfolio")}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
           >
-            Consulter
+            {t("rive.portfolio.cta")}
           </Link>
         </div>
       </div>
@@ -165,7 +165,7 @@ export function LeanFeaturedGrid({ videos }: Props) {
                 onClick={() => setActiveVideo(null)}
                 type="button"
               >
-                Fermer
+                {t("rive.portfolio.modal.close")}
               </button>
             </div>
             <div className="aspect-video w-full">

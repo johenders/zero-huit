@@ -1,43 +1,31 @@
+"use client";
+
+import { useI18n } from "@/lib/i18n/client";
+
 const steps = [
-  {
-    title: "Consultation gratuite",
-    body:
-      "Une première discussion pour comprendre votre réalité et vos objectifs. Pas de pitch, pas de pression. Juste un échange honnête pour bien poser les bases.",
-  },
-  {
-    title: "La planification",
-    body:
-      "On transforme les idées en une direction solide. Tout est pensé pour que le projet soit clair avant d’être produit.",
-  },
-  {
-    title: "La production",
-    body:
-      "On dirige le tournage avec une équipe légère, efficace et alignée sur votre message. Chaque plan sert l’intention.",
-  },
-  {
-    title: "La livraison",
-    body:
-      "On assemble les morceaux, on garde seulement le meilleur. Un rendu propre, cohérent et facile à déployer.",
-  },
+  { titleKey: "rive.approach.step1.title", bodyKey: "rive.approach.step1.body" },
+  { titleKey: "rive.approach.step2.title", bodyKey: "rive.approach.step2.body" },
+  { titleKey: "rive.approach.step3.title", bodyKey: "rive.approach.step3.body" },
+  { titleKey: "rive.approach.step4.title", bodyKey: "rive.approach.step4.body" },
 ];
 
 export function ApproachSection() {
+  const { t } = useI18n();
   return (
     <section className="relative overflow-hidden bg-white py-20 text-zinc-900">
       <div className="relative mx-auto w-full max-w-7xl px-6 sm:px-10">
         <div className="max-w-none">
           <h2 className="text-[2.9rem] font-bold leading-tight sm:text-[3.6rem]">
-            Notre approche
+            {t("rive.approach.title")}
           </h2>
           <p className="mt-5 max-w-6xl text-xs text-zinc-700 sm:text-sm leading-relaxed">
-            Tout commence par vos objectifs d&apos;affaires. On cherche d&apos;abord à comprendre ce que vous voulez atteindre,
-            puis on bâtit la vidéo autour de ça.
+            {t("rive.approach.body.1")}
           </p>
           <p className="mt-2 max-w-6xl text-xs text-zinc-700 sm:text-sm leading-relaxed">
             <span className="font-bold text-black">
-              Résultat
+              {t("rive.approach.result.label")}
             </span>{" "}
-            : des contenus clairs, cohérents et faciles à utiliser dans votre réalité.
+            : {t("rive.approach.result.body")}
           </p>
         </div>
 
@@ -57,12 +45,12 @@ export function ApproachSection() {
 
           <div className="mt-10 grid gap-10 md:grid-cols-4">
             {steps.map((item) => (
-              <div key={item.title}>
+              <div key={item.titleKey}>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-500 text-left">
-                  {item.title}
+                  {t(item.titleKey)}
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-zinc-600 text-left">
-                  {item.body}
+                  {t(item.bodyKey)}
                 </p>
               </div>
             ))}
@@ -74,7 +62,7 @@ export function ApproachSection() {
             type="button"
             className="rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
           >
-            Consultation gratuite
+            {t("rive.approach.cta")}
           </button>
         </div>
       </div>
