@@ -167,28 +167,52 @@ export default async function ProductionVideoRiveSudPage() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-none flex-col justify-center px-6 pb-16 pt-28">
         <div className="w-full pl-[10%] origin-left scale-[1.1] transform">
           <h1 className="font-['Montserrat'] text-[2.6rem] font-semibold leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">
-            <span className="block">{t("rive.hero.title.line1")}</span>
-            <span className="block">
-              {t("rive.hero.title.line2")}{" "}
-              <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
-                <span className="word-slider flex flex-col">
-                  {[
-                    t("rive.hero.word.1"),
-                    t("rive.hero.word.2"),
-                    t("rive.hero.word.3"),
-                    t("rive.hero.word.4"),
-                  ].map((word) => (
-                    <span
-                      key={word}
-                      className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-semibold not-italic text-transparent"
-                      style={{ height: "1.4em", lineHeight: "1.4" }}
-                    >
-                      {word}
+            {locale === "en" ? (
+              <>
+                <span className="block">
+                  Empowering your{" "}
+                  <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
+                    <span className="word-slider flex flex-col">
+                      {["Ideas", "Campaign", "Message", "Story"].map((word) => (
+                        <span
+                          key={word}
+                          className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-semibold not-italic text-transparent"
+                          style={{ height: "1.4em", lineHeight: "1.4" }}
+                        >
+                          {word}
+                        </span>
+                      ))}
                     </span>
-                  ))}
+                  </span>
                 </span>
-              </span>
-            </span>
+                <span className="block">Through video</span>
+              </>
+            ) : (
+              <>
+                <span className="block">{t("rive.hero.title.line1")}</span>
+                <span className="block">
+                  {t("rive.hero.title.line2")}{" "}
+                  <span className="relative inline-flex h-[1.4em] overflow-hidden align-baseline">
+                    <span className="word-slider flex flex-col">
+                      {[
+                        t("rive.hero.word.1"),
+                        t("rive.hero.word.2"),
+                        t("rive.hero.word.3"),
+                        t("rive.hero.word.4"),
+                      ].map((word) => (
+                        <span
+                          key={word}
+                          className="word-item bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] bg-clip-text font-semibold not-italic text-transparent"
+                          style={{ height: "1.4em", lineHeight: "1.4" }}
+                        >
+                          {word}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </span>
+              </>
+            )}
           </h1>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link

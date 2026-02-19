@@ -129,6 +129,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
     {
+      url: `${siteUrl}/en/production-video-rive-sud-mtl`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
       url: `${siteUrl}/en/privacy`,
       lastModified: now,
       changeFrequency: "yearly",
