@@ -126,9 +126,17 @@ export function VideoStatsSection() {
     <section ref={sectionRef} className="bg-white pb-12 pt-24 text-zinc-900">
       <div className="mx-auto w-full max-w-6xl px-6 text-center">
         <h2 className="text-[3.45rem] font-bold leading-tight text-black sm:text-[4.3rem]">
-          {t("rive.stats.title.prefix")}{" "}
-          <span className="font-bold italic text-black">{t("rive.stats.title.highlight")}</span>{" "}
-          {t("rive.stats.title.suffix")}
+          {locale === "en" ? (
+            <>
+              <span className="font-bold italic text-black">Results</span> Tell the Story
+            </>
+          ) : (
+            <>
+              {t("rive.stats.title.prefix")}{" "}
+              <span className="font-bold italic text-black">{t("rive.stats.title.highlight")}</span>{" "}
+              {t("rive.stats.title.suffix")}
+            </>
+          )}
         </h2>
       </div>
       <div className="mx-auto mt-12 w-full max-w-6xl px-6">

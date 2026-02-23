@@ -55,6 +55,8 @@ export default async function ProductionVideoRiveSudPage() {
   const locale = normalizeLocale(requestHeaders.get("x-locale"));
   const dictionary = await getUiDictionary(locale);
   const t = (key: string) => dictionary[key] ?? key;
+  const blogSectionTitle =
+    locale === "en" ? "Results Tell the Story" : t("rive.blog.title");
   let featuredVideos: Video[] = [];
   let latestArticles: DisplayArticle[] = [];
 
@@ -241,7 +243,7 @@ export default async function ProductionVideoRiveSudPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-[2.7rem] font-bold leading-[1.05] tracking-tight text-white sm:text-[3.4rem]">
-              {t("rive.blog.title")}
+              {blogSectionTitle}
             </h2>
           </div>
           <Link
