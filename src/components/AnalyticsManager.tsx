@@ -9,6 +9,8 @@ export function AnalyticsManager() {
   const measurementId =
     process.env.NEXT_PUBLIC_GA_ID ??
     process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? "AW-11082979533";
+  const gtagLoaderId = measurementId ?? googleAdsId;
   const linkedInPartnerId = process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID ?? "9493097";
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "1828222247875618";
 
@@ -29,10 +31,10 @@ export function AnalyticsManager() {
 
   return (
     <>
-      {measurementId ? (
+      {gtagLoaderId ? (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${gtagLoaderId}`}
             strategy="afterInteractive"
           />
           <Script id="ga-init" strategy="afterInteractive">
@@ -40,7 +42,8 @@ export function AnalyticsManager() {
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${measurementId}', { anonymize_ip: true });
+              ${measurementId ? `gtag('config', '${measurementId}', { anonymize_ip: true });` : ""}
+              ${googleAdsId ? `gtag('config', '${googleAdsId}');` : ""}
             `}
           </Script>
         </>
