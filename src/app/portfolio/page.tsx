@@ -5,6 +5,7 @@ import { applyTaxonomyTranslations } from "@/lib/i18n/server";
 import { normalizeLocale } from "@/lib/i18n/shared";
 import { headers } from "next/headers";
 import { buildPageMetadata } from "@/lib/seo";
+import { prioritizePortfolioVideos } from "@/lib/video-selection";
 
 export const dynamic = "force-dynamic";
 
@@ -67,9 +68,9 @@ export default async function Portfolio() {
     supabase
       .from("videos")
       .select(
-        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
+        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
       )
-      .order("is_featured", { ascending: false })
+      .eq("is_published", true)
       .order("created_at", { ascending: false }),
     supabase.from("taxonomies").select("id,kind,label"),
     fetchAllVideoTaxonomies()
@@ -128,9 +129,7 @@ export default async function Portfolio() {
       .filter(Boolean) as Taxonomy[],
   }));
 
-  const visibleVideos = hydratedVideos.filter(
-    (video) => !video.cloudflare_uid.startsWith("pending:"),
-  );
+  const visibleVideos = prioritizePortfolioVideos(hydratedVideos);
   return (
     <PortfolioApp
       initialVideos={visibleVideos}

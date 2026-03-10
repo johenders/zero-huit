@@ -13,6 +13,7 @@ import { fallbackArticles } from "@/lib/articles";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Article, Taxonomy, Video } from "@/lib/types";
 import { buildPageMetadata } from "@/lib/seo";
+import { selectShowcaseVideos } from "@/lib/video-selection";
 
 import heroImage from "../../../assets/bts/zero_huit_production_video.jpg";
 import ctaBg from "../../../assets/bts/IMG_2410.jpg";
@@ -73,11 +74,11 @@ export default async function ProductionVideoRiveSudPage() {
         supabase
           .from("videos")
           .select(
-            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
+            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
           )
-          .eq("is_featured", true)
+          .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(6),
+          .or("is_showcased.eq.true,is_featured.eq.true"),
         supabase.from("taxonomies").select("id,kind,label"),
         supabase
           .from("articles")
@@ -121,9 +122,7 @@ export default async function ProductionVideoRiveSudPage() {
           .filter(Boolean) as Taxonomy[],
       }));
 
-      featuredVideos = hydratedVideos
-        .filter((video) => !video.cloudflare_uid.startsWith("pending:"))
-        .slice(0, 6);
+      featuredVideos = selectShowcaseVideos(hydratedVideos, 6);
     }
 
     if (!articlesError && (articles ?? []).length > 0) {

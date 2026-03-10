@@ -8,6 +8,7 @@ import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy, Video } from "@/lib/types";
 import { headers } from "next/headers";
 import { buildPageMetadata } from "@/lib/seo";
+import { selectShowcaseVideos } from "@/lib/video-selection";
 
 import heroBg from "../../../assets/bg/bg_a_propos.jpg";
 import batisse from "../../../assets/batisse.jpg";
@@ -98,11 +99,11 @@ export default async function LandingPage() {
         supabase
           .from("videos")
           .select(
-            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
+            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
           )
-          .eq("is_featured", true)
+          .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(8),
+          .or("is_showcased.eq.true,is_featured.eq.true"),
         supabase.from("taxonomies").select("id,kind,label"),
       ]);
 
@@ -138,9 +139,7 @@ export default async function LandingPage() {
           .filter(Boolean) as Taxonomy[],
       }));
 
-      featuredVideos = hydratedVideos
-        .filter((video) => !video.cloudflare_uid.startsWith("pending:"))
-        .slice(0, 8);
+      featuredVideos = selectShowcaseVideos(hydratedVideos, 6);
     }
   }
 

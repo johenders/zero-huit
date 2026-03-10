@@ -22,6 +22,8 @@ export type Video = {
   budget_min: number | null;
   budget_max: number | null;
   is_featured: boolean;
+  is_showcased: boolean;
+  is_published: boolean;
   created_at: string;
   taxonomies: Taxonomy[];
 };

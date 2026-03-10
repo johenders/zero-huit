@@ -30,13 +30,12 @@ type RowUploadState = {
 type BulkUploadItem = {
   id: string;
   file: File;
-  video: Video | null;
   status: UploadStage;
   progress: number;
+  videoId?: string;
+  title?: string;
   message?: string | null;
 };
-
-type PendingMatchVideo = Pick<Video, "id" | "title" | "cloudflare_uid">;
 
 type KeywordSuggestions = { existing: string[]; new: string[] };
 
@@ -51,19 +50,8 @@ function normalizeText(value: string) {
     .replace(/\s+/g, " ");
 }
 
-function normalizeMatchKey(value: string) {
-  return normalizeText(value).replace(/\s+/g, "");
-}
-
 function stripExtension(filename: string) {
   return filename.replace(/\.[^/.]+$/, "");
-}
-
-function normalizeFilename(filename: string) {
-  const base = stripExtension(filename);
-  const normalized = normalizeText(base);
-  const withoutVersion = normalized.replace(/\b(?:v|version)\s*\d+\b/g, " ");
-  return normalizeMatchKey(withoutVersion);
 }
 
 function formatDuration(seconds: number | null) {
@@ -72,6 +60,16 @@ function formatDuration(seconds: number | null) {
   const minutes = Math.floor(total / 60);
   const remaining = total % 60;
   return `${minutes}:${String(remaining).padStart(2, "0")}`;
+}
+
+function formatPublishedAt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("fr-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 function buildAiFrameTimes(baseSeconds: number | null) {
@@ -152,6 +150,8 @@ export default function AdminPortfolioPage() {
     new Set(),
   );
   const [file, setFile] = useState<File | null>(null);
+  const [uploadDropActive, setUploadDropActive] = useState(false);
+  const [uploadedUid, setUploadedUid] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<
     "idle" | "requesting" | "uploading" | "saving" | "done" | "error"
   >("idle");
@@ -165,7 +165,7 @@ export default function AdminPortfolioPage() {
   const [bulkDropActive, setBulkDropActive] = useState(false);
   const bulkInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortKey, setSortKey] = useState<"title" | "budget">("title");
+  const [sortKey, setSortKey] = useState<"title" | "budget" | "published_at">("title");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [durationRefreshState, setDurationRefreshState] = useState<
     "idle" | "loading" | "error"
@@ -191,16 +191,13 @@ export default function AdminPortfolioPage() {
   }, [taxonomies]);
 
   function toggleSort(nextKey: typeof sortKey) {
-    setSortKey((current) => {
-      if (current !== nextKey) {
-        setSortDirection("asc");
-        setCurrentPage(1);
-        return nextKey;
-      }
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-      setCurrentPage(1);
-      return current;
-    });
+    if (sortKey === nextKey) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(nextKey);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
   }
 
   useEffect(() => {
@@ -241,22 +238,75 @@ export default function AdminPortfolioPage() {
     [supabase],
   );
 
+  const toggleShowcased = useCallback(
+    async (video: Video) => {
+      if (!supabase) return;
+      const nextValue = !video.is_showcased;
+
+      if (nextValue) {
+        const { count, error: countError } = await supabase
+          .from("videos")
+          .select("id", { count: "exact", head: true })
+          .eq("is_showcased", true);
+        if (countError) {
+          setVideosMessage(countError.message);
+          return;
+        }
+        if ((count ?? 0) >= 6) {
+          setVideosMessage("Il y a deja 6 videos en vedette. Deselectionne-en une d'abord.");
+          return;
+        }
+      }
+
+      setVideos((prev) =>
+        prev.map((item) =>
+          item.id === video.id ? { ...item, is_showcased: nextValue } : item,
+        ),
+      );
+
+      const { error } = await supabase
+        .from("videos")
+        .update({ is_showcased: nextValue })
+        .eq("id", video.id);
+
+      if (error) {
+        setVideos((prev) =>
+          prev.map((item) =>
+            item.id === video.id ? { ...item, is_showcased: video.is_showcased } : item,
+          ),
+        );
+        setVideosMessage(error.message);
+        return;
+      }
+
+      setVideosMessage(null);
+    },
+    [supabase],
+  );
+
   const refreshVideos = useCallback(async () => {
     if (!supabase) return;
     setVideosMessage(null);
     const from = (currentPage - 1) * pageSize;
     const to = from + pageSize - 1;
-    const orderColumn = sortKey === "budget" ? "budget_min" : "title";
+    const orderColumn =
+      sortKey === "budget"
+        ? "budget_min"
+        : sortKey === "published_at"
+          ? "created_at"
+          : "title";
     const rawSearch = searchQuery.trim();
     const safeSearch = rawSearch.replaceAll("%", "\\%").replaceAll(",", "\\,");
     let videosQuery = supabase
       .from("videos")
       .select(
-        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,created_at",
+        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
         { count: "exact" },
       )
-      .order(orderColumn, { ascending: sortDirection === "asc" })
-      .order("created_at", { ascending: false });
+      .order(orderColumn, { ascending: sortDirection === "asc" });
+    if (sortKey !== "published_at") {
+      videosQuery = videosQuery.order("created_at", { ascending: false });
+    }
     if (rawSearch) {
       videosQuery = videosQuery.or(
         `title.ilike.%${safeSearch}%,cloudflare_uid.ilike.%${safeSearch}%`,
@@ -366,11 +416,6 @@ export default function AdminPortfolioPage() {
   }, [supabase, refreshTaxonomies, refreshVideos]);
 
   const totalPages = Math.max(1, Math.ceil(totalVideos / pageSize));
-  const pendingVideos = useMemo(
-    () => videos.filter((video) => isPendingVideoUid(video.cloudflare_uid)),
-    [videos],
-  );
-
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
@@ -459,7 +504,6 @@ export default function AdminPortfolioPage() {
   }
 
   async function uploadVideo() {
-    if (!supabase) return;
     setUploadMessage(null);
     setUploadState("requesting");
     setUploadProgress(null);
@@ -474,11 +518,6 @@ export default function AdminPortfolioPage() {
       setUploadMessage("Choisis un fichier vidéo.");
       return;
     }
-    if (!title.trim()) {
-      setUploadState("error");
-      setUploadMessage("Titre requis.");
-      return;
-    }
 
     try {
       setUploadState("uploading");
@@ -486,29 +525,73 @@ export default function AdminPortfolioPage() {
       const uid = await uploadToCloudflare(file, (progress) => {
         setUploadProgress(progress);
       });
-      let durationFromCloudflare: number | null = null;
+      setUploadedUid(uid);
+      if (!title.trim()) {
+        setTitle(stripExtension(file.name));
+      }
       try {
-        durationFromCloudflare = await fetchCloudflareDuration(uid);
+        const durationFromCloudflare = await fetchCloudflareDuration(uid);
         setDurationSeconds(durationFromCloudflare);
       } catch {
-        durationFromCloudflare = null;
+        setDurationSeconds(null);
       }
+      setUploadState("done");
+      setUploadMessage("Upload termine. Configure les parametres puis publie.");
+    } catch (e) {
+      setUploadState("error");
+      setUploadMessage(e instanceof Error ? e.message : "Erreur");
+    }
+  }
 
+  function resetUploader() {
+    setTitle("");
+    setBudgetMinIndex(0);
+    setBudgetMaxIndex(budgetLevels.length - 1);
+    setThumbSeconds(1);
+    setDurationSeconds(null);
+    setSelectedTaxonomyIds(new Set());
+    setFile(null);
+    setUploadedUid(null);
+    setUploadState("idle");
+    setUploadMessage(null);
+    setUploadProgress(null);
+  }
+
+  async function publishUploadedVideo() {
+    if (!supabase) return;
+    setUploadMessage(null);
+
+    if (!isAdmin) {
+      setUploadState("error");
+      setUploadMessage("Accès refusé (admin requis).");
+      return;
+    }
+    if (!uploadedUid) {
+      setUploadState("error");
+      setUploadMessage("Upload la vidéo avant de publier.");
+      return;
+    }
+    if (!title.trim()) {
+      setUploadState("error");
+      setUploadMessage("Titre requis.");
+      return;
+    }
+
+    try {
       setUploadState("saving");
       const { data: inserted, error: videoError } = await supabase
         .from("videos")
         .insert({
           title: title.trim(),
-          cloudflare_uid: uid,
+          cloudflare_uid: uploadedUid,
           status: "processing",
+          is_published: true,
           thumbnail_time_seconds: Number.isFinite(thumbSeconds)
             ? Math.max(0, Math.floor(thumbSeconds))
             : null,
-          duration_seconds: Number.isFinite(durationFromCloudflare)
-            ? Math.max(0, Math.floor(durationFromCloudflare ?? 0))
-            : Number.isFinite(durationSeconds)
-              ? Math.max(0, Math.floor(durationSeconds ?? 0))
-              : null,
+          duration_seconds: Number.isFinite(durationSeconds)
+            ? Math.max(0, Math.floor(durationSeconds ?? 0))
+            : null,
           budget_min: budgetLevels[budgetMinIndex],
           budget_max: budgetLevels[budgetMaxIndex],
         })
@@ -533,13 +616,9 @@ export default function AdminPortfolioPage() {
         }
       }
 
+      resetUploader();
       setUploadState("done");
-      setUploadMessage("Vidéo ajoutée. (Le statut 'ready' sera géré plus tard.)");
-      setTitle("");
-      setFile(null);
-      setUploadProgress(null);
-      setDurationSeconds(null);
-      setSelectedTaxonomyIds(new Set());
+      setUploadMessage("Video publiee.");
       await refreshVideos();
     } catch (e) {
       setUploadState("error");
@@ -644,17 +723,38 @@ export default function AdminPortfolioPage() {
     }
   }
 
-  async function loadPendingVideosForMatch(): Promise<PendingMatchVideo[]> {
-    if (!supabase) return pendingVideos;
+  async function createDraftVideoRecord(uploadFile: File, uid: string) {
+    if (!supabase) throw new Error("Supabase non initialise.");
+    let durationFromCloudflare: number | null = null;
+    try {
+      durationFromCloudflare = await fetchCloudflareDuration(uid);
+    } catch {
+      durationFromCloudflare = null;
+    }
+
+    const titleFromFile = stripExtension(uploadFile.name).replace(/[_-]+/g, " ").trim();
     const { data, error } = await supabase
       .from("videos")
-      .select("id,title,cloudflare_uid")
-      .like("cloudflare_uid", `${pendingCloudflarePrefix}%`);
-    if (error) {
-      setBulkMessage(error.message);
-      return pendingVideos;
+      .insert({
+        title: titleFromFile || stripExtension(uploadFile.name),
+        cloudflare_uid: uid,
+        status: "processing",
+        is_published: false,
+        thumbnail_time_seconds: 1,
+        duration_seconds: Number.isFinite(durationFromCloudflare)
+          ? Math.max(0, Math.floor(durationFromCloudflare ?? 0))
+          : null,
+        budget_min: budgetLevels[0],
+        budget_max: budgetLevels[budgetLevels.length - 1],
+      })
+      .select("id,title")
+      .single();
+
+    if (error || !data?.id) {
+      throw new Error(error?.message ?? "Erreur DB (videos)");
     }
-    return (data ?? []) as PendingMatchVideo[];
+
+    return data as { id: string; title: string };
   }
 
   async function enqueueBulkUploads(files: File[]) {
@@ -665,41 +765,25 @@ export default function AdminPortfolioPage() {
       return;
     }
 
-    const pendingMatches = await loadPendingVideosForMatch();
-    const pendingByTitle = new Map<string, Video[]>();
-    for (const video of pendingMatches) {
-      const key = normalizeMatchKey(video.title);
-      const list = pendingByTitle.get(key) ?? [];
-      list.push(video as Video);
-      pendingByTitle.set(key, list);
-    }
-
     const newItems: BulkUploadItem[] = files.map((uploadFile) => {
-      const key = normalizeFilename(uploadFile.name);
-      const matches = pendingByTitle.get(key);
-      const video = matches && matches.length > 0 ? matches.shift() ?? null : null;
       return {
         id: crypto.randomUUID(),
         file: uploadFile,
-        video,
-        status: video ? "queued" : "error",
+        title: stripExtension(uploadFile.name),
+        status: "queued",
         progress: 0,
-        message: video
-          ? null
-          : "Aucune vidéo en attente trouvée pour ce nom de fichier.",
+        message: null,
       };
     });
 
     setBulkUploads((prev) => [...newItems, ...prev]);
 
     for (const item of newItems) {
-      if (!item.video) continue;
       void startBulkUpload(item);
     }
   }
 
   async function startBulkUpload(item: BulkUploadItem) {
-    if (!item.video) return;
     setBulkUploads((prev) =>
       prev.map((entry) =>
         entry.id === item.id
@@ -708,25 +792,31 @@ export default function AdminPortfolioPage() {
       ),
     );
     try {
-      await attachUploadToVideo(item.video, item.file, {
-        onProgress: (progress) =>
-          setBulkUploads((prev) =>
-            prev.map((entry) =>
-              entry.id === item.id ? { ...entry, progress } : entry,
-            ),
+      const uid = await uploadToCloudflare(item.file, (progress) =>
+        setBulkUploads((prev) =>
+          prev.map((entry) =>
+            entry.id === item.id ? { ...entry, progress } : entry,
           ),
-        onStage: (stage) =>
-          setBulkUploads((prev) =>
-            prev.map((entry) =>
-              entry.id === item.id
-                ? { ...entry, status: stage === "saving" ? "saving" : "uploading" }
-                : entry,
-            ),
-          ),
-      });
+        ),
+      );
       setBulkUploads((prev) =>
         prev.map((entry) =>
-          entry.id === item.id ? { ...entry, status: "done", progress: 100 } : entry,
+          entry.id === item.id ? { ...entry, status: "saving" } : entry,
+        ),
+      );
+      const draft = await createDraftVideoRecord(item.file, uid);
+      setBulkUploads((prev) =>
+        prev.map((entry) =>
+          entry.id === item.id
+            ? {
+                ...entry,
+                status: "done",
+                progress: 100,
+                videoId: draft.id,
+                title: draft.title,
+                message: "Brouillon cree. Ouvre la video pour la publier.",
+              }
+            : entry,
         ),
       );
       await refreshVideos();
@@ -762,171 +852,286 @@ export default function AdminPortfolioPage() {
         </div>
         {showUploader ? (
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="space-y-3">
-            <label className="block">
-              <div className="text-sm font-medium">Titre</div>
-              <input
-                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100 placeholder:text-zinc-500"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+          <div className="space-y-4">
+            <input
+              className="hidden"
+              id="portfolio-upload-input"
+              type="file"
+              accept="video/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                Etape 1
+              </div>
+              <div className="mt-1 text-sm font-medium">Uploader le fichier video</div>
+              <div className="mt-1 text-sm text-zinc-400">
+                Glisse une video ici, attends la fin de l&apos;upload, puis configure les
+                parametres avant publication.
+              </div>
+            </div>
+            <label
+              htmlFor="portfolio-upload-input"
+              className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center transition ${
+                uploadDropActive
+                  ? "border-emerald-400/60 bg-emerald-500/10"
+                  : "border-white/15 bg-black/20 hover:bg-white/5"
+              }`}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                setUploadDropActive(true);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setUploadDropActive(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setUploadDropActive(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setUploadDropActive(false);
+                const dropped = e.dataTransfer.files?.[0] ?? null;
+                setFile(dropped);
+              }}
+            >
+              <div className="text-sm font-semibold text-zinc-100">
+                {file ? file.name : "Glisse ta video ici"}
+              </div>
+              <div className="mt-2 text-xs text-zinc-400">
+                {file ? "Clique pour remplacer le fichier." : "ou clique pour choisir un fichier"}
+              </div>
             </label>
 
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block">
-                <div className="text-sm font-medium">Budget min</div>
-                <select
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100"
-                  value={budgetMinIndex}
-                  onChange={(e) => {
-                    const next = Number(e.target.value);
-                    setBudgetMinIndex(Math.min(next, budgetMaxIndex));
-                  }}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Fichier selectionne
+                  </div>
+                  <div className="mt-1 text-sm text-zinc-200">
+                    {file ? file.name : "Aucun fichier"}
+                  </div>
+                </div>
+                {uploadedUid ? (
+                  <button
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-zinc-200 hover:bg-white/10"
+                    type="button"
+                    onClick={resetUploader}
+                  >
+                    Recommencer
+                  </button>
+                ) : null}
+              </div>
+              {uploadState === "uploading" && uploadProgress !== null ? (
+                <div className="mt-3">
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-emerald-500/70"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-xs text-zinc-400">Upload: {uploadProgress}%</div>
+                </div>
+              ) : null}
+              <button
+                className="mt-4 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                type="button"
+                onClick={() => void uploadVideo()}
+                disabled={
+                  !file ||
+                  !!uploadedUid ||
+                  uploadState === "requesting" ||
+                  uploadState === "uploading" ||
+                  uploadState === "saving"
+                }
+              >
+                {uploadState === "requesting"
+                  ? "Creation URL…"
+                  : uploadState === "uploading"
+                    ? "Upload…"
+                    : uploadState === "saving" && !uploadedUid
+                      ? "Sauvegarde…"
+                      : uploadedUid
+                        ? "Fichier uploade"
+                        : "Uploader le fichier"}
+              </button>
+              {uploadMessage ? (
+                <div
+                  className={`mt-3 text-sm ${
+                    uploadState === "error" ? "text-red-400" : "text-zinc-200"
+                  }`}
                 >
-                  {budgetLevels.map((b, idx) => (
-                    <option key={b} value={idx}>
-                      {formatCad(b)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <div className="text-sm font-medium">Budget max</div>
-                <select
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100"
-                  value={budgetMaxIndex}
-                  onChange={(e) => {
-                    const next = Number(e.target.value);
-                    setBudgetMaxIndex(Math.max(next, budgetMinIndex));
-                  }}
-                >
-                  {budgetLevels.map((b, idx) => (
-                    <option key={b} value={idx}>
-                      {formatCad(b)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  {uploadMessage}
+                </div>
+              ) : null}
             </div>
 
-            <label className="block">
-              <div className="text-sm font-medium">Thumbnail (secondes)</div>
-              <input
-                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100"
-                value={thumbSeconds}
-                onChange={(e) => setThumbSeconds(Number(e.target.value))}
-                type="number"
-                min={0}
-              />
-            </label>
-            <label className="block">
-              <div className="text-sm font-medium">Durée (secondes)</div>
-              <input
-                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100"
-                value={durationSeconds ?? ""}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setDurationSeconds(raw === "" ? null : Number(raw));
-                }}
-                type="number"
-                min={0}
-              />
-            </label>
+            {uploadedUid ? (
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Etape 2
+                  </div>
+                  <div className="mt-1 text-sm font-medium">Configurer puis publier</div>
+                </div>
 
-            <label className="block">
-              <div className="text-sm font-medium">Fichier vidéo</div>
-              <input
-                className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-white/20"
-                type="file"
-                accept="video/*"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
+                <label className="block">
+                  <div className="text-sm font-medium">Titre</div>
+                  <input
+                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100 placeholder:text-zinc-500"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </label>
 
-            <button
-              className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-              type="button"
-              onClick={() => void uploadVideo()}
-              disabled={uploadState === "requesting" || uploadState === "uploading" || uploadState === "saving"}
-            >
-              {uploadState === "requesting"
-                ? "Création URL…"
-                : uploadState === "uploading"
-                  ? "Upload…"
-                  : uploadState === "saving"
-                    ? "Sauvegarde…"
-                    : "Uploader"}
-            </button>
-            {uploadState === "uploading" && uploadProgress !== null ? (
-              <div className="text-xs text-zinc-400">Upload: {uploadProgress}%</div>
-            ) : null}
-            {uploadMessage ? (
-              <div
-                className={`text-sm ${uploadState === "error" ? "text-red-400" : "text-zinc-200"}`}
-              >
-                {uploadMessage}
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <div className="text-sm font-medium">Budget min</div>
+                    <select
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100"
+                      value={budgetMinIndex}
+                      onChange={(e) => {
+                        const next = Number(e.target.value);
+                        setBudgetMinIndex(Math.min(next, budgetMaxIndex));
+                      }}
+                    >
+                      {budgetLevels.map((b, idx) => (
+                        <option key={b} value={idx}>
+                          {formatCad(b)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <div className="text-sm font-medium">Budget max</div>
+                    <select
+                      className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-100"
+                      value={budgetMaxIndex}
+                      onChange={(e) => {
+                        const next = Number(e.target.value);
+                        setBudgetMaxIndex(Math.max(next, budgetMinIndex));
+                      }}
+                    >
+                      {budgetLevels.map((b, idx) => (
+                        <option key={b} value={idx}>
+                          {formatCad(b)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <label className="block">
+                  <div className="text-sm font-medium">Thumbnail (secondes)</div>
+                  <input
+                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100"
+                    value={thumbSeconds}
+                    onChange={(e) => setThumbSeconds(Number(e.target.value))}
+                    type="number"
+                    min={0}
+                  />
+                </label>
+                <label className="block">
+                  <div className="text-sm font-medium">Duree (secondes)</div>
+                  <input
+                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-zinc-100"
+                    value={durationSeconds ?? ""}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setDurationSeconds(raw === "" ? null : Number(raw));
+                    }}
+                    type="number"
+                    min={0}
+                  />
+                </label>
+
+                <button
+                  className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  type="button"
+                  onClick={() => void publishUploadedVideo()}
+                  disabled={uploadState === "saving"}
+                >
+                  {uploadState === "saving" ? "Publication…" : "Publier"}
+                </button>
               </div>
             ) : null}
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Tags sélectionnés
-            </div>
-            <div className="mt-3 space-y-3">
-              {taxonomyGroups.map((group) => {
-                const options = mergeTaxonomiesByKinds(groupedTaxonomies, group.kinds);
-                return (
-                  <div key={group.kind}>
-                    <div className="text-sm font-semibold">{group.label}</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {options.length === 0 ? (
-                        <div className="text-sm text-zinc-400">À venir</div>
-                      ) : (
-                        options.map((t) => {
-                          const checked = selectedTaxonomyIds.has(t.id);
-                          return (
-                            <label
-                              key={t.id}
-                              className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
-                                checked
-                                  ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-100"
-                                  : "border-white/10 bg-black/30 text-zinc-200 hover:bg-white/10"
-                              }`}
-                            >
-                              <input
-                                className="hidden"
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => {
-                                  setSelectedTaxonomyIds((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(t.id)) next.delete(t.id);
-                                    else next.add(t.id);
-                                    return next;
-                                  });
-                                }}
-                              />
-                              {t.label}
-                            </label>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {uploadedUid ? (
+              <>
+                <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Tags selectionnes
+                </div>
+                <div className="mt-3 space-y-3">
+                  {taxonomyGroups.map((group) => {
+                    const options = mergeTaxonomiesByKinds(groupedTaxonomies, group.kinds);
+                    return (
+                      <div key={group.kind}>
+                        <div className="text-sm font-semibold">{group.label}</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {options.length === 0 ? (
+                            <div className="text-sm text-zinc-400">A venir</div>
+                          ) : (
+                            options.map((t) => {
+                              const checked = selectedTaxonomyIds.has(t.id);
+                              return (
+                                <label
+                                  key={t.id}
+                                  className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
+                                    checked
+                                      ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-100"
+                                      : "border-white/10 bg-black/30 text-zinc-200 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <input
+                                    className="hidden"
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {
+                                      setSelectedTaxonomyIds((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(t.id)) next.delete(t.id);
+                                        else next.add(t.id);
+                                        return next;
+                                      });
+                                    }}
+                                  />
+                                  {t.label}
+                                </label>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            <div className="mt-6 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Preview thumbnail (exemple)
-            </div>
-            <div className="mt-2 text-sm text-zinc-400">
-              Après upload, la grille utilisera:
-            </div>
-            <div className="mt-2 rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-zinc-200">
-              <code>{cloudflareThumbnailSrc("CLOUDFLARE_UID", thumbSeconds)}</code>
-            </div>
+                <div className="mt-6 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Apercu thumbnail
+                </div>
+                <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                  <Image
+                    className="aspect-video w-full object-cover"
+                    src={cloudflareThumbnailSrc(uploadedUid, thumbSeconds, 1920)}
+                    alt=""
+                    width={1920}
+                    height={1080}
+                  />
+                </div>
+                <div className="mt-2 rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-zinc-200">
+                  <code>{cloudflareThumbnailSrc(uploadedUid, thumbSeconds)}</code>
+                </div>
+              </>
+            ) : (
+              <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 p-6 text-center text-sm text-zinc-400">
+                Les champs de publication, tags et thumbnail apparaissent apres un upload
+                reussi.
+              </div>
+            )}
           </div>
           </div>
         ) : null}
@@ -988,13 +1193,12 @@ export default function AdminPortfolioPage() {
         ) : null}
         {videosMessage ? <div className="mt-3 text-sm text-red-400">{videosMessage}</div> : null}
 
-        {pendingVideos.length > 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-white/5 p-4">
+        <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-white/5 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold">Upload rapide (drag &amp; drop)</div>
+                <div className="text-sm font-semibold">Batch upload</div>
                 <div className="text-xs text-zinc-400">
-                  Les noms de fichiers doivent correspondre aux titres des vidéos en attente.
+                  Chaque fichier cree un brouillon non publie avec son propre statut.
                 </div>
               </div>
               <button
@@ -1055,7 +1259,7 @@ export default function AdminPortfolioPage() {
                       <div className="min-w-0">
                         <div className="truncate font-semibold">{item.file.name}</div>
                         <div className="text-xs text-zinc-400">
-                          {item.video ? `→ ${item.video.title}` : "Aucune correspondance"}
+                          {item.title ?? stripExtension(item.file.name)}
                         </div>
                       </div>
                       <div className="text-xs uppercase tracking-wide text-zinc-400">
@@ -1079,20 +1283,23 @@ export default function AdminPortfolioPage() {
                       />
                     </div>
                     <div className="mt-1 text-xs text-zinc-400">
-                      {item.status === "error" ? item.message : `${item.progress}%`}
+                      {item.status === "error"
+                        ? item.message
+                        : item.status === "done"
+                          ? item.message
+                          : `${item.progress}%`}
                     </div>
                   </div>
                 ))}
               </div>
             ) : null}
           </div>
-        ) : null}
 
         {videos.length === 0 ? (
           <div className="mt-4 text-sm text-zinc-400">Aucune vidéo pour le moment.</div>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
-            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
               <thead className="bg-black/30">
                 <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-wide text-zinc-400">
                   <th className="px-3 py-2">Thumbnail</th>
@@ -1117,7 +1324,22 @@ export default function AdminPortfolioPage() {
                     </button>
                   </th>
                   <th className="px-3 py-2">Durée</th>
+                  <th className="px-3 py-2">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 hover:text-white"
+                      onClick={() => toggleSort("published_at")}
+                    >
+                      Publié le
+                      {sortKey === "published_at"
+                        ? sortDirection === "asc"
+                          ? "↑"
+                          : "↓"
+                        : null}
+                    </button>
+                  </th>
                   <th className="px-3 py-2">Favoris</th>
+                  <th className="px-3 py-2">En vedette</th>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Objectifs</th>
                   <th className="px-3 py-2">Mots clés</th>
@@ -1145,6 +1367,7 @@ export default function AdminPortfolioPage() {
                       ? `${formatCad(v.budget_min)}–${formatCad(v.budget_max)}`
                       : "—";
                   const durationText = formatDuration(v.duration_seconds);
+                  const publishedAtText = formatPublishedAt(v.created_at);
                   const keywordGroupTags = mergeTaxonomiesByKinds(byKind, keywordGroupKinds);
 
                   const safeVideo = {
@@ -1185,6 +1408,8 @@ export default function AdminPortfolioPage() {
                         <div className="mt-0.5 text-xs text-zinc-400">
                           {isPendingVideoUid(v.cloudflare_uid)
                             ? "En attente d'upload"
+                            : !v.is_published
+                              ? "Brouillon"
                             : v.status === "ready"
                               ? "Ready"
                               : "Processing"}
@@ -1192,6 +1417,7 @@ export default function AdminPortfolioPage() {
                       </td>
                       <td className="px-3 py-2 text-zinc-200">{budgetText}</td>
                       <td className="px-3 py-2 text-zinc-200">{durationText}</td>
+                      <td className="px-3 py-2 text-zinc-200">{publishedAtText}</td>
                       <td className="px-3 py-2">
                         <button
                           type="button"
@@ -1210,6 +1436,28 @@ export default function AdminPortfolioPage() {
                           }
                         >
                           {v.is_featured ? "★" : "☆"}
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                            v.is_showcased
+                              ? "border-cyan-300/50 bg-cyan-400/20 text-cyan-100"
+                              : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                          }`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void toggleShowcased(v);
+                          }}
+                          aria-label={
+                            v.is_showcased
+                              ? "Retirer des videos en vedette"
+                              : "Ajouter aux videos en vedette"
+                          }
+                        >
+                          {v.is_showcased ? "Mis en vedette" : "Definir"}
                         </button>
                       </td>
                       <TagsCell tags={byKind.type} />
@@ -1365,6 +1613,9 @@ function EditVideoModal({
   );
   const [aiApplyMessage, setAiApplyMessage] = useState<string | null>(null);
   const [taxonomyMessage, setTaxonomyMessage] = useState<string | null>(null);
+  const [publishStatus, setPublishStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(() => video?.is_published ?? false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playerTime, setPlayerTime] = useState<number>(0);
   const [useIframePlayer, setUseIframePlayer] = useState(false);
@@ -1495,7 +1746,10 @@ function EditVideoModal({
     }
     setStatus("idle");
     setMessage(null);
-  }, [video?.id]);
+    setPublishStatus("idle");
+    setPublishMessage(null);
+    setIsPublished(video?.is_published ?? false);
+  }, [video?.id, video?.is_published]);
 
   useEffect(() => {
     if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
@@ -1803,6 +2057,38 @@ function EditVideoModal({
 
   if (!open || !video) return null;
 
+  async function handlePublish() {
+    if (!supabase || !video) return;
+    setPublishMessage(null);
+
+    const snapshot = snapshotFromState();
+    if (!snapshotsEqual(snapshot, lastSavedSnapshotRef.current)) {
+      const saved = await saveSnapshot(snapshot);
+      if (!saved) {
+        setPublishStatus("error");
+        setPublishMessage("Impossible de publier tant que les modifications ne sont pas sauvegardees.");
+        return;
+      }
+    }
+
+    setPublishStatus("saving");
+    const { error } = await supabase
+      .from("videos")
+      .update({ is_published: true })
+      .eq("id", video.id);
+
+    if (error) {
+      setPublishStatus("error");
+      setPublishMessage(error.message);
+      return;
+    }
+
+    setIsPublished(true);
+    setPublishStatus("idle");
+    setPublishMessage("Video publiee.");
+    await onSaved();
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-6">
@@ -1815,6 +2101,22 @@ function EditVideoModal({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                  isPublished
+                    ? "border border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+                    : "bg-gradient-to-r from-cyan-500 to-emerald-500 text-white"
+                } disabled:opacity-60`}
+                type="button"
+                onClick={() => void handlePublish()}
+                disabled={isPublished || publishStatus === "saving" || !supabase}
+              >
+                {isPublished
+                  ? "Publiee"
+                  : publishStatus === "saving"
+                    ? "Publication…"
+                    : "Publier"}
+              </button>
               <button
                 className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold text-zinc-200 hover:bg-white/10 disabled:opacity-50"
                 type="button"
@@ -1847,6 +2149,11 @@ function EditVideoModal({
               </button>
             </div>
           </div>
+          {publishMessage ? (
+            <div className={`mt-3 text-sm ${publishStatus === "error" ? "text-red-400" : "text-emerald-300"}`}>
+              {publishMessage}
+            </div>
+          ) : null}
 
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="space-y-3">
