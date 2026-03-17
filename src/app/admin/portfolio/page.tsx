@@ -1616,6 +1616,7 @@ function EditVideoModal({
   const [publishStatus, setPublishStatus] = useState<"idle" | "saving" | "error">("idle");
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(() => video?.is_published ?? false);
+  const [isFeatured, setIsFeatured] = useState(() => video?.is_featured ?? false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playerTime, setPlayerTime] = useState<number>(0);
   const [useIframePlayer, setUseIframePlayer] = useState(false);
@@ -1638,6 +1639,7 @@ function EditVideoModal({
     durationSeconds: number | null;
     budgetMin: (typeof budgetLevels)[number];
     budgetMax: (typeof budgetLevels)[number];
+    isFeatured: boolean;
     taxonomyIds: string[];
   };
 
@@ -1659,6 +1661,7 @@ function EditVideoModal({
       budgetMax:
         (current?.budget_max as (typeof budgetLevels)[number]) ??
         budgetLevels[budgetLevels.length - 1],
+      isFeatured: current?.is_featured ?? false,
       taxonomyIds: (current?.taxonomies.map((t) => t.id) ?? []).sort((a, b) =>
         a.localeCompare(b),
       ),
@@ -1672,6 +1675,7 @@ function EditVideoModal({
       durationSeconds: normalizeSeconds(durationSeconds),
       budgetMin: budgetLevels[budgetMinIndex],
       budgetMax: budgetLevels[budgetMaxIndex],
+      isFeatured,
       taxonomyIds: normalizeTaxonomyIds(selectedTaxonomyIds),
     };
   }
@@ -1691,6 +1695,7 @@ function EditVideoModal({
       a.durationSeconds === b.durationSeconds &&
       a.budgetMin === b.budgetMin &&
       a.budgetMax === b.budgetMax &&
+      a.isFeatured === b.isFeatured &&
       arraysEqual(a.taxonomyIds, b.taxonomyIds)
     );
   }
@@ -1749,7 +1754,8 @@ function EditVideoModal({
     setPublishStatus("idle");
     setPublishMessage(null);
     setIsPublished(video?.is_published ?? false);
-  }, [video?.id, video?.is_published]);
+    setIsFeatured(video?.is_featured ?? false);
+  }, [video?.id, video?.is_published, video?.is_featured]);
 
   useEffect(() => {
     if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
@@ -1912,6 +1918,7 @@ function EditVideoModal({
           duration_seconds: snapshot.durationSeconds,
           budget_min: snapshot.budgetMin,
           budget_max: snapshot.budgetMax,
+          is_featured: snapshot.isFeatured,
         })
         .eq("id", video.id);
 
@@ -2027,6 +2034,7 @@ function EditVideoModal({
     durationSeconds,
     budgetMinIndex,
     budgetMaxIndex,
+    isFeatured,
     selectedTaxonomyIds,
   ]);
 
@@ -2101,6 +2109,23 @@ function EditVideoModal({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isFeatured}
+                aria-label={
+                  isFeatured ? "Retirer la vidéo des favoris" : "Ajouter la vidéo aux favoris"
+                }
+                onClick={() => setIsFeatured((prev) => !prev)}
+                className={`rounded-md border px-2 py-1 text-xs font-semibold transition ${
+                  isFeatured
+                    ? "border-amber-300/50 bg-amber-400/20 text-amber-100"
+                    : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                }`}
+                title={isFeatured ? "Vidéo favorite" : "Définir comme favorite"}
+              >
+                {isFeatured ? "★" : "☆"}
+              </button>
               <button
                 className={`rounded-md px-2 py-1 text-xs font-semibold ${
                   isPublished
