@@ -30,6 +30,7 @@ type QuoteRequest = {
 };
 
 type DeliverablesPayload = {
+  durations?: string[];
   counts?: Record<string, number>;
   formats?: Record<string, string[]>;
   unknown?: boolean;
@@ -63,6 +64,11 @@ const formatLabels: Record<string, string> = {
 function formatDeliverables(raw: QuoteRequest["deliverables"]) {
   const payload = (raw ?? {}) as DeliverablesPayload;
   if (payload.unknown) return "À définir";
+  if (payload.durations?.length) {
+    return payload.durations
+      .map((duration) => deliverableLabels[duration] ?? duration)
+      .join(" • ");
+  }
   const counts = payload.counts ?? {};
   const formats = payload.formats ?? {};
   const parts: string[] = [];
@@ -79,11 +85,6 @@ function formatDeliverables(raw: QuoteRequest["deliverables"]) {
 
   if (!parts.length) return "—";
   return parts.join(" • ");
-}
-
-function formatReferences(referenceIds: string[]) {
-  if (!referenceIds?.length) return "—";
-  return referenceIds.join(", ");
 }
 
 export default function AdminRequestsPage() {
@@ -249,13 +250,6 @@ export default function AdminRequestsPage() {
                 `Diffusion: ${(activeRequest.diffusions ?? []).join(", ") || "—"}`,
                 `Lieu de tournage: ${activeRequest.locations || "—"}`,
                 `Livrables: ${formatDeliverables(activeRequest.deliverables)}`,
-                `Sous-titres: ${
-                  activeRequest.needs_subtitles === null
-                    ? "—"
-                    : activeRequest.needs_subtitles
-                      ? "Oui"
-                      : "Non"
-                }`,
                 `Intérêt supplémentaire: ${(activeRequest.upsells ?? []).join(", ") || "—"}`,
                 `Références: ${
                   (activeRequest.reference_ids ?? []).length

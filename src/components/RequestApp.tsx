@@ -31,8 +31,6 @@ type Audience =
   | "autre";
 
 
-type DeliverableFormat = "horizontal" | "vertical" | "carre";
-
 type DeliverableKey =
   | "courte_video"
   | "publicite"
@@ -545,19 +543,7 @@ export function RequestApp() {
   const [diffusions, setDiffusions] = useState<ProjectDiffusion[]>([]);
   const [projectDescription, setProjectDescription] = useState("");
   const [shootingLocations, setShootingLocations] = useState("");
-  const [deliverables, setDeliverables] = useState<
-    Record<Exclude<DeliverableKey, "incertain">, number>
-  >({
-    courte_video: 0,
-    publicite: 0,
-    film_publicitaire: 0,
-    mini_documentaire: 0,
-  });
-  const [deliverableFormatsByKey, setDeliverableFormatsByKey] = useState<
-    Partial<Record<Exclude<DeliverableKey, "incertain">, DeliverableFormat[]>>
-  >({});
-  const [deliverableUnknown, setDeliverableUnknown] = useState(false);
-  const [needsSubtitles, setNeedsSubtitles] = useState<null | boolean>(null);
+  const [deliverables, setDeliverables] = useState<DeliverableKey[]>([]);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOptionId | "">("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -618,12 +604,7 @@ export function RequestApp() {
         objectives.length ||
         audiences.length ||
         diffusions.length ||
-        Object.values(deliverables).some((value) => value > 0) ||
-        Object.values(deliverableFormatsByKey).some(
-          (formats) => formats && formats.length > 0,
-        ) ||
-        deliverableUnknown ||
-        needsSubtitles !== null ||
+        deliverables.length ||
         budgetChoice ||
         timelineChoice ||
         referralChoice ||
@@ -631,9 +612,9 @@ export function RequestApp() {
     ) || step > 0;
 
   useEffect(() => {
-    const selectedDurations = Object.entries(deliverables)
-      .filter(([, quantity]) => quantity > 0)
-      .map(([key]) => key);
+    const selectedDurations = deliverables.filter(
+      (deliverable) => deliverable !== "incertain",
+    );
     const hasCriteria =
       Boolean(budgetChoice && budgetChoice !== "unknown") ||
       objectives.length > 0 ||
@@ -655,7 +636,9 @@ export function RequestApp() {
             budget: budgetChoice === "unknown" ? null : budgetChoice || null,
             objectives,
             audiences,
-            durations: deliverableUnknown ? ["incertain"] : selectedDurations,
+            durations: deliverables.includes("incertain")
+              ? ["incertain"]
+              : selectedDurations,
             description: projectDescription,
             excludeIds: [],
             limit: 6,
@@ -701,7 +684,6 @@ export function RequestApp() {
     };
   }, [
     budgetChoice,
-    deliverableUnknown,
     deliverables,
     objectives,
     projectDescription,
@@ -733,11 +715,9 @@ export function RequestApp() {
           budget: budgetChoice === "unknown" ? null : budgetChoice || null,
           objectives,
           audiences,
-          durations: deliverableUnknown
+          durations: deliverables.includes("incertain")
             ? ["incertain"]
-            : Object.entries(deliverables)
-                .filter(([, quantity]) => quantity > 0)
-                .map(([key]) => key),
+            : deliverables.filter((deliverable) => deliverable !== "incertain"),
           description: projectDescription,
           excludeIds: referenceVideos.map((video) => video.id),
           limit: 6,
@@ -795,11 +775,9 @@ export function RequestApp() {
         description: projectDescription,
         locations: shootingLocations,
         deliverables: {
-          counts: deliverables,
-          formats: deliverableFormatsByKey,
-          unknown: deliverableUnknown,
+          durations: deliverables,
+          unknown: deliverables.includes("incertain"),
         },
-        needsSubtitles,
         budget: budgetChoice || null,
         timeline: timelineChoice || null,
         referral: referralChoice || null,
@@ -1213,138 +1191,60 @@ export function RequestApp() {
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
                 {t("request.step6.subtitle")}
               </p>
-              <div className="mx-auto mt-6 w-full max-w-4xl space-y-4 text-left">
+              <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 text-left md:grid-cols-2">
                 {deliverableOptions.map((option) => {
                   if (option.id === "incertain") return null;
 
-                  const deliverableKey = option.id as Exclude<
-                    DeliverableKey,
-                    "incertain"
-                  >;
-                  const quantity = deliverables[deliverableKey];
-                  const formats = deliverableFormatsByKey[deliverableKey] ?? [];
-                  const selected = quantity > 0;
-                  const formatButton = (value: DeliverableFormat, label: string) => (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDeliverableFormatsByKey((prev) => ({
-                          ...prev,
-                          [deliverableKey]: toggleArrayValue(
-                            prev[deliverableKey] ?? [],
-                            value,
-                          ),
-                        }))
-                      }
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] transition ${
-                        formats.includes(value)
-                          ? "border-emerald-300/70 bg-emerald-300/20 text-emerald-100"
-                          : "border-white/10 text-zinc-400 hover:border-white/30"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
+                  const selected = deliverables.includes(option.id);
 
                   return (
-                    <div
+                    <button
                       key={option.id}
-                      className={`rounded-2xl border p-5 transition ${
+                      type="button"
+                      onClick={() =>
+                        setDeliverables((prev) => {
+                          if (option.id === "incertain") {
+                            return prev.includes("incertain") ? [] : ["incertain"];
+                          }
+                          return toggleArrayValue(
+                            prev.filter((item) => item !== "incertain"),
+                            option.id,
+                          );
+                        })
+                      }
+                      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition ${
                         selected
                           ? "border-emerald-300/50 bg-emerald-300/10"
-                          : "border-white/10 bg-black/30"
+                          : "border-white/10 bg-black/30 hover:border-white/30"
                       }`}
                     >
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <div className="text-lg font-semibold text-zinc-100">
-                            {t(option.labelKey)}
-                          </div>
-                          <div className="mt-1 text-sm text-zinc-400">
-                            {t(option.descriptionKey)}
-                          </div>
+                      <div
+                        className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
+                          selected
+                            ? "border-emerald-300/70 bg-emerald-300/20 text-emerald-100"
+                            : "border-white/20 text-transparent group-hover:border-white/40"
+                        }`}
+                        aria-hidden
+                      >
+                        <span className="text-xs">✓</span>
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold text-zinc-100">
+                          {t(option.labelKey)}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setDeliverables((prev) => ({
-                                ...prev,
-                                [deliverableKey]: Math.max(
-                                  0,
-                                  prev[deliverableKey] - 1,
-                                ),
-                              }))
-                            }
-                            className="h-9 w-9 rounded-full border border-white/10 text-xl text-zinc-200 hover:bg-white/10"
-                            aria-label={`${t("request.step6.remove")} ${t(option.labelKey)}`}
-                          >
-                            -
-                          </button>
-                          <div className="min-w-[32px] text-center text-lg font-semibold text-white">
-                            {quantity}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDeliverables((prev) => ({
-                                ...prev,
-                                [deliverableKey]: prev[deliverableKey] + 1,
-                              }));
-                              setDeliverableUnknown(false);
-                            }}
-                            className="h-9 w-9 rounded-full border border-white/10 text-xl text-zinc-200 hover:bg-white/10"
-                            aria-label={`${t("request.step6.add")} ${t(option.labelKey)}`}
-                          >
-                            +
-                          </button>
+                        <div className="mt-1 text-sm text-zinc-400">
+                          {t(option.descriptionKey)}
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {formatButton("horizontal", t("request.step6.format.horizontal"))}
-                        {formatButton("vertical", t("request.step6.format.vertical"))}
-                        {formatButton("carre", t("request.step6.format.square"))}
-                      </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
-              <div className="mx-auto mt-8 w-full max-w-4xl space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-left">
-                <div className="text-sm font-semibold text-zinc-200">
-                  {t("request.step6.subtitles.title")}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: true, label: t("request.yes") },
-                    { value: false, label: t("request.no") },
-                  ].map((option) => (
-                    <button
-                      key={String(option.value)}
-                      type="button"
-                      onClick={() => setNeedsSubtitles(option.value)}
-                      className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
-                        needsSubtitles === option.value
-                          ? "border-fuchsia-300/70 bg-fuchsia-300/20 text-fuchsia-100"
-                          : "border-white/10 text-zinc-400 hover:border-white/30"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 flex justify-center">
+              <div className="flex justify-center">
                 <button
                   type="button"
                   onClick={() => {
-                    setDeliverableUnknown(true);
-                    setDeliverables({
-                      courte_video: 0,
-                      publicite: 0,
-                      film_publicitaire: 0,
-                      mini_documentaire: 0,
-                    });
-                    setDeliverableFormatsByKey({});
+                    setDeliverables(["incertain"]);
                     setStep(6);
                   }}
                   className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
@@ -1379,6 +1279,8 @@ export function RequestApp() {
               </p>
               <div className="mx-auto mt-6 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
                 {budgetOptions.map((option) => {
+                  if (option.id === "unknown") return null;
+
                   const selected = budgetChoice === option.id;
                   return (
                     <button
@@ -1395,6 +1297,18 @@ export function RequestApp() {
                     </button>
                   );
                 })}
+              </div>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBudgetChoice("unknown");
+                    setStep(7);
+                  }}
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
+                >
+                  {t("request.unknown")}
+                </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button

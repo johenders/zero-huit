@@ -305,7 +305,7 @@ export const uiEntries: UiEntry[] = [
   { key: "request.step5.locations.placeholder", fr: "Ex: Montréal, bureaux, studio...", section: "ui" },
 
   { key: "request.step6.title", fr: "Quels sont les livrables?", section: "content" },
-  { key: "request.step6.subtitle", fr: "Indique la durée, la quantité et le format.", section: "content" },
+  { key: "request.step6.subtitle", fr: "Sélectionne une ou plusieurs durées.", section: "content" },
   { key: "request.deliverable.courte_video.label", fr: "30 secondes et moins", section: "ui" },
   { key: "request.deliverable.courte_video.desc", fr: "Ex.: Story ou Publicité", section: "content" },
   { key: "request.deliverable.publicite.label", fr: "30 à 60 secondes", section: "ui" },
