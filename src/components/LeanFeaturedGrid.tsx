@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { CloudflareHlsPlayer } from "@/components/CloudflareHlsPlayer";
 import type { Video } from "@/lib/types";
 import { cloudflarePreviewIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
 import { useI18n } from "@/lib/i18n/client";
@@ -16,14 +17,54 @@ function FeaturedVideoCard({
   video,
   onOpen,
   priority = false,
+  prewarmPreview = false,
 }: {
   video: Video;
   onOpen: (video: Video) => void;
   priority?: boolean;
+  prewarmPreview?: boolean;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [hasPreview, setHasPreview] = useState(false);
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useI18n();
-  const previewStart = video.thumbnail_time_seconds ?? 0;
+  const previewStart = Math.max(0, video.thumbnail_time_seconds ?? 0);
+  const thumbnailSrc = cloudflareThumbnailSrc(
+    video.cloudflare_uid,
+    video.thumbnail_time_seconds ?? 1,
+    1200,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!prewarmPreview || hasPreview) return;
+    const root = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    type TimeoutHandle = ReturnType<typeof setTimeout>;
+    const idle = (cb: () => void) => {
+      if (typeof root.requestIdleCallback === "function") {
+        return root.requestIdleCallback(cb, { timeout: 1200 });
+      }
+      return root.setTimeout(cb, 400);
+    };
+    const cancel = (id: number | TimeoutHandle) => {
+      if (typeof id === "number" && typeof root.cancelIdleCallback === "function") {
+        root.cancelIdleCallback(id);
+        return;
+      }
+      root.clearTimeout(id as TimeoutHandle);
+    };
+
+    const handle = idle(() => setHasPreview(true));
+    return () => cancel(handle);
+  }, [hasPreview, prewarmPreview]);
 
   return (
     <button
@@ -31,31 +72,42 @@ function FeaturedVideoCard({
       className="group relative overflow-hidden rounded-2xl bg-black/40 text-left shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
       type="button"
       onClick={() => onOpen(video)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        if (hasPreview) return;
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = setTimeout(() => {
+          setHasPreview(true);
+        }, 160);
+      }}
+      onMouseLeave={() => {
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      }}
+      onFocus={() => setHasPreview(true)}
     >
       <div className="relative aspect-video w-full">
         <Image
-          src={cloudflareThumbnailSrc(
-            video.cloudflare_uid,
-            video.thumbnail_time_seconds ?? 1,
-            1200,
-          )}
+          src={thumbnailSrc}
           alt={video.title}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
           priority={priority}
           className={`object-cover transition duration-700 ${
-            isHovered ? "opacity-0" : "opacity-100"
+            isPreviewReady
+              ? "group-hover:opacity-0 group-focus:opacity-0"
+              : "opacity-100"
           }`}
         />
-        {isHovered ? (
+        {hasPreview ? (
           <iframe
-            className="absolute inset-0 h-full w-full pointer-events-none"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+              isPreviewReady
+                ? "opacity-0 group-hover:opacity-100 group-focus:opacity-100"
+                : "opacity-0"
+            }`}
             src={cloudflarePreviewIframeSrc(video.cloudflare_uid, previewStart)}
             allow="autoplay; fullscreen"
+            loading="eager"
+            onLoad={() => setIsPreviewReady(true)}
             title={video.title}
           />
         ) : null}
@@ -124,6 +176,7 @@ export function LeanFeaturedGrid({ videos }: Props) {
               video={video}
               onOpen={setActiveVideo}
               priority={index < 3}
+              prewarmPreview={index < 6}
             />
           ))}
         </div>
@@ -169,11 +222,10 @@ export function LeanFeaturedGrid({ videos }: Props) {
               </button>
             </div>
             <div className="aspect-video w-full">
-              <iframe
+              <CloudflareHlsPlayer
                 className="h-full w-full"
-                src={`https://iframe.videodelivery.net/${activeVideo.cloudflare_uid}?autoplay=true&muted=false&loop=false&controls=true&preload=true&quality=1080`}
-                allow="autoplay; fullscreen"
-                allowFullScreen
+                uid={activeVideo.cloudflare_uid}
+                autoPlay
                 title={activeVideo.title}
               />
             </div>

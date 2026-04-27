@@ -56,3 +56,10 @@ export function cloudflareThumbnailSrc(
 export function cloudflareDownloadSrc(uid: string) {
   return `https://videodelivery.net/${encodeURIComponent(uid)}/downloads/default.mp4`;
 }
+
+export function cloudflareHlsManifestSrc(uid: string, bandwidthHintMbps = 8) {
+  const params = new URLSearchParams({
+    clientBandwidthHint: String(bandwidthHintMbps),
+  });
+  return `https://videodelivery.net/${encodeURIComponent(uid)}/manifest/video.m3u8?${params.toString()}`;
+}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cloudflareIframeSrc } from "@/lib/cloudflare";
+import { CloudflareHlsPlayer } from "@/components/CloudflareHlsPlayer";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
 import { stripLocalePrefix, withLocaleHref } from "@/lib/i18n/shared";
 
@@ -32,9 +32,10 @@ function formatDuration(seconds: number | null) {
 }
 
 export function VideoModal({ video, open, onClose }: Props) {
-  if (!open || !video) return null;
   const pathname = usePathname();
   const locale = stripLocalePrefix(pathname).locale;
+  if (!open || !video) return null;
+
   const byKind: Record<TaxonomyKind, Taxonomy[]> = {
     type: [],
     objectif: [],
@@ -84,11 +85,9 @@ export function VideoModal({ video, open, onClose }: Props) {
         </div>
         <div className="grid grid-cols-1 gap-4 bg-zinc-950/70 p-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <div className="aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/40">
-            <iframe
+            <CloudflareHlsPlayer
               className="h-full w-full"
-              src={cloudflareIframeSrc(video.cloudflare_uid)}
-              allow="accelerometer; autoplay; encrypted-media; picture-in-picture;"
-              allowFullScreen
+              uid={video.cloudflare_uid}
               title={video.title}
             />
           </div>
