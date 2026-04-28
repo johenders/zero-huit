@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
-import { loadRecommendationSettings } from "@/lib/recommendationsSettings";
 import type { Taxonomy, TaxonomyKind, Video } from "@/lib/types";
 
 type Payload = {
@@ -16,27 +15,14 @@ type Payload = {
 type VideoEntry = {
   id: string;
   title: string;
-  budget_min: number | null;
-  budget_max: number | null;
   tags: Record<TaxonomyKind, string[]>;
 };
-
-const taxonomyKinds: TaxonomyKind[] = [
-  "type",
-  "objectif",
-  "keyword",
-  "style",
-  "feel",
-  "parametre",
-];
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Payload;
-    const durations = body.durations ?? [];
     const description = body.description ?? "";
     const objectives = Array.isArray(body.objectives) ? body.objectives : [];
-    const audiences = Array.isArray(body.audiences) ? body.audiences : [];
     const excludeIds = Array.isArray(body.excludeIds) ? body.excludeIds : [];
     const limit = Math.max(1, Math.min(12, Number(body.limit ?? 6)));
 
@@ -99,8 +85,6 @@ export async function POST(request: Request) {
       return {
         id: video.id,
         title: video.title,
-        budget_min: video.budget_min ?? null,
-        budget_max: video.budget_max ?? null,
         tags: tagsByKind,
       };
     });
@@ -125,15 +109,76 @@ export async function POST(request: Request) {
     const normalizedDescription = normalize(description);
     const paddedDescription = ` ${normalizedDescription} `;
 
-    const settings = await loadRecommendationSettings();
-    const keywordLimit = Math.max(1, Math.min(8, Number(settings.keywordLimit ?? 4)));
+    const selectedObjectiveLabels = new Set(
+      objectives
+        .map((objective) => {
+          const taxonomy = taxonomyById.get(objective);
+          return taxonomy?.kind === "objectif" ? taxonomy.label : objective;
+        })
+        .map((label) => normalize(label))
+        .filter((label) => label && label !== "autre" && label !== "je ne sais pas"),
+    );
 
-    const keywordGroupLabels = (taxonomiesResult.data ?? [])
-      .filter((t) => t.kind === "keyword" || t.kind === "style" || t.kind === "parametre")
-      .map((t) => ({ label: t.label, normalized: normalize(t.label) }));
+    const keywordLimit = 6;
+    const keywordsByNormalizedLabel = new Map<string, string>();
+    for (const taxonomy of (taxonomiesResult.data ?? []) as Taxonomy[]) {
+      if (taxonomy.kind !== "keyword") continue;
+      const normalized = normalize(taxonomy.label);
+      if (!normalized) continue;
+      keywordsByNormalizedLabel.set(normalized, taxonomy.label);
+    }
+    const keywordOptions = Array.from(keywordsByNormalizedLabel.entries()).map(
+      ([normalized, label]) => ({ label, normalized }),
+    );
 
     const matchedKeywordLabels = new Set<string>();
-    if (normalizedDescription.length > 8 && keywordGroupLabels.length > 0) {
+    const keywordWeights = new Map<string, number>();
+    const addAvailableKeyword = (targets: string[], weight: number) => {
+      for (const target of targets.map(normalize)) {
+        const exact = keywordsByNormalizedLabel.get(target);
+        if (exact) {
+          matchedKeywordLabels.add(exact);
+          keywordWeights.set(
+            normalize(exact),
+            Math.max(keywordWeights.get(normalize(exact)) ?? 0, weight),
+          );
+          continue;
+        }
+        const partial = keywordOptions.find(
+          (entry) =>
+            entry.normalized.includes(target) || target.includes(entry.normalized),
+        );
+        if (partial) {
+          matchedKeywordLabels.add(partial.label);
+          keywordWeights.set(
+            partial.normalized,
+            Math.max(keywordWeights.get(partial.normalized) ?? 0, weight),
+          );
+        }
+      }
+    };
+
+    if (/\bgolf\b/.test(paddedDescription)) {
+      addAvailableKeyword(["golf"], 100);
+    }
+    if (
+      /\b(tournoi|tournois|gala|festival|conference|congres|salon|lancement|evenement|evenementiel)\b/.test(
+        paddedDescription,
+      )
+    ) {
+      addAvailableKeyword(["événement", "événementiel"], 85);
+    }
+    if (/\b(renovation|renover|construction|chantier|contracteur)\b/.test(paddedDescription)) {
+      addAvailableKeyword(["construction", "rénovation"], 100);
+    }
+    if (/\b(immobilier|maison|condo|propriete|courtier)\b/.test(paddedDescription)) {
+      addAvailableKeyword(["immobilier"], 95);
+    }
+    if (/\b(restaurant|resto|chef|menu|cuisine|traiteur)\b/.test(paddedDescription)) {
+      addAvailableKeyword(["restauration", "restaurant"], 95);
+    }
+
+    if (normalizedDescription.length > 8 && keywordOptions.length > 0) {
       try {
         const apiKey = process.env.OPENAI_API_KEY;
         if (apiKey) {
@@ -163,13 +208,13 @@ export async function POST(request: Request) {
                 {
                   role: "system",
                   content:
-                    "Tu choisis les mots-clés les plus pertinents à partir d'une liste. Réponds uniquement en JSON valide.",
+                    "Tu choisis les mots-clés de portfolio les plus pertinents à partir d'une liste. Inclus les mots-clés qui correspondent directement ou indirectement au secteur, au contexte ou au type d'activité décrit. Réponds uniquement en JSON valide.",
                 },
                 {
                   role: "user",
                   content: JSON.stringify({
                     description,
-                    available_keywords: keywordGroupLabels.map((entry) => entry.label),
+                    available_keywords: keywordOptions.map((entry) => entry.label),
                     rules: [`Choisis au plus ${keywordLimit} mots-clés existants.`],
                   }),
                 },
@@ -195,12 +240,21 @@ export async function POST(request: Request) {
             }
             if (raw) {
               const parsed = JSON.parse(raw) as { keywords?: string[] };
-              for (const label of (parsed.keywords ?? []).slice(0, keywordLimit)) {
+              for (const [index, label] of (parsed.keywords ?? [])
+                .slice(0, keywordLimit)
+                .entries()) {
                 const normalized = normalize(label);
-                const match = keywordGroupLabels.find(
+                const match = keywordOptions.find(
                   (entry) => entry.normalized === normalized,
                 );
-                if (match) matchedKeywordLabels.add(match.label);
+                if (match) {
+                  const weight = Math.max(25, 80 - index * 10);
+                  matchedKeywordLabels.add(match.label);
+                  keywordWeights.set(
+                    match.normalized,
+                    Math.max(keywordWeights.get(match.normalized) ?? 0, weight),
+                  );
+                }
               }
             }
           }
@@ -211,239 +265,148 @@ export async function POST(request: Request) {
     }
 
     if (matchedKeywordLabels.size === 0) {
-      for (const entry of keywordGroupLabels) {
+      for (const entry of keywordOptions) {
         if (!entry.normalized) continue;
         if (paddedDescription.includes(` ${entry.normalized} `)) {
           matchedKeywordLabels.add(entry.label);
+          keywordWeights.set(
+            entry.normalized,
+            Math.max(keywordWeights.get(entry.normalized) ?? 0, 70),
+          );
         }
       }
     }
-
-    const activeDurationFilters = new Set(
-      durations.filter((value) => value !== "incertain"),
-    );
-    const durationRanges: Array<{
-      id: string;
-      min: number;
-      max: number | null;
-    }> = [
-      { id: "courte_video", min: 10, max: 30 },
-      { id: "publicite", min: 30, max: 90 },
-      { id: "film_publicitaire", min: 120, max: 240 },
-      { id: "mini_documentaire", min: 300, max: null },
-    ];
-
-    const objectiveRules = settings.objectives ?? {};
-
-    const hasOtherObjective = objectives.includes("autre");
-    const allowedTypeNormalized = new Set<string>();
-    const allowedObjectifNormalized = new Set<string>();
-    const priorityObjectifNormalized = new Set<string>();
-
-    if (!hasOtherObjective && objectives.length > 0) {
-      for (const objective of objectives) {
-        const rule = objectiveRules[objective];
-        if (!rule) continue;
-        for (const label of rule.types) allowedTypeNormalized.add(normalize(label));
-        for (const label of rule.objectifs) {
-          allowedObjectifNormalized.add(normalize(label));
-        }
-        for (const label of rule.priorityObjectifs) {
-          priorityObjectifNormalized.add(normalize(label));
-        }
-      }
-    }
-
-    const audienceRemovals = settings.audiences ?? {};
-
-    const hasOtherAudience = audiences.includes("autre");
-    const removedTypeNormalized = new Set<string>();
-    if (!hasOtherAudience && audiences.length > 0) {
-      for (const audience of audiences) {
-        const removed = audienceRemovals[audience] ?? [];
-        for (const label of removed) removedTypeNormalized.add(normalize(label));
-      }
-    }
-
-    const applyObjectiveFilters =
-      allowedTypeNormalized.size > 0 || allowedObjectifNormalized.size > 0;
-
-    const budgetRanges: Record<
-      string,
-      { min: number; max: number | null }
-    > = {
-      "2000-5000": { min: 2000, max: 5000 },
-      "5000-10000": { min: 5000, max: 10000 },
-      "10000-20000": { min: 10000, max: 20000 },
-      "20000+": { min: 20000, max: null },
-    };
-    const budgetRange = body.budget ? budgetRanges[body.budget] ?? null : null;
 
     const videoById = new Map(visibleVideos.map((video) => [video.id, video]));
-
-    const filteredEntries = availableEntries.filter((entry) => {
-      if (applyObjectiveFilters) {
-        const typeOk =
-          allowedTypeNormalized.size === 0 ||
-          entry.tags.type.some((label) =>
-            allowedTypeNormalized.has(normalize(label)),
-          );
-        const objectifOk =
-          allowedObjectifNormalized.size === 0 ||
-          entry.tags.objectif.some((label) =>
-            allowedObjectifNormalized.has(normalize(label)),
-          );
-        if (!typeOk || !objectifOk) return false;
-      }
-
-      if (removedTypeNormalized.size > 0) {
-        const hasRemoved = entry.tags.type.some((label) =>
-          removedTypeNormalized.has(normalize(label)),
-        );
-        if (hasRemoved) return false;
-      }
-
-      if (budgetRange) {
-        const rawVideo = videoById.get(entry.id);
-        if (!rawVideo) return false;
-        const vMin = rawVideo.budget_min ?? rawVideo.budget_max ?? budgetRange.min;
-        const vMax = rawVideo.budget_max ?? rawVideo.budget_min ?? budgetRange.max;
-        if (typeof vMin !== "number" || typeof vMax !== "number") return false;
-        const maxValue = budgetRange.max ?? Number.POSITIVE_INFINITY;
-        const budgetOk = vMax >= budgetRange.min && vMin <= maxValue;
-        if (!budgetOk) return false;
-      }
-
-      if (activeDurationFilters.size > 0) {
-        const rawVideo = videoById.get(entry.id);
-        if (!rawVideo) return false;
-        const durationSeconds = rawVideo.duration_seconds ?? null;
-        if (typeof durationSeconds !== "number") return false;
-        const durationOk = durationRanges.some((range) => {
-          if (!activeDurationFilters.has(range.id)) return false;
-          const withinMin = durationSeconds >= range.min;
-          const withinMax = range.max === null ? true : durationSeconds <= range.max;
-          return withinMin && withinMax;
-        });
-        if (!durationOk) return false;
-      }
-
-      return true;
-    });
-
-    const scoreVideo = (entry: VideoEntry, rawVideo: Omit<Video, "taxonomies">) => {
-      const keywordMatches = [
-        ...entry.tags.keyword,
-        ...entry.tags.style,
-        ...entry.tags.parametre,
-      ].filter((label) => matchedKeywordLabels.has(label)).length;
-
-      const typeMatches =
-        allowedTypeNormalized.size > 0
-          ? entry.tags.type.filter((label) =>
-              allowedTypeNormalized.has(normalize(label)),
-            ).length
-          : 0;
-
-      const priorityObjectifMatch = entry.tags.objectif.some((label) =>
-        priorityObjectifNormalized.has(normalize(label)),
-      )
-        ? 1
-        : 0;
-      const objectifMatches =
-        allowedObjectifNormalized.size > 0
-          ? entry.tags.objectif.filter((label) =>
-              allowedObjectifNormalized.has(normalize(label)),
-            ).length
-          : 0;
-
-      const durationSeconds = (rawVideo as { duration_seconds?: number | null })
-        .duration_seconds;
-      const durationMatch =
-        typeof durationSeconds === "number" && activeDurationFilters.size > 0
-          ? durationRanges.some((range) => {
-              if (!activeDurationFilters.has(range.id)) return false;
-              const withinMin = durationSeconds >= range.min;
-              const withinMax =
-                range.max === null ? true : durationSeconds <= range.max;
-              return withinMin && withinMax;
-            })
-          : false;
-
-      const budgetMatch =
-        budgetRange && (rawVideo.budget_min !== null || rawVideo.budget_max !== null)
-          ? (() => {
-              const vMin = rawVideo.budget_min ?? rawVideo.budget_max ?? budgetRange.min;
-              const vMax = rawVideo.budget_max ?? rawVideo.budget_min ?? budgetRange.max;
-              if (typeof vMin !== "number" || typeof vMax !== "number") return false;
-              const maxValue = budgetRange.max ?? Number.POSITIVE_INFINITY;
-              return vMax >= budgetRange.min && vMin <= maxValue;
-            })()
-          : false;
-
-      return {
-        keywordMatches,
-        typeMatches,
-        priorityObjectifMatch,
-        objectifMatches,
-        durationMatch: durationMatch ? 1 : 0,
-        budgetMatch: budgetMatch ? 1 : 0,
-      };
-    };
-
-    const shouldFallback = settings.fallbackToBest ?? true;
-    const candidates =
-      filteredEntries.length > 0 || !shouldFallback
-        ? filteredEntries
-        : availableEntries;
-    const scored = candidates
+    const matchedKeywordNormalizedLabels = new Set(
+      Array.from(matchedKeywordLabels).map((label) => normalize(label)),
+    );
+    const scored = availableEntries
       .map((entry) => {
         const rawVideo = videoById.get(entry.id);
         if (!rawVideo) return null;
         return {
           entry,
           rawVideo,
-          score: scoreVideo(entry, rawVideo),
+          matchedKeywords: entry.tags.keyword.filter((label) =>
+            matchedKeywordNormalizedLabels.has(normalize(label)),
+          ),
+          keywordScore: entry.tags.keyword.reduce(
+            (score, label) => score + (keywordWeights.get(normalize(label)) ?? 0),
+            0,
+          ),
+          objectiveMatches:
+            selectedObjectiveLabels.size === 0
+              ? 0
+              : entry.tags.objectif.filter((label) =>
+                  selectedObjectiveLabels.has(normalize(label)),
+                ).length,
         };
       })
       .filter(Boolean) as Array<{
       entry: VideoEntry;
       rawVideo: Omit<Video, "taxonomies">;
-      score: {
-        keywordMatches: number;
-        typeMatches: number;
-        priorityObjectifMatch: number;
-        objectifMatches: number;
-        durationMatch: number;
-        budgetMatch: number;
-      };
+      matchedKeywords: string[];
+      keywordScore: number;
+      objectiveMatches: number;
     }>;
+    const hasSelectedKeywords = matchedKeywordNormalizedLabels.size > 0;
 
-    scored.sort((a, b) => {
-      if (a.score.keywordMatches !== b.score.keywordMatches) {
-        return b.score.keywordMatches - a.score.keywordMatches;
+    const sortByKeywordsThenRecent = (items: typeof scored) =>
+      [...items].sort((a, b) => {
+        if (a.keywordScore !== b.keywordScore) {
+          return b.keywordScore - a.keywordScore;
+        }
+        if (a.matchedKeywords.length !== b.matchedKeywords.length) {
+          return b.matchedKeywords.length - a.matchedKeywords.length;
+        }
+        if (a.objectiveMatches !== b.objectiveMatches) {
+          return b.objectiveMatches - a.objectiveMatches;
+        }
+        const aTime = Date.parse(a.rawVideo.created_at ?? "") || 0;
+        const bTime = Date.parse(b.rawVideo.created_at ?? "") || 0;
+        return bTime - aTime;
+      });
+    const sortByRecent = (items: typeof scored) =>
+      [...items].sort((a, b) => {
+        const aTime = Date.parse(a.rawVideo.created_at ?? "") || 0;
+        const bTime = Date.parse(b.rawVideo.created_at ?? "") || 0;
+        return bTime - aTime;
+      });
+
+    const allKeywordMatches = sortByKeywordsThenRecent(
+      scored.filter(
+        (item) =>
+          hasSelectedKeywords &&
+          item.matchedKeywords.length === matchedKeywordNormalizedLabels.size,
+      ),
+    );
+    const partialKeywordMatches = sortByKeywordsThenRecent(
+      scored.filter(
+        (item) =>
+          item.matchedKeywords.length > 0 &&
+          item.matchedKeywords.length < matchedKeywordNormalizedLabels.size,
+      ),
+    );
+    const objectiveMatches = sortByRecent(
+      scored.filter(
+        (item) =>
+          item.matchedKeywords.length === 0 &&
+          selectedObjectiveLabels.size > 0 &&
+          item.objectiveMatches > 0,
+      ),
+    );
+    const favoriteMatches = sortByRecent(
+      scored.filter((item) => item.rawVideo.is_featured),
+    );
+    const otherMatches = sortByRecent(scored);
+
+    const selectedIds = new Set<string>();
+    const topScored: typeof scored = [];
+    const appendCandidates = (items: typeof scored) => {
+      for (const item of items) {
+        if (topScored.length >= limit) return;
+        if (selectedIds.has(item.entry.id)) continue;
+        selectedIds.add(item.entry.id);
+        topScored.push(item);
       }
-      if (a.score.priorityObjectifMatch !== b.score.priorityObjectifMatch) {
-        return b.score.priorityObjectifMatch - a.score.priorityObjectifMatch;
+    };
+
+    appendCandidates(allKeywordMatches);
+    appendCandidates(partialKeywordMatches);
+    appendCandidates(objectiveMatches);
+    appendCandidates(favoriteMatches);
+    appendCandidates(otherMatches);
+
+    topScored.sort((a, b) => {
+      const tier = (item: (typeof topScored)[number]) => {
+        if (
+          hasSelectedKeywords &&
+          item.matchedKeywords.length === matchedKeywordNormalizedLabels.size
+        ) {
+          return 0;
+        }
+        if (item.matchedKeywords.length > 0) {
+          return 1;
+        }
+        if (selectedObjectiveLabels.size > 0 && item.objectiveMatches > 0) {
+          return 2;
+        }
+        if (item.rawVideo.is_featured) return 3;
+        return 4;
+      };
+      const tierDiff = tier(a) - tier(b);
+      if (tierDiff !== 0) return tierDiff;
+      if (a.keywordScore !== b.keywordScore) {
+        return b.keywordScore - a.keywordScore;
       }
-      if (a.score.objectifMatches !== b.score.objectifMatches) {
-        return b.score.objectifMatches - a.score.objectifMatches;
-      }
-      if (a.score.typeMatches !== b.score.typeMatches) {
-        return b.score.typeMatches - a.score.typeMatches;
-      }
-      if (a.score.durationMatch !== b.score.durationMatch) {
-        return b.score.durationMatch - a.score.durationMatch;
-      }
-      if (a.score.budgetMatch !== b.score.budgetMatch) {
-        return b.score.budgetMatch - a.score.budgetMatch;
+      if (a.matchedKeywords.length !== b.matchedKeywords.length) {
+        return b.matchedKeywords.length - a.matchedKeywords.length;
       }
       const aTime = Date.parse(a.rawVideo.created_at ?? "") || 0;
       const bTime = Date.parse(b.rawVideo.created_at ?? "") || 0;
       return bTime - aTime;
     });
-
-    const topScored = scored.slice(0, limit);
     const selectedVideos = topScored.map(({ rawVideo }) => ({
       id: rawVideo.id,
       title: rawVideo.title,
@@ -452,41 +415,44 @@ export async function POST(request: Request) {
       budget_min: rawVideo.budget_min ?? null,
       budget_max: rawVideo.budget_max ?? null,
     }));
+    const reasonsByVideoId = topScored.reduce<Record<string, string[]>>(
+      (acc, { entry, rawVideo, matchedKeywords }) => {
+        const reasons: string[] = [];
+        const matchedObjectives = entry.tags.objectif.filter((label) =>
+          selectedObjectiveLabels.has(normalize(label)),
+        );
+        if (matchedKeywords.length > 0) {
+          reasons.push(`Mots clés: ${Array.from(new Set(matchedKeywords)).join(", ")}`);
+        }
+        if (matchedObjectives.length > 0) {
+          reasons.push(`Objectifs: ${Array.from(new Set(matchedObjectives)).join(", ")}`);
+        }
+        if (reasons.length === 0 && rawVideo.is_featured) {
+          reasons.push("Favoris");
+        }
+        acc[entry.id] = reasons;
+        return acc;
+      },
+      {},
+    );
 
     const debug =
       process.env.RECOMMENDATIONS_DEBUG === "true"
         ? {
             objectives,
-            audiences,
-            budget: body.budget ?? null,
-            durations,
             matchedKeywordLabels: Array.from(matchedKeywordLabels),
-            allowedTypes: Array.from(allowedTypeNormalized),
-            allowedObjectifs: Array.from(allowedObjectifNormalized),
-            priorityObjectifs: Array.from(priorityObjectifNormalized),
-            removedTypes: Array.from(removedTypeNormalized),
-            activeDurationFilters: Array.from(activeDurationFilters),
+            allowedObjectifs: Array.from(selectedObjectiveLabels),
             keywordLimit,
-            reasonsByVideoId: topScored.reduce<Record<string, string[]>>(
-              (acc, { entry, rawVideo, score }) => {
-                const reasons: string[] = [];
-                if (score.keywordMatches > 0) reasons.push("Mots-clés");
-                if (score.priorityObjectifMatch > 0)
-                  reasons.push("Objectif prioritaire");
-                if (score.objectifMatches > 0) reasons.push("Objectif");
-                if (score.typeMatches > 0) reasons.push("Type");
-                if (score.durationMatch > 0) reasons.push("Durée");
-                if (score.budgetMatch > 0) reasons.push("Budget");
-                if (rawVideo.is_featured) reasons.push("Favoris");
-                acc[entry.id] = reasons;
-                return acc;
-              },
-              {},
-            ),
+            reasonsByVideoId,
           }
         : null;
 
-    return NextResponse.json({ videos: selectedVideos, debug });
+    return NextResponse.json({
+      videos: selectedVideos,
+      matchedKeywordLabels: Array.from(matchedKeywordLabels),
+      reasonsByVideoId,
+      debug,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Erreur serveur." },

@@ -10,16 +10,16 @@ import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
 import type {
   ProjectDiffusion,
-  ProjectObjective,
 } from "@/lib/types";
 import levPhoto from "../../assets/Lev.jpg";
 import logoSymbol from "../../assets/zero_huit_symbole.png";
 
 type ObjectiveOption = {
-  id: ProjectObjective;
+  id: string;
+  label?: string;
   labelKey: string;
-  descriptionKey: string;
-  icon: React.ReactNode;
+  descriptionKey?: string;
+  icon?: React.ReactNode;
 };
 
 type Audience =
@@ -94,7 +94,7 @@ type ReferralOption = {
   labelKey: string;
 };
 
-const objectiveOptions: ObjectiveOption[] = [
+const fallbackObjectiveOptions: ObjectiveOption[] = [
   {
     id: "promotion",
     labelKey: "request.objective.promotion.label",
@@ -206,6 +206,210 @@ const objectiveOptions: ObjectiveOption[] = [
     ),
   },
 ];
+
+function normalizeObjectiveLabel(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function objectiveIcon(label: string) {
+  const normalized = normalizeObjectiveLabel(label);
+
+  if (normalized.includes("promotion")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 13V7a2 2 0 0 1 2-2h4" />
+        <path d="M20 11v6a2 2 0 0 1-2 2h-4" />
+        <path d="M7 16l10-8" />
+        <path d="M14 8h3v3" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("recrutement")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3 20a6 6 0 0 1 12 0" />
+        <path d="M17 11h4" />
+        <path d="M19 9v4" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("notoriete")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.5-.8L12 3z" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("informatif")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 10v6" />
+        <path d="M12 7h.01" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("educatif")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14H6.5A2.5 2.5 0 0 0 4 20.5z" />
+        <path d="M8 8h8" />
+        <path d="M8 12h6" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("evenement")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M7 3v4" />
+        <path d="M17 3v4" />
+        <path d="M4 8h16" />
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <path d="M8 13h3" />
+        <path d="M13 13h3" />
+        <path d="M8 17h3" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("communautaire")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="8" cy="9" r="3" />
+        <circle cx="16" cy="9" r="3" />
+        <path d="M3 20a5 5 0 0 1 10 0" />
+        <path d="M11 20a5 5 0 0 1 10 0" />
+      </svg>
+    );
+  }
+
+  if (normalized.includes("divertissement")) {
+    return (
+      <svg
+        aria-hidden
+        className="h-6 w-6"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M7 8h.01" />
+        <path d="M17 8h.01" />
+        <path d="M8 14c1.2 1 2.6 1.5 4 1.5s2.8-.5 4-1.5" />
+        <circle cx="12" cy="12" r="9" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      aria-hidden
+      className="h-6 w-6"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 6v12" />
+      <path d="M6 12h12" />
+      <circle cx="12" cy="12" r="9" />
+    </svg>
+  );
+}
+
+const objectiveOrder = [
+  "promotionnelle",
+  "recrutement",
+  "informatif",
+  "evenementiel",
+  "educatif",
+  "communautaire",
+  "notoriete",
+];
+
+function objectiveOrderIndex(label: string) {
+  const normalized = normalizeObjectiveLabel(label);
+  const index = objectiveOrder.findIndex((entry) => normalized.includes(entry));
+  return index === -1 ? objectiveOrder.length : index;
+}
 
 const audienceOptions: AudienceOption[] = [
   {
@@ -527,7 +731,11 @@ function toggleArrayValue<T extends string>(list: T[], value: T) {
     : [...list, value];
 }
 
-export function RequestApp() {
+type RequestAppProps = {
+  initialObjectiveOptions?: Array<{ id: string; label: string }>;
+};
+
+export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
   const { locale, t } = useI18n();
   const privacyHref = locale === "en" ? "/en/privacy" : "/politique-de-confidentialite";
   const searchParams = useSearchParams();
@@ -538,7 +746,33 @@ export function RequestApp() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
-  const [objectives, setObjectives] = useState<ProjectObjective[]>([]);
+  const objectiveOptions: ObjectiveOption[] =
+    initialObjectiveOptions.length > 0
+      ? [...initialObjectiveOptions]
+          .sort((a, b) => {
+            const orderDiff =
+              objectiveOrderIndex(a.label) - objectiveOrderIndex(b.label);
+            if (orderDiff !== 0) return orderDiff;
+            return a.label.localeCompare(b.label, "fr");
+          })
+          .map((option) => ({
+            id: option.id,
+            label: option.label,
+            labelKey: option.label,
+            icon: objectiveIcon(option.label),
+          }))
+      : fallbackObjectiveOptions;
+  const objectiveLabelById = new Map(
+    [
+      ...objectiveOptions.map(
+        (option) =>
+          [option.id, option.label ?? t(option.labelKey)] as [string, string],
+      ),
+      ["autre", t("request.unknown")] as [string, string],
+    ],
+  );
+
+  const [objectives, setObjectives] = useState<string[]>([]);
   const [audiences, setAudiences] = useState<Audience[]>([]);
   const [diffusions, setDiffusions] = useState<ProjectDiffusion[]>([]);
   const [projectDescription, setProjectDescription] = useState("");
@@ -625,6 +859,9 @@ export function RequestApp() {
 
     setReferenceStatus("loading");
     setReferenceMessage(null);
+    setReferenceVideos([]);
+    setSelectedReferenceIds(new Set());
+    setReferenceDebug(null);
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       try {
@@ -647,6 +884,8 @@ export function RequestApp() {
         const json = (await response.json()) as
           | {
               videos: typeof referenceVideos;
+              matchedKeywordLabels?: string[];
+              reasonsByVideoId?: Record<string, string[]>;
               debug?: {
                 objectives?: string[];
                 audiences?: string[];
@@ -726,6 +965,8 @@ export function RequestApp() {
       const json = (await response.json()) as
         | {
             videos: typeof referenceVideos;
+            matchedKeywordLabels?: string[];
+            reasonsByVideoId?: Record<string, string[]>;
             debug?: {
               objectives?: string[];
               audiences?: string[];
@@ -769,7 +1010,7 @@ export function RequestApp() {
         company,
         email,
         phone,
-        objectives,
+        objectives: objectives.map((id) => objectiveLabelById.get(id) ?? id),
         audiences,
         diffusions,
         description: projectDescription,
@@ -941,16 +1182,20 @@ export function RequestApp() {
               <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
                 {objectiveOptions.map((option) => {
                   const selected = objectives.includes(option.id);
+                  const label = option.label ?? t(option.labelKey);
                   return (
                     <button
                       key={option.id}
                       type="button"
                       onClick={() =>
                         setObjectives((prev) =>
-                          toggleArrayValue(prev, option.id),
+                          toggleArrayValue(
+                            prev.filter((id) => id !== "autre"),
+                            option.id,
+                          ),
                         )
                       }
-                      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition ${
+                      className={`group flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition ${
                         selected
                           ? "border-amber-300/60 bg-amber-300/10 text-amber-100"
                           : "border-white/10 bg-black/30 text-zinc-200 hover:border-white/30"
@@ -963,19 +1208,37 @@ export function RequestApp() {
                             : "border-white/10 bg-white/5 text-zinc-300 group-hover:border-white/30"
                         }`}
                       >
-                        {option.icon}
+                        {option.icon ?? (
+                          <span className="text-sm font-semibold">
+                            {selected ? "✓" : ""}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
-                          {t(option.labelKey)}
+                          {label}
                         </div>
-                        <div className="mt-1 text-sm text-zinc-400">
-                          {t(option.descriptionKey)}
-                        </div>
+                        {option.descriptionKey ? (
+                          <div className="mt-1 text-sm text-zinc-400">
+                            {t(option.descriptionKey)}
+                          </div>
+                        ) : null}
                       </div>
                     </button>
                   );
                 })}
+              </div>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setObjectives(["autre"]);
+                    setStep(2);
+                  }}
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
+                >
+                  {t("request.unknown")}
+                </button>
               </div>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
@@ -1396,10 +1659,33 @@ export function RequestApp() {
                 </div>
               ) : null}
               {referenceStatus === "loading" && referenceVideos.length === 0 ? (
-                <div className="mt-8 flex items-center justify-center">
-                  <span className="inline-flex h-8 w-8 animate-spin rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 p-[2px]">
-                    <span className="h-full w-full rounded-full bg-black/60" />
-                  </span>
+                <div className="relative mt-8">
+                  <div
+                    className="grid grid-cols-1 gap-4 opacity-0 md:grid-cols-2 lg:grid-cols-3"
+                    aria-hidden="true"
+                  >
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="overflow-hidden rounded-2xl border border-white/10 bg-black/30"
+                      >
+                        <div className="aspect-video w-full" />
+                        <div className="p-3">
+                          <div className="h-5 w-2/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
+                    <span className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">
+                      Chargement des références en cours
+                      <span className="inline-flex w-5 justify-start text-left">
+                        <span className="animate-pulse">.</span>
+                        <span className="animate-pulse [animation-delay:150ms]">.</span>
+                        <span className="animate-pulse [animation-delay:300ms]">.</span>
+                      </span>
+                    </span>
+                  </div>
                 </div>
               ) : null}
               {referenceStatus === "error" ? (
@@ -1456,7 +1742,7 @@ export function RequestApp() {
                                 sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                                 className="object-cover opacity-90 transition group-hover:opacity-100"
                               />
-                              <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white/80 backdrop-blur">
                                   <svg
                                     aria-hidden
@@ -1497,12 +1783,6 @@ export function RequestApp() {
                               <div className="text-sm font-semibold text-zinc-100">
                                 {video.title}
                               </div>
-                              {referenceDebug?.reasonsByVideoId?.[video.id]?.length ? (
-                                <div className="mt-2 text-xs text-zinc-500">
-                                  {t("request.step9.reason")}:{" "}
-                                  {referenceDebug.reasonsByVideoId[video.id].join(", ")}
-                                </div>
-                              ) : null}
                             </div>
                           </button>
                         </div>
@@ -1764,8 +2044,12 @@ export function RequestApp() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
           role="dialog"
           aria-modal="true"
+          onClick={() => setReferenceModal({ open: false, video: null })}
         >
-          <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+          <div
+            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between gap-4 bg-zinc-950 px-4 py-3">
               <div className="truncate text-sm font-medium text-white">
                 {referenceModal.video.title}
