@@ -94,6 +94,29 @@ type ReferralOption = {
   labelKey: string;
 };
 
+type GtagWindow = Window & {
+  gtag?: (
+    command: "event",
+    eventName: string,
+    parameters?: Record<string, string>,
+  ) => void;
+};
+
+function trackDemandeFormSubmit(locale: string) {
+  if (typeof window === "undefined") return;
+
+  const { gtag } = window as GtagWindow;
+  if (typeof gtag !== "function") return;
+
+  gtag("event", "demande_form_submit", {
+    form_id: "demande",
+    form_name: "Demande de soumission",
+    language: locale,
+    page_location: window.location.href,
+    page_path: window.location.pathname,
+  });
+}
+
 const fallbackObjectiveOptions: ObjectiveOption[] = [
   {
     id: "promotion",
@@ -1033,6 +1056,7 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
       if (!response.ok) {
         throw new Error("submit_failed");
       }
+      trackDemandeFormSubmit(locale);
       setSubmissionStatus("sent");
     } catch (error) {
       setSubmissionStatus("idle");
@@ -1127,9 +1151,10 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               </div>
 
           {step === 0 ? (
-            <form
+            <div
               className="w-full space-y-6"
-              onSubmit={(event) => {
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
                 event.preventDefault();
                 if (canGoNext) setStep(1);
               }}
@@ -1163,14 +1188,17 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               </div>
               <div className="mt-8 flex justify-center">
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => {
+                    if (canGoNext) setStep(1);
+                  }}
                   disabled={!canGoNext}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
-            </form>
+            </div>
           ) : step === 1 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
