@@ -17,8 +17,8 @@ export const metadata: Metadata = {
     canonical: "/en",
   },
   icons: {
-    icon: "/assets/zero_huit_favico.jpg",
-    apple: "/assets/zero_huit_favico.jpg",
+    icon: "/assets/zero_huit_favicon.png",
+    apple: "/assets/zero_huit_favicon.png",
   },
   openGraph: {
     type: "website",
