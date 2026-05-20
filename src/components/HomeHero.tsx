@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/client";
 
-const videoId = "0c63337d4f672f4dd6e39853d1d94301";
-const heroVideoSrc = `https://iframe.videodelivery.net/${videoId}?autoplay=true&muted=true&loop=true&controls=false&preload=true&quality=1080`;
-const modalVideoSrc = `https://iframe.videodelivery.net/${videoId}?autoplay=true&muted=false&loop=false&controls=true&preload=true&quality=1080`;
+const heroVideoId = "9ba44e9bad8d94fa577b534ef0fc4e57";
+const modalVideoId = "adba9e730ce2ec7a9c0476cd46eee0ce";
+const heroVideoSrc = `https://iframe.videodelivery.net/${heroVideoId}?autoplay=true&muted=true&loop=true&controls=false&preload=true&quality=1080`;
+const modalVideoSrc = `https://iframe.videodelivery.net/${modalVideoId}?autoplay=true&muted=false&loop=false&controls=true&preload=true&quality=1080`;
 
 export function HomeHero() {
   const [isOpen, setIsOpen] = useState(false);
