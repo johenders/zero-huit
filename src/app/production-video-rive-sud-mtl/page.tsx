@@ -15,9 +15,24 @@ import type { Article, Taxonomy, Video } from "@/lib/types";
 import { buildPageMetadata } from "@/lib/seo";
 import { selectShowcaseVideos } from "@/lib/video-selection";
 
-import heroImage from "../../../assets/bts/zero_huit_production_video.jpg";
 import ctaBg from "../../../assets/bts/IMG_2410.jpg";
 import zerohuitLogo from "../../../assets/zerohuit_blanc.png";
+
+const heroVideoId = "9ba44e9bad8d94fa577b534ef0fc4e57";
+
+function streamBackgroundVideoSrc(videoId: string) {
+  const params = new URLSearchParams({
+    autoplay: "true",
+    muted: "true",
+    loop: "true",
+    controls: "false",
+    preload: "auto",
+    quality: "1080",
+  });
+  return `https://iframe.videodelivery.net/${encodeURIComponent(videoId)}?${params.toString()}`;
+}
+
+const heroVideoSrc = streamBackgroundVideoSrc(heroVideoId);
 
 type DisplayArticle = {
   title: string;
@@ -156,15 +171,22 @@ export default async function ProductionVideoRiveSudPage() {
   return (
     <div className="font-['Montserrat']">
     <section className="relative min-h-screen w-full overflow-hidden text-white">
-      <Image
-        src={heroImage}
-        alt={t("rive.hero.image.alt")}
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-black/75" />
+      <div className="absolute inset-0">
+        <iframe
+          className="pointer-events-none absolute left-1/2 top-1/2 border-0 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            minWidth: "177.78vh",
+            minHeight: "56.25vw",
+          }}
+          src={heroVideoSrc}
+          title={t("rive.hero.image.alt")}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+      <div className="absolute inset-0 bg-black/65" />
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-none flex-col justify-center px-6 pb-16 pt-28">
         <div className="w-full pl-[10%] origin-left scale-[1.1] transform">
           <h1 className="font-['Montserrat'] text-[2.6rem] font-semibold leading-[1.1] sm:text-[3.2rem] lg:text-[3.8rem]">

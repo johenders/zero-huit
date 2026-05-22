@@ -22,7 +22,7 @@ import saqLogo from "../../assets/clients/saq.png";
 import skyspaLogo from "../../assets/clients/skyspa.png";
 import valleyfieldLogo from "../../assets/clients/valleyfield.png";
 import zelLogo from "../../assets/clients/zel.png";
-const videoId = "0c63337d4f672f4dd6e39853d1d94301";
+const videoId = "adba9e730ce2ec7a9c0476cd46eee0ce";
 const heroVideoSrc = `https://iframe.videodelivery.net/${videoId}?preload=true&quality=1080&autoplay=true&muted=true&loop=true&controls=true`;
 
 const logos = [
