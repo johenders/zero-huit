@@ -58,12 +58,12 @@ export function ApproachSection() {
         </div>
 
         <div className="mt-12 flex justify-center md:justify-end">
-          <button
-            type="button"
-            className="rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
+          <a
+            href="https://www.zerohuit.ca/demande"
+            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-8 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
           >
             {t("rive.approach.cta")}
-          </button>
+          </a>
         </div>
       </div>
     </section>
