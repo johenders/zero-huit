@@ -34,6 +34,11 @@ type DeliverablesPayload = {
   counts?: Record<string, number>;
   formats?: Record<string, string[]>;
   unknown?: boolean;
+  eventDate?: string;
+  eventDateLabel?: string;
+  eventDuration?: string;
+  eventDurationLabel?: string;
+  package?: string;
 };
 
 function formatDate(value: string) {
@@ -63,7 +68,17 @@ const formatLabels: Record<string, string> = {
 
 function formatDeliverables(raw: QuoteRequest["deliverables"]) {
   const payload = (raw ?? {}) as DeliverablesPayload;
+  const eventParts = [
+    payload.package,
+    payload.eventDateLabel ? `Date: ${payload.eventDateLabel}` : payload.eventDate,
+    payload.eventDurationLabel
+      ? `Durée: ${payload.eventDurationLabel}`
+      : payload.eventDuration
+        ? `Durée: ${payload.eventDuration}`
+        : null,
+  ].filter(Boolean);
   if (payload.unknown) return "À définir";
+  if (eventParts.length) return eventParts.join(" • ");
   if (payload.durations?.length) {
     return payload.durations
       .map((duration) => deliverableLabels[duration] ?? duration)

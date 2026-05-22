@@ -4,18 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSupabaseClient } from "@/lib/supabase/useClient";
 import type { Taxonomy } from "@/lib/types";
 import { useAdminState } from "@/app/admin/_hooks/useAdminState";
-import { groupUiEntriesBySection, uiKeys } from "@/lib/i18n/ui";
+import { buildEnglishDictionary, groupUiEntriesBySection, uiKeys } from "@/lib/i18n/ui";
 import { mergeTaxonomiesByKinds, taxonomyGroups } from "@/app/admin/_lib/taxonomies";
 
 const locale = "en";
+const englishDefaults = buildEnglishDictionary();
 
 type TabKey = "ui" | "content" | "tags";
-
-type UiEntry = {
-  key: string;
-  fr: string;
-  section: "ui" | "content";
-};
 
 export default function AdminTranslationsPage() {
   const supabase = useSupabaseClient();
@@ -28,14 +23,7 @@ export default function AdminTranslationsPage() {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [taxonomies, setTaxonomies] = useState<Taxonomy[]>([]);
   const [taxonomyTranslations, setTaxonomyTranslations] = useState<Record<string, string>>({});
-  const [entries, setEntries] = useState<{ ui: UiEntry[]; content: UiEntry[] }>({
-    ui: [],
-    content: [],
-  });
-
-  useEffect(() => {
-    setEntries(groupUiEntriesBySection());
-  }, []);
+  const entries = useMemo(() => groupUiEntriesBySection(), []);
 
   const groupedTaxonomies = useMemo(() => {
     const groups: Record<string, Taxonomy[]> = {
@@ -69,6 +57,9 @@ export default function AdminTranslationsPage() {
     const map: Record<string, string> = {};
     for (const row of data ?? []) {
       map[row.key] = row.value;
+    }
+    for (const key of uiKeys) {
+      if (!map[key]) map[key] = englishDefaults[key] ?? "";
     }
     setTranslations(map);
   }, [supabase]);
@@ -112,8 +103,11 @@ export default function AdminTranslationsPage() {
 
   useEffect(() => {
     if (!supabase) return;
-    void refreshTranslations();
-    void refreshTaxonomyTranslations();
+    const load = async () => {
+      await refreshTranslations();
+      await refreshTaxonomyTranslations();
+    };
+    void load();
   }, [supabase, refreshTranslations, refreshTaxonomyTranslations]);
 
   const handleTranslationChange = (key: string, value: string) => {

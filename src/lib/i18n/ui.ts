@@ -3,6 +3,7 @@ export type UiSection = "ui" | "content";
 export type UiEntry = {
   key: string;
   fr: string;
+  en?: string;
   section: UiSection;
 };
 
@@ -570,6 +571,92 @@ export const uiEntries: UiEntry[] = [
   { key: "rive.cta.image.alt", fr: "Zéro huit", section: "ui" },
   { key: "rive.footer.copy", fr: "© 2026 Zéro huit. Tous droits réservés.", section: "content" },
 
+  { key: "events.meta.title", fr: "Recap événementiel | Zéro huit", en: "Event recap video | Zéro huit", section: "content" },
+  {
+    key: "events.meta.description",
+    fr: "Un forfait recap événementiel simple pour revivre les meilleurs moments et faire rayonner votre événement.",
+    en: "A simple event recap package to relive the best moments and extend the reach of your event.",
+    section: "content",
+  },
+  { key: "events.hero.eyebrow", fr: "Service événementiel", en: "Event service", section: "content" },
+  { key: "events.hero.title.line1", fr: "Recap", en: "Recap", section: "content" },
+  { key: "events.hero.title.line2", fr: "de votre événement", en: "of your event", section: "content" },
+  { key: "events.hero.lead", fr: "Revivez les meilleurs moments.", en: "Relive the best moments.", section: "content" },
+  { key: "events.hero.cta.primary", fr: "Réservez votre date", en: "Reserve your date", section: "ui" },
+  { key: "events.hero.cta.demo", fr: "Visionner notre démo", en: "Watch our demo", section: "ui" },
+  { key: "events.hero.demo.title", fr: "Démo recap événementiel", en: "Event recap demo", section: "content" },
+  { key: "events.hero.demo.close", fr: "Fermer la démo", en: "Close demo", section: "ui" },
+  { key: "events.hero.video.title", fr: "Vidéo de fond événementielle Zéro huit", en: "Zéro huit event background video", section: "ui" },
+  { key: "events.package.label", fr: "Forfait recap", en: "Recap package", section: "content" },
+  { key: "events.package.price", fr: "2 195$", en: "$2,195", section: "content" },
+  { key: "events.package.note", fr: "+ taxes", en: "+ taxes", section: "content" },
+  { key: "events.package.customNote", fr: "*Forfaits sur mesure disponibles", en: "*Custom packages available", section: "content" },
+  { key: "events.package.stat1.value", fr: "TOURNAGE", en: "SHOOT", section: "content" },
+  { key: "events.package.stat1.label", fr: "jusqu'à une demi-journée", en: "up to a half-day", section: "content" },
+  { key: "events.package.stat2.value", fr: "MONTAGE RECAP", en: "RECAP EDIT", section: "content" },
+  { key: "events.package.stat2.label", fr: "60 à 90 secondes", en: "60 to 90 seconds", section: "content" },
+  { key: "events.package.stat3.value", fr: "SHORT", en: "SHORT", section: "content" },
+  { key: "events.package.stat3.label", fr: "15 à 30 secondes", en: "15 to 30 seconds", section: "content" },
+  { key: "events.examples.eyebrow", fr: "Parce que chaque moment compte", en: "Because every moment matters", section: "content" },
+  { key: "events.examples.title", fr: "on était là.", en: "we were there.", section: "content" },
+  { key: "events.examples.mainLabel", fr: "Recap complet", en: "Full recap", section: "content" },
+  { key: "events.examples.shortLabel", fr: "Déclinaisons", en: "Cutdowns", section: "content" },
+  { key: "events.examples.video.mainTitle", fr: "Jeux du Commerce", en: "Jeux du Commerce", section: "content" },
+  { key: "events.examples.video.shortTitle", fr: "Régates de Valleyfield", en: "Valleyfield Regattas", section: "content" },
+  { key: "events.examples.story1.title", fr: "David Guetta au Beachclub", en: "David Guetta at Beachclub", section: "content" },
+  { key: "events.examples.story1.hashtags", fr: "#davidguetta #recap #beachclub", en: "#davidguetta #recap #beachclub", section: "content" },
+  { key: "events.examples.story2.title", fr: "Fondation Anna-Laberge", en: "Anna-Laberge Foundation", section: "content" },
+  { key: "events.examples.story2.hashtags", fr: "#golf #tournoi #robertthibert", en: "#golf #tournament #robertthibert", section: "content" },
+  { key: "events.examples.story3.title", fr: "Cégep de Valleyfield", en: "Valleyfield College", section: "content" },
+  { key: "events.examples.story3.hashtags", fr: "#bal #finissants2025 #diplome", en: "#prom #graduates2025 #diploma", section: "content" },
+  { key: "events.examples.story4.title", fr: "Au Vieux", en: "Au Vieux", section: "content" },
+  { key: "events.examples.story4.hashtags", fr: "#brasseriefestive #party", en: "#festivepub #party", section: "content" },
+  { key: "events.option.eyebrow", fr: "En option", en: "Optional add-on", section: "content" },
+  { key: "events.option.title", fr: "Ajoutez un photographe", en: "Add a photographer", section: "content" },
+  { key: "events.option.price", fr: "795$", en: "$795", section: "content" },
+  { key: "events.option.note", fr: "+ taxes", en: "+ taxes", section: "content" },
+  {
+    key: "events.option.body",
+    fr: "50 photos retouchées pour compléter votre recap et alimenter vos réseaux.",
+    en: "50 retouched photos to complete your recap and feed your social channels.",
+    section: "content",
+  },
+  { key: "events.option.imageAlt", fr: "Tournage avec micro et équipe vidéo", en: "Shoot with microphone and video crew", section: "ui" },
+  { key: "events.cta.title", fr: "Revivez le moment.", en: "Relive the moment.", section: "content" },
+  { key: "events.cta.body", fr: "Réservez dès maintenant.", en: "Reserve now.", section: "content" },
+  { key: "events.cta.button", fr: "Réservez votre date ou obtenez une soumission", en: "Reserve your date or request a quote", section: "ui" },
+  { key: "events.cta.imageAlt", fr: "Équipe Zéro huit en tournage", en: "Zéro huit crew on set", section: "ui" },
+  { key: "events.form.meta.title", fr: "Réserver votre date — Zéro huit", en: "Reserve your date — Zéro huit", section: "content" },
+  {
+    key: "events.form.meta.description",
+    fr: "Formulaire de réservation pour un recap événementiel avec Zéro huit.",
+    en: "Reservation form for an event recap with Zéro huit.",
+    section: "content",
+  },
+  { key: "events.form.title", fr: "Réservation", en: "Reservation", section: "content" },
+  { key: "events.form.date.title", fr: "Date de votre événement", en: "Event date", section: "content" },
+  { key: "events.form.date.subtitle", fr: "Choisissez votre date. Nous vous contacterons pour confirmer.", en: "Choose your date. We will contact you to confirm.", section: "content" },
+  { key: "events.form.date.previous", fr: "Mois précédent", en: "Previous month", section: "ui" },
+  { key: "events.form.date.next", fr: "Mois suivant", en: "Next month", section: "ui" },
+  { key: "events.form.date.selected", fr: "Date sélectionnée", en: "Selected date", section: "ui" },
+  { key: "events.form.date.empty", fr: "Aucune date sélectionnée", en: "No date selected", section: "ui" },
+  { key: "events.form.duration.title", fr: "Durée de votre événement", en: "Event duration", section: "content" },
+  { key: "events.form.duration.under4", fr: "Moins de 4h", en: "Less than 4h", section: "ui" },
+  { key: "events.form.duration.over4", fr: "Plus de 4h", en: "More than 4h", section: "ui" },
+  { key: "events.form.duration.unknown", fr: "Je ne sais pas encore", en: "I don't know yet", section: "ui" },
+  { key: "events.form.submit", fr: "Envoyer la demande", en: "Send request", section: "ui" },
+  {
+    key: "events.form.privacy",
+    fr: "En soumettant, vous acceptez d’être contacté au sujet de votre demande. ",
+    en: "By submitting, you agree to be contacted about your request. ",
+    section: "content",
+  },
+  { key: "events.form.error", fr: "Une erreur s’est produite. Réessaie ou écris-nous.", en: "Something went wrong. Please try again or email us.", section: "ui" },
+  { key: "events.form.objective", fr: "Recap événementiel", en: "Event recap", section: "content" },
+  { key: "events.form.audience", fr: "evenement", en: "event", section: "content" },
+  { key: "events.form.diffusion", fr: "reseaux_sociaux", en: "social media", section: "content" },
+  { key: "events.form.packageName", fr: "Forfait recap événementiel", en: "Event recap package", section: "content" },
+
   { key: "footer.cta.label", fr: "Laissez-nous raconter votre histoire", section: "content" },
   { key: "footer.cta.button", fr: "Nous joindre", section: "ui" },
   { key: "footer.nav.label", fr: "Navigation", section: "ui" },
@@ -590,6 +677,14 @@ export const uiKeys = uiEntries.map((entry) => entry.key);
 
 export function buildFrenchDictionary() {
   return Object.fromEntries(uiEntries.map((entry) => [entry.key, entry.fr]));
+}
+
+export function buildEnglishDictionary() {
+  return Object.fromEntries(
+    uiEntries
+      .filter((entry) => entry.en)
+      .map((entry) => [entry.key, entry.en as string]),
+  );
 }
 
 export function groupUiEntriesBySection() {

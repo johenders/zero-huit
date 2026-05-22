@@ -16,6 +16,7 @@ type Props = {
   position?: "sticky" | "absolute";
   headerClassName?: string;
   variant?: "full" | "minimal";
+  ctaHref?: string;
 };
 
 function navItemClass(isActive: boolean) {
@@ -33,6 +34,7 @@ export function AppHeader({
   position = "sticky",
   headerClassName,
   variant = "full",
+  ctaHref = "/request",
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
@@ -119,7 +121,7 @@ export function AppHeader({
             </nav>
           )}
           <Link
-            href={withLocaleHref(locale, "/request")}
+            href={withLocaleHref(locale, ctaHref)}
             className={`items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 ${
               isMinimal
                 ? "inline-flex whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:text-sm"
@@ -203,7 +205,7 @@ export function AppHeader({
               {t("nav.contact")}
             </Link>
             <Link
-              href={withLocaleHref(locale, "/request")}
+              href={withLocaleHref(locale, ctaHref)}
               onClick={() => setIsMobileMenuOpen(false)}
               className="mt-2 flex items-center justify-center rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20"
             >

@@ -15,10 +15,14 @@ type Props = {
 export function SiteShell({ children }: Props) {
   const pathname = usePathname();
   const normalizedPath = stripLocalePrefix(pathname).pathname;
+  const minimalLandingPaths = ["/production-video-rive-sud-mtl", "/evenements"];
   const isHome = normalizedPath === "/";
-  const isRequest = normalizedPath.startsWith("/request");
-  const isMinimalHeader = normalizedPath === "/production-video-rive-sud-mtl";
-  const hideFooter = normalizedPath === "/production-video-rive-sud-mtl";
+  const isRequest =
+    normalizedPath.startsWith("/request") ||
+    normalizedPath.startsWith("/evenements/demande");
+  const isMinimalHeader = minimalLandingPaths.includes(normalizedPath);
+  const minimalCtaHref = normalizedPath === "/evenements" ? "/evenements/demande" : undefined;
+  const hideFooter = minimalLandingPaths.includes(normalizedPath);
   const hideShell =
     normalizedPath === "/login" ||
     normalizedPath.startsWith("/auth/callback") ||
@@ -31,7 +35,7 @@ export function SiteShell({ children }: Props) {
 
   return (
     <>
-      {isMinimalHeader ? <MinimalHeader /> : <HomeHeader />}
+      {isMinimalHeader ? <MinimalHeader ctaHref={minimalCtaHref} /> : <HomeHeader />}
       <div style={shouldOffset ? { paddingTop: `${headerOffset}px` } : undefined}>
         {children}
       </div>

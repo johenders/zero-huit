@@ -3,7 +3,11 @@
 import { AppHeader } from "./AppHeader";
 import zerohuitLogo from "../../assets/zerohuit_blanc.png";
 
-export function MinimalHeader() {
+type Props = {
+  ctaHref?: string;
+};
+
+export function MinimalHeader({ ctaHref }: Props) {
   return (
     <AppHeader
       sessionEmail={null}
@@ -14,6 +18,7 @@ export function MinimalHeader() {
       position="absolute"
       headerClassName="border-transparent bg-transparent backdrop-blur-0"
       variant="minimal"
+      ctaHref={ctaHref}
     />
   );
 }

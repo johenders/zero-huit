@@ -65,11 +65,45 @@ function normalizeText(value?: string) {
 }
 
 function buildEmailText(payload: QuoteRequestPayload, referenceLabels: string[]) {
+  const eventDate =
+    typeof payload.deliverables?.eventDateLabel === "string"
+      ? payload.deliverables.eventDateLabel
+      : typeof payload.deliverables?.eventDate === "string"
+        ? payload.deliverables.eventDate
+        : "";
+  const packageName =
+    typeof payload.deliverables?.package === "string"
+      ? payload.deliverables.package
+      : "";
+  const eventDuration =
+    typeof payload.deliverables?.eventDurationLabel === "string"
+      ? payload.deliverables.eventDurationLabel
+      : typeof payload.deliverables?.eventDuration === "string"
+        ? payload.deliverables.eventDuration
+        : "";
+  const isEventRequest = Boolean(eventDate || eventDuration || packageName);
   const deliverableDurations = Array.isArray(payload.deliverables?.durations)
     ? payload.deliverables.durations
         .filter((duration): duration is string => typeof duration === "string")
         .map((duration) => deliverableLabels[duration] ?? duration)
     : [];
+
+  if (isEventRequest) {
+    return [
+      "Nouvelle demande événementielle",
+      "",
+      `Nom: ${payload.name}`,
+      `Entreprise: ${payload.company}`,
+      `Courriel: ${payload.email}`,
+      `Téléphone: ${payload.phone || "—"}`,
+      "",
+      `Forfait: ${packageName || "—"}`,
+      `Date de l'événement: ${eventDate || "—"}`,
+      `Durée de l'événement: ${eventDuration || "—"}`,
+      `Référence: ${payload.referral || "—"}`,
+    ].join("\n");
+  }
+
   const lines = [
     "Nouvelle demande de soumission",
     "",
@@ -84,7 +118,10 @@ function buildEmailText(payload: QuoteRequestPayload, referenceLabels: string[])
     `Diffusion: ${(payload.diffusions ?? []).join(", ") || "—"}`,
     `Budget: ${payload.budget || "—"}`,
     `Échéancier: ${payload.timeline || "—"}`,
+    `Date de l'événement: ${eventDate || "—"}`,
+    `Durée de l'événement: ${eventDuration || "—"}`,
     `Référence: ${payload.referral || "—"}`,
+    `Forfait: ${packageName || "—"}`,
     `Livrables: ${deliverableDurations.join(", ") || "—"}`,
     "",
     `Description: ${payload.description || "—"}`,

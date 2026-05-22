@@ -143,9 +143,19 @@ function MarqueeRow({ direction, items }: MarqueeRowProps) {
   );
 }
 
-export function ClientsMarqueeSection() {
+export function ClientsLogoMarquee({ className = "" }: { className?: string }) {
   const firstRow = logos.slice(0, 8);
   const secondRow = logos.slice(8);
+
+  return (
+    <div className={`space-y-6 ${className}`}>
+      <MarqueeRow direction="left" items={firstRow} />
+      <MarqueeRow direction="right" items={secondRow} />
+    </div>
+  );
+}
+
+export function ClientsMarqueeSection() {
   const { locale, t } = useI18n();
 
   return (
@@ -155,10 +165,7 @@ export function ClientsMarqueeSection() {
         <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="absolute left-1/3 bottom-0 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
       </div>
-      <div className="mt-6 space-y-6">
-        <MarqueeRow direction="left" items={firstRow} />
-        <MarqueeRow direction="right" items={secondRow} />
-      </div>
+      <ClientsLogoMarquee className="mt-6" />
 
       <div className="mt-20 bg-white text-black">
         <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-24">

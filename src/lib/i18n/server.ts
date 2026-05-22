@@ -1,14 +1,15 @@
 import { getSupabasePublicServerClient } from "@/lib/supabase/server";
 import type { Taxonomy } from "@/lib/types";
-import { buildFrenchDictionary, uiKeys } from "./ui";
+import { buildEnglishDictionary, buildFrenchDictionary, uiKeys } from "./ui";
 import type { Locale } from "./shared";
 
 export async function getUiDictionary(locale: Locale) {
   const base = buildFrenchDictionary();
   if (locale === "fr") return base;
+  const englishBase = { ...base, ...buildEnglishDictionary() };
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return base;
+    return englishBase;
   }
 
   const supabase = getSupabasePublicServerClient();
@@ -18,13 +19,13 @@ export async function getUiDictionary(locale: Locale) {
     .eq("locale", locale)
     .in("key", uiKeys);
 
-  if (error || !data) return base;
+  if (error || !data) return englishBase;
 
   const overrides = Object.fromEntries(
     (data ?? []).map((row) => [row.key, row.value]) as Array<[string, string]>,
   );
 
-  return { ...base, ...overrides };
+  return { ...englishBase, ...overrides };
 }
 
 export async function applyTaxonomyTranslations(
