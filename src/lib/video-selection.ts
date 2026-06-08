@@ -13,9 +13,13 @@ function shuffleVideos(videos: Video[]) {
 
 export function prioritizePortfolioVideos(videos: Video[]) {
   const availableVideos = videos.filter((video) => !video.cloudflare_uid.startsWith("pending:"));
-  const favorites = availableVideos.filter((video) => video.is_featured);
-  const others = availableVideos.filter((video) => !video.is_featured);
-  return [...shuffleVideos(favorites), ...others];
+  return availableVideos
+    .map((video, index) => ({ video, index }))
+    .sort((a, b) => {
+      const ratingDifference = b.video.featured_rating - a.video.featured_rating;
+      return ratingDifference !== 0 ? ratingDifference : a.index - b.index;
+    })
+    .map(({ video }) => video);
 }
 
 export function selectShowcaseVideos(videos: Video[], count = 6) {

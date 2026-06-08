@@ -22,6 +22,7 @@ export type Video = {
   budget_min: number | null;
   budget_max: number | null;
   is_featured: boolean;
+  featured_rating: number;
   is_showcased: boolean;
   is_published: boolean;
   created_at: string;

@@ -34,6 +34,8 @@ create table if not exists public.videos (
   budget_min integer,
   budget_max integer,
   is_featured boolean not null default false,
+  featured_rating smallint not null default 0
+    check (featured_rating between 0 and 5),
   is_showcased boolean not null default false,
   is_published boolean not null default true,
   created_at timestamptz not null default now(),

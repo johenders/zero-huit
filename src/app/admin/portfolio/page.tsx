@@ -39,6 +39,63 @@ type BulkUploadItem = {
 
 type KeywordSuggestions = { existing: string[]; new: string[] };
 
+const featuredRatingLevels = [1, 2, 3, 4, 5] as const;
+
+function normalizeFeaturedRating(
+  value: number | null | undefined,
+  isFeatured = false,
+) {
+  if (!Number.isFinite(value)) return isFeatured ? 5 : 0;
+  return Math.min(5, Math.max(0, Math.round(value ?? 0)));
+}
+
+function FeaturedRating({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: number;
+  onChange: (rating: number) => void;
+  disabled?: boolean;
+}) {
+  const normalizedValue = normalizeFeaturedRating(value);
+
+  return (
+    <div
+      className="inline-flex items-center gap-0.5"
+      role="group"
+      aria-label={`Note favorite: ${normalizedValue} sur 5`}
+    >
+      {featuredRatingLevels.map((rating) => (
+        <button
+          key={rating}
+          type="button"
+          className={`p-0.5 text-lg leading-none transition disabled:cursor-wait disabled:opacity-60 ${
+            rating <= normalizedValue
+              ? "text-amber-300"
+              : "text-zinc-600 hover:text-amber-200"
+          }`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onChange(rating === normalizedValue ? 0 : rating);
+          }}
+          disabled={disabled}
+          aria-label={
+            rating === normalizedValue
+              ? `Retirer la note de ${rating} sur 5`
+              : `Noter ${rating} sur 5`
+          }
+          aria-pressed={rating === normalizedValue}
+          title={`${rating} étoile${rating > 1 ? "s" : ""} sur 5`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
@@ -173,6 +230,7 @@ export default function AdminPortfolioPage() {
   const [durationRefreshMessage, setDurationRefreshMessage] = useState<string | null>(
     null,
   );
+  const [ratingUpdates, setRatingUpdates] = useState<Set<string>>(new Set());
 
   const groupedTaxonomies = useMemo(() => {
     const groups: Record<TaxonomyKind, Taxonomy[]> = {
@@ -213,27 +271,56 @@ export default function AdminPortfolioPage() {
     setTaxonomies((data ?? []) as Taxonomy[]);
   }, [supabase]);
 
-  const toggleFeatured = useCallback(
-    async (video: Video) => {
+  const updateFeaturedRating = useCallback(
+    async (video: Video, nextRating: number) => {
       if (!supabase) return;
-      const nextValue = !video.is_featured;
+      const normalizedRating = normalizeFeaturedRating(nextRating);
+      const previousRating = normalizeFeaturedRating(
+        video.featured_rating,
+        video.is_featured,
+      );
+      const nextFeatured = normalizedRating > 0;
+
+      setRatingUpdates((prev) => new Set(prev).add(video.id));
       setVideos((prev) =>
         prev.map((item) =>
-          item.id === video.id ? { ...item, is_featured: nextValue } : item,
+          item.id === video.id
+            ? {
+                ...item,
+                featured_rating: normalizedRating,
+                is_featured: nextFeatured,
+              }
+            : item,
         ),
       );
       const { error } = await supabase
         .from("videos")
-        .update({ is_featured: nextValue })
+        .update({
+          featured_rating: normalizedRating,
+          is_featured: nextFeatured,
+        })
         .eq("id", video.id);
       if (error) {
         setVideos((prev) =>
           prev.map((item) =>
-            item.id === video.id ? { ...item, is_featured: video.is_featured } : item,
+            item.id === video.id
+              ? {
+                  ...item,
+                  featured_rating: previousRating,
+                  is_featured: video.is_featured,
+                }
+              : item,
           ),
         );
         setVideosMessage(error.message);
+      } else {
+        setVideosMessage(null);
       }
+      setRatingUpdates((prev) => {
+        const next = new Set(prev);
+        next.delete(video.id);
+        return next;
+      });
     },
     [supabase],
   );
@@ -300,7 +387,7 @@ export default function AdminPortfolioPage() {
     let videosQuery = supabase
       .from("videos")
       .select(
-        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
+        "id,title,cloudflare_uid,status,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,featured_rating,is_showcased,is_published,created_at",
         { count: "exact" },
       )
       .order(orderColumn, { ascending: sortDirection === "asc" });
@@ -1419,24 +1506,16 @@ export default function AdminPortfolioPage() {
                       <td className="px-3 py-2 text-zinc-200">{durationText}</td>
                       <td className="px-3 py-2 text-zinc-200">{publishedAtText}</td>
                       <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          className={`rounded-full border px-2 py-1 text-xs font-semibold ${
-                            v.is_featured
-                              ? "border-amber-300/50 bg-amber-400/20 text-amber-100"
-                              : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
-                          }`}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            void toggleFeatured(v);
+                        <FeaturedRating
+                          value={normalizeFeaturedRating(
+                            v.featured_rating,
+                            v.is_featured,
+                          )}
+                          onChange={(rating) => {
+                            void updateFeaturedRating(v, rating);
                           }}
-                          aria-label={
-                            v.is_featured ? "Retirer des favoris" : "Ajouter aux favoris"
-                          }
-                        >
-                          {v.is_featured ? "★" : "☆"}
-                        </button>
+                          disabled={ratingUpdates.has(v.id)}
+                        />
                       </td>
                       <td className="px-3 py-2">
                         <button
@@ -1616,7 +1695,9 @@ function EditVideoModal({
   const [publishStatus, setPublishStatus] = useState<"idle" | "saving" | "error">("idle");
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(() => video?.is_published ?? false);
-  const [isFeatured, setIsFeatured] = useState(() => video?.is_featured ?? false);
+  const [featuredRating, setFeaturedRating] = useState(() =>
+    normalizeFeaturedRating(video?.featured_rating, video?.is_featured),
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playerTime, setPlayerTime] = useState<number>(0);
   const [useIframePlayer, setUseIframePlayer] = useState(false);
@@ -1639,7 +1720,7 @@ function EditVideoModal({
     durationSeconds: number | null;
     budgetMin: (typeof budgetLevels)[number];
     budgetMax: (typeof budgetLevels)[number];
-    isFeatured: boolean;
+    featuredRating: number;
     taxonomyIds: string[];
   };
 
@@ -1661,7 +1742,10 @@ function EditVideoModal({
       budgetMax:
         (current?.budget_max as (typeof budgetLevels)[number]) ??
         budgetLevels[budgetLevels.length - 1],
-      isFeatured: current?.is_featured ?? false,
+      featuredRating: normalizeFeaturedRating(
+        current?.featured_rating,
+        current?.is_featured,
+      ),
       taxonomyIds: (current?.taxonomies.map((t) => t.id) ?? []).sort((a, b) =>
         a.localeCompare(b),
       ),
@@ -1675,7 +1759,7 @@ function EditVideoModal({
       durationSeconds: normalizeSeconds(durationSeconds),
       budgetMin: budgetLevels[budgetMinIndex],
       budgetMax: budgetLevels[budgetMaxIndex],
-      isFeatured,
+      featuredRating,
       taxonomyIds: normalizeTaxonomyIds(selectedTaxonomyIds),
     };
   }
@@ -1695,7 +1779,7 @@ function EditVideoModal({
       a.durationSeconds === b.durationSeconds &&
       a.budgetMin === b.budgetMin &&
       a.budgetMax === b.budgetMax &&
-      a.isFeatured === b.isFeatured &&
+      a.featuredRating === b.featuredRating &&
       arraysEqual(a.taxonomyIds, b.taxonomyIds)
     );
   }
@@ -1754,8 +1838,15 @@ function EditVideoModal({
     setPublishStatus("idle");
     setPublishMessage(null);
     setIsPublished(video?.is_published ?? false);
-    setIsFeatured(video?.is_featured ?? false);
-  }, [video?.id, video?.is_published, video?.is_featured]);
+    setFeaturedRating(
+      normalizeFeaturedRating(video?.featured_rating, video?.is_featured),
+    );
+  }, [
+    video?.id,
+    video?.is_published,
+    video?.is_featured,
+    video?.featured_rating,
+  ]);
 
   useEffect(() => {
     if (!durationSeconds || !Number.isFinite(durationSeconds)) return;
@@ -1918,7 +2009,8 @@ function EditVideoModal({
           duration_seconds: snapshot.durationSeconds,
           budget_min: snapshot.budgetMin,
           budget_max: snapshot.budgetMax,
-          is_featured: snapshot.isFeatured,
+          featured_rating: snapshot.featuredRating,
+          is_featured: snapshot.featuredRating > 0,
         })
         .eq("id", video.id);
 
@@ -2034,7 +2126,7 @@ function EditVideoModal({
     durationSeconds,
     budgetMinIndex,
     budgetMaxIndex,
-    isFeatured,
+    featuredRating,
     selectedTaxonomyIds,
   ]);
 
@@ -2109,23 +2201,13 @@ function EditVideoModal({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isFeatured}
-                aria-label={
-                  isFeatured ? "Retirer la vidéo des favoris" : "Ajouter la vidéo aux favoris"
-                }
-                onClick={() => setIsFeatured((prev) => !prev)}
-                className={`rounded-md border px-2 py-1 text-xs font-semibold transition ${
-                  isFeatured
-                    ? "border-amber-300/50 bg-amber-400/20 text-amber-100"
-                    : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
-                }`}
-                title={isFeatured ? "Vidéo favorite" : "Définir comme favorite"}
-              >
-                {isFeatured ? "★" : "☆"}
-              </button>
+              <div className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5">
+                <FeaturedRating
+                  value={featuredRating}
+                  onChange={setFeaturedRating}
+                  disabled={status === "saving"}
+                />
+              </div>
               <button
                 className={`rounded-md px-2 py-1 text-xs font-semibold ${
                   isPublished

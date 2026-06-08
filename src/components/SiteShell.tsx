@@ -15,13 +15,23 @@ type Props = {
 export function SiteShell({ children }: Props) {
   const pathname = usePathname();
   const normalizedPath = stripLocalePrefix(pathname).pathname;
-  const minimalLandingPaths = ["/production-video-rive-sud-mtl", "/evenements"];
+  const minimalLandingPaths = [
+    "/production-video-rive-sud-mtl",
+    "/evenements",
+    "/municipal",
+    "/recrutement",
+  ];
   const isHome = normalizedPath === "/";
   const isRequest =
     normalizedPath.startsWith("/request") ||
     normalizedPath.startsWith("/evenements/demande");
   const isMinimalHeader = minimalLandingPaths.includes(normalizedPath);
-  const minimalCtaHref = normalizedPath === "/evenements" ? "/evenements/demande" : undefined;
+  const minimalCtaHref =
+    normalizedPath === "/evenements"
+      ? "/evenements/demande"
+      : normalizedPath === "/municipal" || normalizedPath === "/recrutement"
+        ? "/demande"
+        : undefined;
   const hideFooter = minimalLandingPaths.includes(normalizedPath);
   const hideShell =
     normalizedPath === "/login" ||

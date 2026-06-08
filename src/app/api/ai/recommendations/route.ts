@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         supabase
           .from("videos")
           .select(
-            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,is_showcased,is_published,created_at",
+            "id,title,cloudflare_uid,thumbnail_time_seconds,duration_seconds,budget_min,budget_max,is_featured,featured_rating,is_showcased,is_published,created_at",
           )
           .eq("is_published", true)
           .order("created_at", { ascending: false }),
