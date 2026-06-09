@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeClientsSection } from "@/components/HomeClientsSection";
+import { ClientsLogoMarquee } from "@/components/ClientsMarqueeSection";
 import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHero } from "@/components/HomeHero";
 import { fallbackArticles } from "@/lib/articles";
@@ -219,8 +219,15 @@ export default async function Home() {
   return (
     <div className="min-h-screen text-zinc-100">
       <HomeHero />
+      <section className="relative overflow-hidden bg-black py-10 text-white">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-6 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
+        </div>
+        <ClientsLogoMarquee className="relative z-10" />
+      </section>
       <HomeFeaturedSection featuredVideos={featuredVideos} />
-      <HomeClientsSection />
       <section className="bg-[#fefefe] py-20 text-slate-900">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

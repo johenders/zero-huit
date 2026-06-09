@@ -846,6 +846,9 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
             setAppointmentRefreshKey((current) => current + 1);
             throw new Error("slot_unavailable");
           }
+          if (response.status === 429 || json.error === "rate_limited") {
+            throw new Error("rate_limited");
+          }
           throw new Error(json.error || "submit_failed");
         }
         setBookedAppointmentStart(
@@ -884,9 +887,9 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
       setSubmissionStatus("sent");
     } catch (error) {
       setSubmissionStatus("idle");
-      setSubmissionMessage(
-        error instanceof Error ? error.message : "submit_failed",
-      );
+      const message =
+        error instanceof Error ? error.message : "submit_failed";
+      setSubmissionMessage(message);
     }
   }
 
@@ -1721,7 +1724,9 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                 />
                 {submissionMessage ? (
                   <p className="text-xs text-rose-200">
-                    Une erreur s’est produite. Réessaie ou écris-nous.
+                    {submissionMessage === "rate_limited"
+                      ? t("request.booking.rateLimited")
+                      : t("request.submit.error")}
                   </p>
                 ) : null}
               </div>

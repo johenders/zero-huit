@@ -24,7 +24,7 @@ type AppointmentPayload = {
 };
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAX = 20;
 const rateLimitByIp = new Map<string, number[]>();
 
 function getClientIp(request: Request) {
@@ -57,10 +57,6 @@ function overlaps(
 }
 
 export async function POST(request: NextRequest) {
-  if (isRateLimited(getClientIp(request))) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-  }
-
   const body = (await request.json()) as AppointmentPayload;
   if (body.website?.trim()) {
     return NextResponse.json({ error: "spam" }, { status: 400 });
@@ -88,6 +84,17 @@ export async function POST(request: NextRequest) {
   }
   if (!isValidAppointmentSlot(startValue)) {
     return NextResponse.json({ error: "invalid_slot" }, { status: 400 });
+  }
+  if (isRateLimited(getClientIp(request))) {
+    return NextResponse.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)),
+        },
+      },
+    );
   }
 
   const start = new Date(startValue);
@@ -156,6 +163,12 @@ export async function POST(request: NextRequest) {
     if (insertError || !appointment) {
       const conflict =
         insertError?.code === "23P01" || insertError?.code === "23505";
+      if (!conflict) {
+        console.error("[appointments] Database insert failed", {
+          code: insertError?.code,
+          message: insertError?.message,
+        });
+      }
       return NextResponse.json(
         { error: conflict ? "slot_unavailable" : "db_error" },
         { status: conflict ? 409 : 500 },
@@ -227,6 +240,10 @@ export async function POST(request: NextRequest) {
         .eq("id", appointmentId);
     }
     const message = error instanceof Error ? error.message : "booking_failed";
+    console.error("[appointments] Booking failed", {
+      appointmentId,
+      message,
+    });
     const status = message.includes("not connected") ? 503 : 500;
     return NextResponse.json({ error: message }, { status });
   }

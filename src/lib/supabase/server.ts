@@ -18,11 +18,15 @@ export function getSupabasePublicServerClient() {
 export function getSupabaseServiceRoleClient() {
   const url =
     process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey =
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url) throw new Error("Missing env: SUPABASE_URL");
   if (!serviceRoleKey) {
-    throw new Error("Missing env: SUPABASE_SERVICE_ROLE_KEY");
+    throw new Error(
+      "Missing env: SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY",
+    );
   }
 
   return createClient(url, serviceRoleKey, {

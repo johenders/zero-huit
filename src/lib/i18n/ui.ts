@@ -362,6 +362,18 @@ export const uiEntries: UiEntry[] = [
     en: "This time was just booked. Please choose another.",
     section: "ui",
   },
+  {
+    key: "request.booking.rateLimited",
+    fr: "Trop de tentatives ont été effectuées. Attendez quelques minutes avant de réessayer.",
+    en: "Too many attempts were made. Wait a few minutes before trying again.",
+    section: "ui",
+  },
+  {
+    key: "request.submit.error",
+    fr: "Une erreur s’est produite. Réessaie ou écris-nous.",
+    en: "Something went wrong. Please try again or email us.",
+    section: "ui",
+  },
   { key: "request.step.label", fr: "Étape", section: "ui" },
   { key: "request.prefill", fr: "Prérempli depuis", section: "ui" },
   { key: "request.nav.next", fr: "Suivant", section: "ui" },
