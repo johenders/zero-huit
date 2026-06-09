@@ -68,6 +68,52 @@ body {
   line-height: 1.2;
 }
 
+@keyframes ctaLabelFlip {
+  0%,
+  42% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+  48%,
+  92% {
+    opacity: 0;
+    transform: translateY(-0.3em) rotateX(-90deg);
+  }
+  98%,
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+.cta-flip-label {
+  display: inline-grid;
+  perspective: 500px;
+}
+
+.cta-flip-label > span {
+  grid-area: 1 / 1;
+  animation: ctaLabelFlip 6s ease-in-out infinite;
+  backface-visibility: hidden;
+  transform-origin: center;
+  white-space: nowrap;
+  will-change: opacity, transform;
+}
+
+.cta-flip-label > span:nth-child(2) {
+  animation-delay: -3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-flip-label > span {
+    animation: none;
+  }
+
+  .cta-flip-label > span:nth-child(2) {
+    display: none;
+  }
+}
+
 .article-content {
   font-size: 1rem;
   line-height: 1.75;

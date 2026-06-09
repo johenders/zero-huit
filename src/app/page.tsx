@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ApproachSection } from "@/components/ApproachSection";
 import { ClientsLogoMarquee } from "@/components/ClientsMarqueeSection";
 import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHero } from "@/components/HomeHero";
+import { MadeToFlexSection } from "@/components/MadeToFlexSection";
 import { fallbackArticles } from "@/lib/articles";
 import { applyTaxonomyTranslations, getUiDictionary } from "@/lib/i18n/server";
 import { normalizeLocale, withLocaleHref } from "@/lib/i18n/shared";
@@ -228,6 +230,39 @@ export default async function Home() {
         <ClientsLogoMarquee className="relative z-10" />
       </section>
       <HomeFeaturedSection featuredVideos={featuredVideos} />
+      <MadeToFlexSection />
+      <ApproachSection />
+      <section className="relative overflow-hidden bg-[#0c0b0b] py-20 text-white sm:py-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
+          <div className="absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="absolute -right-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
+        </div>
+        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center px-6 text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.4em] text-[#8acd5f]">
+            {t("home.projectCta.kicker")}
+          </p>
+          <h2 className="mt-6 max-w-4xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+            {t("home.projectCta.title")}
+          </h2>
+          <p className="mt-6 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base">
+            {t("home.projectCta.body")}
+          </p>
+          <Link
+            href={withLocaleHref(locale, "/request")}
+            aria-label={t("home.projectCta.button.aria")}
+            className="mt-9 inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30"
+          >
+            <span className="cta-flip-label" aria-hidden>
+              <span>{t("home.projectCta.button.booking")}</span>
+              <span>{t("home.projectCta.button.quote")}</span>
+            </span>
+            <span aria-hidden className="text-lg leading-none">
+              &#8594;
+            </span>
+          </Link>
+        </div>
+      </section>
       <section className="bg-[#fefefe] py-20 text-slate-900">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

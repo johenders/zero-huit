@@ -520,6 +520,43 @@ export const uiEntries: UiEntry[] = [
   { key: "home.featured.modal.close", fr: "Fermer", section: "ui" },
   { key: "home.featured.fallback", fr: "Vidéo", section: "ui" },
 
+  {
+    key: "home.projectCta.kicker",
+    fr: "Consultation gratuite",
+    en: "Free Consultation",
+    section: "content",
+  },
+  {
+    key: "home.projectCta.title",
+    fr: "Une idée en tête?",
+    en: "Have an idea? Let's move it forward.",
+    section: "content",
+  },
+  {
+    key: "home.projectCta.body",
+    fr: "Réservez un appel de 30 minutes ou obtenez une soumission personnalisée.",
+    en: "Book a 30-minute call with our producer or request a personalized quote for your project.",
+    section: "content",
+  },
+  {
+    key: "home.projectCta.button.aria",
+    fr: "Prendre rendez-vous ou obtenir une soumission",
+    en: "Book a meeting or request a quote",
+    section: "ui",
+  },
+  {
+    key: "home.projectCta.button.booking",
+    fr: "Prendre rendez-vous",
+    en: "Book a meeting",
+    section: "ui",
+  },
+  {
+    key: "home.projectCta.button.quote",
+    fr: "Obtenir une soumission",
+    en: "Request a quote",
+    section: "ui",
+  },
+
   { key: "home.clients.title.prefix", fr: "Ils nous ont fait", section: "content" },
   { key: "home.clients.title.highlight", fr: "confiance", section: "content" },
 
@@ -648,8 +685,6 @@ export const uiEntries: UiEntry[] = [
     fr: "On assemble les morceaux, on garde seulement le meilleur. Un rendu propre, cohérent et facile à déployer.",
     section: "content",
   },
-  { key: "rive.approach.cta", fr: "Consultation gratuite", section: "ui" },
-
   { key: "rive.blog.title", fr: "Comprendre avant de produire", section: "content" },
   { key: "rive.cta.subtitle", fr: "Consultation gratuite", section: "content" },
   { key: "rive.cta.image.alt", fr: "Zéro huit", section: "ui" },
