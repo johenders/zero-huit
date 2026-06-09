@@ -97,10 +97,7 @@ export function VideoModal({ video, open, onClose }: Props) {
             <div className="mt-1 text-sm text-zinc-400">Durée: {durationText}</div>
             <div className="mt-4">
               <Link
-                href={withLocaleHref(
-                  locale,
-                  `/request?referenceId=${encodeURIComponent(video.id)}`,
-                )}
+                href={withLocaleHref(locale, "/request")}
                 className="inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2 text-xs font-semibold tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20"
               >
                 Demande de soumission

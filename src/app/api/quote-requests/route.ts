@@ -24,14 +24,6 @@ type QuoteRequestPayload = {
   projectTitle?: string | null;
 };
 
-const deliverableLabels: Record<string, string> = {
-  courte_video: "30 secondes et moins",
-  publicite: "30 à 60 secondes",
-  film_publicitaire: "2 à 4 minutes",
-  mini_documentaire: "5 min et +",
-  incertain: "Je ne sais pas",
-};
-
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 5;
 const rateLimitByIp = new Map<string, number[]>();
@@ -64,7 +56,7 @@ function normalizeText(value?: string) {
   return value?.trim() || null;
 }
 
-function buildEmailText(payload: QuoteRequestPayload, referenceLabels: string[]) {
+function buildEmailText(payload: QuoteRequestPayload) {
   const eventDate =
     typeof payload.deliverables?.eventDateLabel === "string"
       ? payload.deliverables.eventDateLabel
@@ -82,12 +74,6 @@ function buildEmailText(payload: QuoteRequestPayload, referenceLabels: string[])
         ? payload.deliverables.eventDuration
         : "";
   const isEventRequest = Boolean(eventDate || eventDuration || packageName);
-  const deliverableDurations = Array.isArray(payload.deliverables?.durations)
-    ? payload.deliverables.durations
-        .filter((duration): duration is string => typeof duration === "string")
-        .map((duration) => deliverableLabels[duration] ?? duration)
-    : [];
-
   if (isEventRequest) {
     return [
       "Nouvelle demande événementielle",
@@ -122,33 +108,11 @@ function buildEmailText(payload: QuoteRequestPayload, referenceLabels: string[])
     `Durée de l'événement: ${eventDuration || "—"}`,
     `Référence: ${payload.referral || "—"}`,
     `Forfait: ${packageName || "—"}`,
-    `Livrables: ${deliverableDurations.join(", ") || "—"}`,
     "",
     `Description: ${payload.description || "—"}`,
     `Lieux: ${payload.locations || "—"}`,
-    `Références sélectionnées: ${referenceLabels.join(", ") || "—"}`,
   ];
   return lines.join("\n");
-}
-
-async function getReferenceLabels(
-  supabase: ReturnType<typeof getSupabasePublicServerClient>,
-  referenceIds: string[],
-) {
-  const ids = Array.from(new Set(referenceIds.filter(Boolean)));
-  if (!ids.length) return [];
-
-  const { data, error } = await supabase
-    .from("videos")
-    .select("id,title")
-    .in("id", ids);
-
-  if (error || !data) return ids;
-
-  const titleById = new Map(
-    data.map((video) => [video.id as string, video.title as string]),
-  );
-  return ids.map((id) => titleById.get(id) ?? id);
 }
 
 export async function POST(request: Request) {
@@ -201,11 +165,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
 
-  const referenceLabels = await getReferenceLabels(
-    supabase,
-    record.reference_ids,
-  );
-
   const apiKey = process.env.RESEND_API_KEY;
   const from =
     process.env.RESEND_FROM ?? "Zéro huit <no-reply@zerohuit.ca>";
@@ -218,7 +177,7 @@ export async function POST(request: Request) {
         from,
         to,
         subject: `Nouvelle demande de soumission — ${name}`,
-        text: buildEmailText({ ...body, name, company, email }, referenceLabels),
+        text: buildEmailText({ ...body, name, company, email }),
       });
     } catch {
       return NextResponse.json(

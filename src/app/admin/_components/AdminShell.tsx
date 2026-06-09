@@ -11,6 +11,7 @@ const navItems = [
   { href: "/admin/taxonomies", label: "Taxonomies" },
   { href: "/admin/traductions", label: "Traductions" },
   { href: "/admin/demandes", label: "Demandes" },
+  { href: "/admin/rendez-vous", label: "Rendez-vous" },
   { href: "/admin/auteurs", label: "Auteurs" },
   { href: "/admin/articles", label: "Articles" },
   { href: "/admin/images", label: "Images" },

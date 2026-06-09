@@ -14,9 +14,9 @@ export async function generateMetadata() {
   return buildPageMetadata({
     locale,
     path: "/request",
-    title: "Demande de soumission — Zéro huit",
+    title: "Demande de soumission ou rendez-vous — Zéro huit",
     description:
-      "Formulaire pour démarrer un projet vidéo et recevoir une réponse rapide et personnalisée.",
+      "Demandez une soumission vidéo ou réservez un rendez-vous de 30 minutes avec notre producteur.",
   });
 }
 

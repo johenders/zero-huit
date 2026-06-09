@@ -1,16 +1,14 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { cloudflareIframeSrc, cloudflareThumbnailSrc } from "@/lib/cloudflare";
+import { useRouter } from "next/navigation";
+import { AppointmentCalendar } from "@/components/AppointmentCalendar";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
-import type {
-  ProjectDiffusion,
-} from "@/lib/types";
+import type { ProjectDiffusion } from "@/lib/types";
 import levPhoto from "../../assets/Lev.jpg";
 import logoSymbol from "../../assets/zero_huit_symbole.png";
 
@@ -30,15 +28,6 @@ type Audience =
   | "evenement"
   | "autre";
 
-
-type DeliverableKey =
-  | "courte_video"
-  | "publicite"
-  | "film_publicitaire"
-  | "mini_documentaire"
-  | "incertain";
-
-
 type BudgetOptionId =
   | "2000-5000"
   | "5000-10000"
@@ -57,6 +46,8 @@ type ReferralOptionId =
   | "seo"
   | "amis";
 
+type RequestMode = "quote" | "booking";
+
 type AudienceOption = {
   id: Audience;
   labelKey: string;
@@ -70,13 +61,6 @@ type DiffusionOption = {
   descriptionKey: string;
   icon: React.ReactNode;
 };
-
-type DeliverableOption = {
-  id: DeliverableKey;
-  labelKey: string;
-  descriptionKey: string;
-};
-
 
 type BudgetOption = {
   id: BudgetOptionId;
@@ -111,6 +95,21 @@ function trackDemandeFormSubmit(locale: string) {
   gtag("event", "demande_form_submit", {
     form_id: "demande",
     form_name: "Demande de soumission",
+    language: locale,
+    page_location: window.location.href,
+    page_path: window.location.pathname,
+  });
+}
+
+function trackAppointmentBookingSubmit(locale: string) {
+  if (typeof window === "undefined") return;
+
+  const { gtag } = window as GtagWindow;
+  if (typeof gtag !== "function") return;
+
+  gtag("event", "appointment_booking_submit", {
+    form_id: "demande_rendez_vous",
+    form_name: "Prise de rendez-vous",
     language: locale,
     page_location: window.location.href,
     page_path: window.location.pathname,
@@ -679,34 +678,6 @@ const diffusionOptions: DiffusionOption[] = [
 ];
 
 
-const deliverableOptions: DeliverableOption[] = [
-  {
-    id: "courte_video",
-    labelKey: "request.deliverable.courte_video.label",
-    descriptionKey: "request.deliverable.courte_video.desc",
-  },
-  {
-    id: "publicite",
-    labelKey: "request.deliverable.publicite.label",
-    descriptionKey: "request.deliverable.publicite.desc",
-  },
-  {
-    id: "film_publicitaire",
-    labelKey: "request.deliverable.film_publicitaire.label",
-    descriptionKey: "request.deliverable.film_publicitaire.desc",
-  },
-  {
-    id: "mini_documentaire",
-    labelKey: "request.deliverable.mini_documentaire.label",
-    descriptionKey: "request.deliverable.mini_documentaire.desc",
-  },
-  {
-    id: "incertain",
-    labelKey: "request.deliverable.incertain.label",
-    descriptionKey: "request.deliverable.incertain.desc",
-  },
-];
-
 const budgetOptions: BudgetOption[] = [
   { id: "2000-5000", labelKey: "request.budget.2000-5000" },
   { id: "5000-10000", labelKey: "request.budget.5000-10000" },
@@ -761,11 +732,9 @@ type RequestAppProps = {
 export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
   const { locale, t } = useI18n();
   const privacyHref = locale === "en" ? "/en/privacy" : "/politique-de-confidentialite";
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const preselectedReferenceId = searchParams.get("referenceId");
-  const preselectAppliedRef = useRef(false);
 
+  const [mode, setMode] = useState<RequestMode | null>(null);
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
@@ -800,7 +769,6 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
   const [diffusions, setDiffusions] = useState<ProjectDiffusion[]>([]);
   const [projectDescription, setProjectDescription] = useState("");
   const [shootingLocations, setShootingLocations] = useState("");
-  const [deliverables, setDeliverables] = useState<DeliverableKey[]>([]);
   const [budgetChoice, setBudgetChoice] = useState<BudgetOptionId | "">("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -811,48 +779,18 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
     "",
   );
   const [website, setWebsite] = useState("");
-  const [referenceStatus, setReferenceStatus] = useState<
-    "idle" | "loading" | "error"
-  >("idle");
-  const [referenceMessage, setReferenceMessage] = useState<string | null>(null);
+  const [appointmentStart, setAppointmentStart] = useState("");
+  const [appointmentRefreshKey, setAppointmentRefreshKey] = useState(0);
+  const [bookedAppointmentStart, setBookedAppointmentStart] = useState("");
   const [submissionStatus, setSubmissionStatus] = useState<
     "idle" | "sending" | "sent"
   >("idle");
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
-  const [referenceDebug, setReferenceDebug] = useState<{
-    objectives?: string[];
-    audiences?: string[];
-    budget?: string | null;
-    durations?: string[];
-    matchedKeywordLabels?: string[];
-    allowedTypes?: string[];
-    allowedObjectifs?: string[];
-    priorityObjectifs?: string[];
-    removedTypes?: string[];
-    activeDurationFilters?: string[];
-    reasonsByVideoId?: Record<string, string[]>;
-  } | null>(null);
-  const [referenceVideos, setReferenceVideos] = useState<
-    Array<{
-      id: string;
-      title: string;
-      cloudflare_uid: string;
-      thumbnail_time_seconds: number | null;
-      budget_min: number | null;
-      budget_max: number | null;
-    }>
-  >([]);
-  const [selectedReferenceIds, setSelectedReferenceIds] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [referenceModal, setReferenceModal] = useState<{
-    open: boolean;
-    video: { id: string; title: string; cloudflare_uid: string } | null;
-  }>({ open: false, video: null });
 
   const hasStarted =
     Boolean(
-      name.trim() ||
+      mode ||
+        name.trim() ||
         company.trim() ||
         email.trim() ||
         phone.trim() ||
@@ -861,172 +799,63 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
         objectives.length ||
         audiences.length ||
         diffusions.length ||
-        deliverables.length ||
         budgetChoice ||
         timelineChoice ||
         referralChoice ||
-        selectedReferenceIds.size > 0,
-    ) || step > 0;
-
-  useEffect(() => {
-    const selectedDurations = deliverables.filter(
-      (deliverable) => deliverable !== "incertain",
-    );
-    const hasCriteria =
-      Boolean(budgetChoice && budgetChoice !== "unknown") ||
-      objectives.length > 0 ||
-      audiences.length > 0 ||
-      selectedDurations.length > 0 ||
-      projectDescription.trim().length > 12;
-    if (!hasCriteria) return;
-
-    setReferenceStatus("loading");
-    setReferenceMessage(null);
-    setReferenceVideos([]);
-    setSelectedReferenceIds(new Set());
-    setReferenceDebug(null);
-    const controller = new AbortController();
-    const timeout = setTimeout(async () => {
-      try {
-        const response = await fetch("/api/ai/recommendations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            budget: budgetChoice === "unknown" ? null : budgetChoice || null,
-            objectives,
-            audiences,
-            durations: deliverables.includes("incertain")
-              ? ["incertain"]
-              : selectedDurations,
-            description: projectDescription,
-            excludeIds: [],
-            limit: 6,
-          }),
-        });
-        const json = (await response.json()) as
-          | {
-              videos: typeof referenceVideos;
-              matchedKeywordLabels?: string[];
-              reasonsByVideoId?: Record<string, string[]>;
-              debug?: {
-                objectives?: string[];
-                audiences?: string[];
-                budget?: string | null;
-                durations?: string[];
-                matchedKeywordLabels?: string[];
-                allowedTypes?: string[];
-                allowedObjectifs?: string[];
-                priorityObjectifs?: string[];
-                removedTypes?: string[];
-                activeDurationFilters?: string[];
-                reasonsByVideoId?: Record<string, string[]>;
-              } | null;
-            }
-          | { error: string };
-        if (!response.ok || "error" in json) {
-          throw new Error("error" in json ? json.error : t("request.ai.error"));
-        }
-        setReferenceVideos(json.videos);
-        setReferenceDebug("debug" in json ? json.debug ?? null : null);
-        setSelectedReferenceIds(new Set());
-        setReferenceStatus("idle");
-      } catch (error) {
-        if ((error as Error).name === "AbortError") return;
-        setReferenceStatus("error");
-        setReferenceMessage(
-          error instanceof Error ? error.message : t("request.ai.error"),
-        );
-      }
-    }, 650);
-
-    return () => {
-      clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [
-    budgetChoice,
-    deliverables,
-    objectives,
-    projectDescription,
-    audiences,
-    t,
-  ]);
-
-  useEffect(() => {
-    if (!preselectedReferenceId || preselectAppliedRef.current) return;
-    if (!referenceVideos.some((video) => video.id === preselectedReferenceId)) return;
-    setSelectedReferenceIds((prev) => {
-      if (prev.has(preselectedReferenceId)) return prev;
-      const next = new Set(prev);
-      next.add(preselectedReferenceId);
-      return next;
-    });
-    preselectAppliedRef.current = true;
-  }, [preselectedReferenceId, referenceVideos]);
-
-  async function handleLoadMoreReferences() {
-    if (referenceStatus === "loading") return;
-    setReferenceStatus("loading");
-    setReferenceMessage(null);
-    try {
-      const response = await fetch("/api/ai/recommendations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          budget: budgetChoice === "unknown" ? null : budgetChoice || null,
-          objectives,
-          audiences,
-          durations: deliverables.includes("incertain")
-            ? ["incertain"]
-            : deliverables.filter((deliverable) => deliverable !== "incertain"),
-          description: projectDescription,
-          excludeIds: referenceVideos.map((video) => video.id),
-          limit: 6,
-        }),
-      });
-      const json = (await response.json()) as
-        | {
-            videos: typeof referenceVideos;
-            matchedKeywordLabels?: string[];
-            reasonsByVideoId?: Record<string, string[]>;
-            debug?: {
-              objectives?: string[];
-              audiences?: string[];
-              budget?: string | null;
-              durations?: string[];
-              matchedKeywordLabels?: string[];
-              allowedTypes?: string[];
-              allowedObjectifs?: string[];
-              priorityObjectifs?: string[];
-              removedTypes?: string[];
-              activeDurationFilters?: string[];
-              reasonsByVideoId?: Record<string, string[]>;
-            } | null;
-          }
-        | { error: string };
-      if (!response.ok || "error" in json) {
-        throw new Error("error" in json ? json.error : t("request.ai.error"));
-      }
-      setReferenceVideos((prev) => [...prev, ...json.videos]);
-      if ("debug" in json && json.debug) setReferenceDebug(json.debug);
-      setReferenceStatus("idle");
-    } catch (error) {
-      setReferenceStatus("error");
-      setReferenceMessage(
-        error instanceof Error ? error.message : t("request.ai.error"),
-      );
-    }
-  }
+        appointmentStart,
+    ) || step !== 0;
 
   const canGoNext = step === 0 ? Boolean(name.trim() && company.trim()) : true;
-  const canSubmit = Boolean(name.trim() && company.trim() && email.trim());
+  const canSubmit = Boolean(
+    name.trim() &&
+      company.trim() &&
+      email.trim() &&
+      (mode !== "booking" ||
+        (appointmentStart && budgetChoice && referralChoice)),
+  );
 
   async function submitRequest() {
     if (submissionStatus === "sending") return;
     setSubmissionStatus("sending");
     setSubmissionMessage(null);
     try {
+      if (mode === "booking") {
+        const response = await fetch("/api/appointments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locale,
+            start: appointmentStart,
+            name,
+            company,
+            email,
+            phone,
+            budget: budgetChoice,
+            referral: referralChoice,
+            website,
+          }),
+        });
+        const json = (await response.json()) as {
+          error?: string;
+          appointment?: { start?: string };
+        };
+        if (!response.ok) {
+          if (response.status === 409 || json.error === "slot_unavailable") {
+            setStep(-1);
+            setAppointmentStart("");
+            setAppointmentRefreshKey((current) => current + 1);
+            throw new Error("slot_unavailable");
+          }
+          throw new Error(json.error || "submit_failed");
+        }
+        setBookedAppointmentStart(
+          json.appointment?.start || appointmentStart,
+        );
+        trackAppointmentBookingSubmit(locale);
+        setSubmissionStatus("sent");
+        return;
+      }
+
       const payload = {
         locale,
         name,
@@ -1038,14 +867,9 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
         diffusions,
         description: projectDescription,
         locations: shootingLocations,
-        deliverables: {
-          durations: deliverables,
-          unknown: deliverables.includes("incertain"),
-        },
         budget: budgetChoice || null,
         timeline: timelineChoice || null,
         referral: referralChoice || null,
-        referenceIds: Array.from(selectedReferenceIds),
         website,
       };
       const response = await fetch("/api/quote-requests", {
@@ -1114,11 +938,31 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                 </div>
               </div>
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                {t("request.sent.title")}
+                {mode === "booking"
+                  ? t("request.booking.sent.title")
+                  : t("request.sent.title")}
               </h1>
               <p className="text-sm text-zinc-300">
-                {t("request.sent.subtitle")}
+                {mode === "booking"
+                  ? t("request.booking.sent.subtitle")
+                  : t("request.sent.subtitle")}
               </p>
+              {mode === "booking" && bookedAppointmentStart ? (
+                <div className="mx-auto w-fit rounded-full border border-emerald-300/30 bg-emerald-300/10 px-5 py-2 text-sm font-semibold text-emerald-100">
+                  {new Intl.DateTimeFormat(
+                    locale === "en" ? "en-CA" : "fr-CA",
+                    {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "America/Toronto",
+                    },
+                  ).format(new Date(bookedAppointmentStart))}
+                </div>
+              ) : null}
               <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/30 p-5 text-left sm:flex-row sm:items-center">
                 <div className="h-20 w-20 overflow-hidden rounded-full border border-white/10">
                   <Image
@@ -1147,16 +991,137 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
           ) : (
             <>
               <div className="mb-6 flex flex-wrap items-center justify-center gap-3 text-xs uppercase tracking-[0.3em] text-zinc-500">
-                <span>{t("request.title")}</span>
+                <span>
+                  {mode === "booking"
+                    ? t("request.mode.booking.title")
+                    : t("request.title")}
+                </span>
               </div>
 
-          {step === 0 ? (
+          {mode === null ? (
+            <div className="w-full space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
+                  {t("request.mode.title")}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-sm text-zinc-400">
+                  {t("request.mode.subtitle")}
+                </p>
+              </div>
+              <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("quote");
+                    setStep(0);
+                  }}
+                  className="group rounded-2xl border border-white/10 bg-black/30 p-6 text-left transition hover:border-cyan-300/40 hover:bg-cyan-300/5"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
+                    <svg
+                      aria-hidden
+                      className="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 4h14v16H5z" />
+                      <path d="M8 8h8M8 12h8M8 16h5" />
+                    </svg>
+                  </div>
+                  <div className="mt-5 text-xl font-semibold text-white">
+                    {t("request.mode.quote.title")}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    {t("request.mode.quote.description")}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("booking");
+                    setStep(-1);
+                  }}
+                  className="group rounded-2xl border border-white/10 bg-black/30 p-6 text-left transition hover:border-emerald-300/40 hover:bg-emerald-300/5"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-300/10 text-emerald-100">
+                    <svg
+                      aria-hidden
+                      className="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="16" rx="2" />
+                      <path d="M8 3v4M16 3v4M3 10h18M8 14h3M13 14h3M8 18h3" />
+                    </svg>
+                  </div>
+                  <div className="mt-5 text-xl font-semibold text-white">
+                    {t("request.mode.booking.title")}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    {t("request.mode.booking.description")}
+                  </p>
+                </button>
+              </div>
+            </div>
+          ) : step === -1 ? (
+            <div className="w-full space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
+                  {t("request.booking.title")}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-sm text-zinc-400">
+                  {t("request.booking.subtitle")}
+                </p>
+              </div>
+              <AppointmentCalendar
+                selectedStart={appointmentStart}
+                onSelect={(value) => {
+                  setAppointmentStart(value);
+                  if (value) setSubmissionMessage(null);
+                }}
+                refreshKey={appointmentRefreshKey}
+              />
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(null);
+                    setStep(0);
+                  }}
+                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                >
+                  {t("request.nav.back")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  disabled={!appointmentStart}
+                  className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {t("request.nav.next")}
+                </button>
+              </div>
+              {submissionMessage === "slot_unavailable" ? (
+                <p className="text-sm text-rose-200">
+                  {t("request.booking.slotUnavailable")}
+                </p>
+              ) : null}
+            </div>
+          ) : step === 0 ? (
             <div
               className="w-full space-y-6"
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 event.preventDefault();
-                if (canGoNext) setStep(1);
+                if (canGoNext) setStep(mode === "booking" ? 5 : 1);
               }}
             >
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
@@ -1186,11 +1151,24 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                   />
                 </label>
               </div>
-              <div className="mt-8 flex justify-center">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => {
-                    if (canGoNext) setStep(1);
+                    if (mode === "booking") {
+                      setStep(-1);
+                    } else {
+                      setMode(null);
+                    }
+                  }}
+                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
+                >
+                  {t("request.nav.back")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canGoNext) setStep(mode === "booking" ? 5 : 1);
                   }}
                   disabled={!canGoNext}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1477,92 +1455,6 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
           ) : step === 5 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                {t("request.step6.title")}
-              </h1>
-              <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                {t("request.step6.subtitle")}
-              </p>
-              <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 text-left md:grid-cols-2">
-                {deliverableOptions.map((option) => {
-                  if (option.id === "incertain") return null;
-
-                  const selected = deliverables.includes(option.id);
-
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() =>
-                        setDeliverables((prev) => {
-                          if (option.id === "incertain") {
-                            return prev.includes("incertain") ? [] : ["incertain"];
-                          }
-                          return toggleArrayValue(
-                            prev.filter((item) => item !== "incertain"),
-                            option.id,
-                          );
-                        })
-                      }
-                      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition ${
-                        selected
-                          ? "border-emerald-300/50 bg-emerald-300/10"
-                          : "border-white/10 bg-black/30 hover:border-white/30"
-                      }`}
-                    >
-                      <div
-                        className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
-                          selected
-                            ? "border-emerald-300/70 bg-emerald-300/20 text-emerald-100"
-                            : "border-white/20 text-transparent group-hover:border-white/40"
-                        }`}
-                        aria-hidden
-                      >
-                        <span className="text-xs">✓</span>
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold text-zinc-100">
-                          {t(option.labelKey)}
-                        </div>
-                        <div className="mt-1 text-sm text-zinc-400">
-                          {t(option.descriptionKey)}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeliverables(["incertain"]);
-                    setStep(6);
-                  }}
-                  className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
-                >
-                  {t("request.unknown")}
-                </button>
-              </div>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(4)}
-                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-                >
-                  {t("request.nav.back")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(6)}
-                  className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
-                >
-                  {t("request.nav.next")}
-                </button>
-              </div>
-            </div>
-          ) : step === 6 ? (
-            <div className="w-full space-y-8">
-              <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step8.title")}
               </h1>
               <p className="mx-auto max-w-2xl text-sm text-zinc-400">
@@ -1594,7 +1486,7 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                   type="button"
                   onClick={() => {
                     setBudgetChoice("unknown");
-                    setStep(7);
+                    setStep(mode === "booking" ? 7 : 6);
                   }}
                   className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
                 >
@@ -1604,258 +1496,21 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(mode === "booking" ? 0 : 4)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(7)}
+                  onClick={() => setStep(mode === "booking" ? 7 : 6)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
             </div>
-          ) : step === 7 ? (
-            <div className="w-full space-y-8">
-              <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
-                {t("request.step9.title")}
-              </h1>
-              <p className="mx-auto max-w-2xl text-sm text-zinc-400">
-                {t("request.step9.subtitle")}
-              </p>
-              {referenceDebug ? (
-                <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4 text-left text-xs text-zinc-200">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                    {t("request.step9.debug")}
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <div className="text-[11px] text-zinc-500">
-                        {t("request.step9.debug.step1")}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.objectives")}:{" "}
-                        {(referenceDebug.objectives ?? []).join(", ") || "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.allowedTypes")}:{" "}
-                        {(referenceDebug.allowedTypes ?? []).join(", ") || "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.allowedObjectives")}:{" "}
-                        {(referenceDebug.allowedObjectifs ?? []).join(", ") || "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.priorityObjectives")}:{" "}
-                        {(referenceDebug.priorityObjectifs ?? []).join(", ") || "—"}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[11px] text-zinc-500">
-                        {t("request.step9.debug.step2")}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.audiences")}:{" "}
-                        {(referenceDebug.audiences ?? []).join(", ") || "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.removedTypes")}:{" "}
-                        {(referenceDebug.removedTypes ?? []).join(", ") || "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.budget")}: {referenceDebug.budget ?? "—"}
-                      </div>
-                      <div className="mt-1">
-                        {t("request.step9.debug.durations")}:{" "}
-                        {(referenceDebug.activeDurationFilters ?? []).join(", ") ||
-                          (referenceDebug.durations ?? []).join(", ") ||
-                          "—"}
-                      </div>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <div className="text-[11px] text-zinc-500">
-                        {t("request.step9.debug.keywords")}
-                      </div>
-                      <div className="mt-1">
-                        {(referenceDebug.matchedKeywordLabels ?? []).join(", ") || "—"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              {referenceStatus === "loading" && referenceVideos.length === 0 ? (
-                <div className="relative mt-8">
-                  <div
-                    className="grid grid-cols-1 gap-4 opacity-0 md:grid-cols-2 lg:grid-cols-3"
-                    aria-hidden="true"
-                  >
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="overflow-hidden rounded-2xl border border-white/10 bg-black/30"
-                      >
-                        <div className="aspect-video w-full" />
-                        <div className="p-3">
-                          <div className="h-5 w-2/3" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
-                    <span className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">
-                      Chargement des références en cours
-                      <span className="inline-flex w-5 justify-start text-left">
-                        <span className="animate-pulse">.</span>
-                        <span className="animate-pulse [animation-delay:150ms]">.</span>
-                        <span className="animate-pulse [animation-delay:300ms]">.</span>
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-              {referenceStatus === "error" ? (
-                <div className="mt-8 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                  {referenceMessage ?? t("request.step9.error")}
-                </div>
-              ) : null}
-              {referenceVideos.length === 0 && referenceStatus !== "loading" ? (
-                <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-400">
-                  {t("request.step9.empty")}
-                </div>
-              ) : referenceVideos.length > 0 ? (
-                <div className="mt-8 space-y-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                    {selectedReferenceIds.size}{" "}
-                    {selectedReferenceIds.size > 1
-                      ? t("request.step9.selection.plural")
-                      : t("request.step9.selection.singular")}
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {referenceVideos.map((video) => {
-                      const isSelected = selectedReferenceIds.has(video.id);
-                      return (
-                        <div
-                          key={video.id}
-                          className={`group overflow-hidden rounded-2xl border bg-black/30 transition ${
-                            isSelected
-                              ? "border-emerald-300/60"
-                              : "border-white/10 hover:border-white/30"
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            className="relative block w-full text-left"
-                            onClick={() =>
-                              setReferenceModal({
-                                open: true,
-                                video: {
-                                  id: video.id,
-                                  title: video.title,
-                                  cloudflare_uid: video.cloudflare_uid,
-                                },
-                              })
-                            }
-                          >
-                            <div className="relative aspect-video w-full overflow-hidden">
-                              <Image
-                                src={cloudflareThumbnailSrc(
-                                  video.cloudflare_uid,
-                                  video.thumbnail_time_seconds,
-                                )}
-                                alt=""
-                                fill
-                                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                                className="object-cover opacity-90 transition group-hover:opacity-100"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white/80 backdrop-blur">
-                                  <svg
-                                    aria-hidden
-                                    className="h-4 w-4 translate-x-[1px]"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                  >
-                                    <path d="M8 5.5v13l11-6.5-11-6.5z" />
-                                  </svg>
-                                </div>
-                              </div>
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/0 opacity-80" />
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setSelectedReferenceIds((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(video.id)) {
-                                      next.delete(video.id);
-                                    } else {
-                                      next.add(video.id);
-                                    }
-                                    return next;
-                                  });
-                                }}
-                                className={`absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border text-xs transition ${
-                                  isSelected
-                                    ? "border-emerald-300/70 bg-emerald-300/30 text-emerald-100"
-                                    : "border-white/30 bg-black/40 text-white/70 hover:border-white/60"
-                                }`}
-                                aria-label={isSelected ? t("request.step9.selected") : t("request.step9.choose")}
-                              >
-                                {isSelected ? "✓" : ""}
-                              </button>
-                            </div>
-                            <div className="p-3">
-                              <div className="text-sm font-semibold text-zinc-100">
-                                {video.title}
-                              </div>
-                            </div>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex flex-col items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => void handleLoadMoreReferences()}
-                      disabled={referenceStatus === "loading"}
-                      className="rounded-full border border-white/10 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {referenceStatus === "loading"
-                        ? t("request.step9.loading")
-                        : t("request.step9.loadMore")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStep(8)}
-                      className="inline-flex items-center justify-center rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:bg-white/10"
-                    >
-                      {t("request.unknown")}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(6)}
-                  className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
-                >
-                  {t("request.nav.back")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(8)}
-                  className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
-                >
-                  {t("request.nav.next")}
-                </button>
-              </div>
-            </div>
-          ) : step === 8 ? (
+          ) : step === 6 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step10.title")}
@@ -1913,21 +1568,21 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(7)}
+                  onClick={() => setStep(5)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(9)}
+                  onClick={() => setStep(7)}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
                 >
                   {t("request.nav.next")}
                 </button>
               </div>
             </div>
-          ) : step === 9 ? (
+          ) : step === 7 ? (
             <div className="w-full space-y-8">
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step11.title")}
@@ -1957,14 +1612,14 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep(8)}
+                  onClick={() => setStep(mode === "booking" ? 5 : 6)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(10)}
+                  onClick={() => setStep(8)}
                   disabled={!referralChoice}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/60"
                 >
@@ -1977,6 +1632,21 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
               <h1 className="text-3xl font-semibold text-zinc-100 sm:text-4xl lg:text-6xl">
                 {t("request.step12.title")}
               </h1>
+              {mode === "booking" && appointmentStart ? (
+                <div className="mx-auto w-fit rounded-full border border-emerald-300/30 bg-emerald-300/10 px-5 py-2 text-sm font-semibold text-emerald-100">
+                  {new Intl.DateTimeFormat(
+                    locale === "en" ? "en-CA" : "fr-CA",
+                    {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "America/Toronto",
+                    },
+                  ).format(new Date(appointmentStart))}
+                </div>
+              ) : null}
               <div className="mx-auto mt-2 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
                 <label className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm text-zinc-400">
                   <span className="block text-xs uppercase tracking-[0.2em] text-zinc-500">
@@ -2012,11 +1682,13 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                   disabled={!canSubmit || submissionStatus === "sending"}
                   className="rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t("request.step12.submit")}
+                  {mode === "booking"
+                    ? t("request.booking.submit")
+                    : t("request.step12.submit")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(9)}
+                  onClick={() => setStep(7)}
                   className="rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-zinc-100 hover:bg-white/10"
                 >
                   {t("request.nav.back")}
@@ -2066,46 +1738,6 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
           />
         </div>
       </main>
-
-      {referenceModal.open && referenceModal.video ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setReferenceModal({ open: false, video: null })}
-        >
-          <div
-            className="w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-4 bg-zinc-950 px-4 py-3">
-              <div className="truncate text-sm font-medium text-white">
-                {referenceModal.video.title}
-              </div>
-              <button
-                className="rounded-md px-2 py-1 text-sm text-zinc-200 hover:bg-white/10"
-                onClick={() =>
-                  setReferenceModal({ open: false, video: null })
-                }
-                type="button"
-              >
-                {t("request.modal.close")}
-              </button>
-            </div>
-            <div className="bg-zinc-950/70 p-4">
-              <div className="aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/40">
-                <iframe
-                  className="h-full w-full"
-                  src={cloudflareIframeSrc(referenceModal.video.cloudflare_uid)}
-                  allow="accelerometer; autoplay; encrypted-media; picture-in-picture;"
-                  allowFullScreen
-                  title={referenceModal.video.title}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
     </div>
   );
