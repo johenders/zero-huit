@@ -778,7 +778,7 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
   const [referralChoice, setReferralChoice] = useState<ReferralOptionId | "">(
     "",
   );
-  const [website, setWebsite] = useState("");
+  const [website] = useState("");
   const [appointmentStart, setAppointmentStart] = useState("");
   const [appointmentRefreshKey, setAppointmentRefreshKey] = useState(0);
   const [bookedAppointmentStart, setBookedAppointmentStart] = useState("");
@@ -1716,10 +1716,10 @@ export function RequestApp({ initialObjectiveOptions = [] }: RequestAppProps) {
                   type="text"
                   name="website"
                   value={website}
-                  onChange={(event) => setWebsite(event.target.value)}
+                  readOnly
                   className="hidden"
                   tabIndex={-1}
-                  autoComplete="off"
+                  autoComplete="new-password"
                   aria-hidden="true"
                 />
                 {submissionMessage ? (

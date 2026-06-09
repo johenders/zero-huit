@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
   APPOINTMENT_BUFFER_MINUTES,
+  APPOINTMENT_SUBMISSION_GRACE_MINUTES,
   APPOINTMENT_TIME_ZONE,
   appointmentEnd,
   isValidAppointmentSlot,
@@ -59,6 +60,7 @@ function overlaps(
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as AppointmentPayload;
   if (body.website?.trim()) {
+    console.warn("[appointments] Rejected by honeypot");
     return NextResponse.json({ error: "spam" }, { status: 400 });
   }
 
@@ -80,10 +82,31 @@ export async function POST(request: NextRequest) {
     !budget ||
     !referral
   ) {
+    console.warn("[appointments] Missing or invalid required fields", {
+      hasStart: Boolean(startValue),
+      hasName: Boolean(name),
+      hasCompany: Boolean(company),
+      hasEmail: Boolean(email),
+      emailIsValid,
+      hasBudget: Boolean(budget),
+      hasReferral: Boolean(referral),
+    });
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
-  if (!isValidAppointmentSlot(startValue)) {
-    return NextResponse.json({ error: "invalid_slot" }, { status: 400 });
+  if (
+    !isValidAppointmentSlot(
+      startValue,
+      new Date(),
+      APPOINTMENT_SUBMISSION_GRACE_MINUTES,
+    )
+  ) {
+    console.warn("[appointments] Selected slot is no longer valid", {
+      start: startValue,
+    });
+    return NextResponse.json(
+      { error: "slot_unavailable" },
+      { status: 409 },
+    );
   }
   if (isRateLimited(getClientIp(request))) {
     return NextResponse.json(

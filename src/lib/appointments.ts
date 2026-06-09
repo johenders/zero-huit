@@ -4,6 +4,7 @@ export const APPOINTMENT_TIME_ZONE = "America/Toronto";
 export const APPOINTMENT_DURATION_MINUTES = 30;
 export const APPOINTMENT_BUFFER_MINUTES = 30;
 export const APPOINTMENT_MIN_LEAD_HOURS = 3;
+export const APPOINTMENT_SUBMISSION_GRACE_MINUTES = 15;
 export const APPOINTMENT_START_HOUR = 9;
 export const APPOINTMENT_END_HOUR = 16;
 export const APPOINTMENT_LUNCH_START_HOUR = 12;
@@ -257,12 +258,17 @@ export function availableAppointmentSlots(input: {
   return slots;
 }
 
-export function isValidAppointmentSlot(startValue: string, now = new Date()) {
+export function isValidAppointmentSlot(
+  startValue: string,
+  now = new Date(),
+  leadGraceMinutes = 0,
+) {
   const start = new Date(startValue);
   if (Number.isNaN(start.getTime())) return false;
   if (
     start.getTime() <
-    now.getTime() + APPOINTMENT_MIN_LEAD_HOURS * 60 * 60 * 1000
+    now.getTime() +
+      (APPOINTMENT_MIN_LEAD_HOURS * 60 - leadGraceMinutes) * 60 * 1000
   ) {
     return false;
   }
