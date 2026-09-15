@@ -16,7 +16,6 @@ import {
 } from "@/components/organismes/TestimonialVideos";
 import { normalizeLocale } from "@/lib/i18n/shared";
 import { buildPageMetadata } from "@/lib/seo";
-import blobPattern from "../../../assets/landingpage/Organimes/blob-scatter-haikei.svg";
 import t211 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4817.jpg";
 import t212 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4828.jpg";
 import t213 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4524.jpg";
@@ -510,14 +509,6 @@ export default function OrganismesPage() {
       {/* Témoignages                                                   */}
       {/* ------------------------------------------------------------ */}
       <section className="relative isolate overflow-hidden bg-[#F6F4EF] pt-24 pb-16 sm:pt-32 sm:pb-24">
-        {/* Le motif porte son propre fond gris : en fusion « multiply » il se
-            teinte du blanc chaud de la page au lieu de l'écraser. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center opacity-70 mix-blend-multiply"
-          style={{ backgroundImage: `url(${blobPattern.src})` }}
-        />
-
         <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
           <div className="zh-reveal">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#1f8ba3]">
