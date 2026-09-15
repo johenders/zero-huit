@@ -93,7 +93,8 @@ export function SiteFooter({ showCta = true }: Props) {
         if (!isActive || !Array.isArray(data)) return;
         const articles = data.filter(
           (article): article is { title: string; slug: string } =>
-            typeof article?.title === "string" && typeof article?.slug === "string",
+            typeof article?.title === "string" && article.title.trim().length > 0 &&
+            typeof article?.slug === "string" && article.slug.trim().length > 0,
         );
         if (articles.length > 0) setLatestArticles(articles);
       } catch {
