@@ -1,7 +1,7 @@
 import type { SectorContentByLocale } from "./types";
 
 // TODO(images) : remplacer par des photos de tournage en milieu de santé.
-import heroImage from "../../../assets/landingpage/Communications · Santé · Services sociaux/Still 2026-03-04 121037_4.5.1.jpg";
+import heroImage from "../../../assets/landingpage/Communications · Santé · Services sociaux/Still 2026-03-04 121037_4.5.1.jpg";
 import classroomImage from "../../../assets/bts/IMG_7132.jpg";
 import roomImage from "../../../assets/bts/IMG_5163.jpg";
 import crewImage from "../../../assets/bts/DSCF8758.jpg";
