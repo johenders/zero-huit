@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 
 import {
   MandatesExplorer,
@@ -14,8 +14,6 @@ import {
   TestimonialVideos,
   type Testimonial,
 } from "@/components/organismes/TestimonialVideos";
-import { normalizeLocale } from "@/lib/i18n/shared";
-import { buildPageMetadata } from "@/lib/seo";
 import t211 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4817.jpg";
 import t212 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4828.jpg";
 import t213 from "../../../assets/landingpage/Organimes/Photos - Trisomie 21/IMG_4524.jpg";
@@ -39,7 +37,8 @@ import ppr6 from "../../../assets/landingpage/Organimes/Photos - Les pas pour ri
 import ppr7 from "../../../assets/landingpage/Organimes/Photos - Les pas pour rire/Web/IMG_9303.jpeg";
 import ppr8 from "../../../assets/landingpage/Organimes/Photos - Les pas pour rire/Web/IMG_8364.jpeg";
 import ppr9 from "../../../assets/landingpage/Organimes/Photos - Les pas pour rire/Web/IMG_9409.jpeg";
-import heroImage from "../../../assets/landingpage/Organimes/hero-organisme.jpg";
+import heroImage from "../../../assets/landingpage/Organimes/hero-organisme-web.webp";
+import heroMobileImage from "../../../assets/landingpage/Organimes/hero-organisme-mobile.webp";
 import espaceBts1 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7529.jpg .jpg";
 import espaceBts2 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7587.jpg";
 import espaceBts3 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7498.jpg";
@@ -368,22 +367,43 @@ const APPROACH_STEPS = [
   },
 ];
 
-export async function generateMetadata() {
-  const requestHeaders = await headers();
-  const locale = normalizeLocale(requestHeaders.get("x-locale"));
+const pageUrl = "https://www.zerohuit.ca/organismes";
+const pageTitle = "Vidéos pour organismes communautaires | Zéro Huit";
+const pageDescription = "Vidéos, témoignages et campagnes de sensibilisation pour organismes communautaires au Québec. Zéro Huit vous aide à informer et mobiliser votre communauté.";
 
-  return buildPageMetadata({
-    locale,
-    path: "/organismes",
-    title: "Communication pour organismes communautaires | Zéro Huit",
-    description:
-      "Zéro Huit accompagne les organismes communautaires dans la création de vidéos, de campagnes de sensibilisation et de projets soutenus par du financement ou des subventions.",
-  });
-}
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  alternates: { canonical: pageUrl, languages: { "fr-CA": pageUrl } },
+  openGraph: {
+    type: "website", url: pageUrl, locale: "fr_CA", siteName: "Zéro Huit",
+    title: pageTitle, description: pageDescription,
+    images: [{ url: heroImage.src, width: heroImage.width, height: heroImage.height, alt: "L’équipe Zéro Huit en tournage auprès d’un organisme communautaire" }],
+  },
+  twitter: { card: "summary_large_image", title: pageTitle, description: pageDescription, images: [heroImage.src] },
+};
+
+const pageSchema = [
+  {
+    "@context": "https://schema.org", "@type": "Service", "@id": `${pageUrl}#service`,
+    name: "Production vidéo pour organismes communautaires", description: pageDescription, url: pageUrl,
+    areaServed: { "@type": "AdministrativeArea", name: "Québec" },
+    provider: { "@type": "Organization", name: "Zéro Huit", url: "https://www.zerohuit.ca" },
+    serviceType: ["Production vidéo", "Photographie", "Campagnes de sensibilisation", "Stratégie de communication"],
+  },
+  {
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Accueil", item: "https://www.zerohuit.ca" },
+      { "@type": "ListItem", position: 2, name: "Organismes communautaires", item: pageUrl },
+    ],
+  },
+];
 
 export default function OrganismesPage() {
   return (
-    <main className="font-['Montserrat'] bg-[#F6F4EF] text-[#111111]">
+    <main id="contenu" className="organismes-page font-['Montserrat'] bg-[#F6F4EF] text-[#111111]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
       {/* ------------------------------------------------------------ */}
       {/* Hero                                                          */}
       {/* ------------------------------------------------------------ */}
@@ -394,14 +414,18 @@ export default function OrganismesPage() {
             premier plan encombré du bas. Sous `lg` le rognage devient
             horizontal : on se recale sur le duo qui discute à droite, la
             scène qui porte le propos. */}
-        <Image
+        <picture>
+          <source media="(max-width: 767px)" srcSet={heroMobileImage.src} />
+          <Image
           src={heroImage}
           alt="Tournage dans une salle communautaire : une intervenante discute avec une participante pendant qu'une caméra capte la scène, entourées de membres du groupe"
           fill
-          priority
+          loading="eager"
+          fetchPriority="high"
           sizes="100vw"
-          className="zh-hero-zoom zh-parallax object-cover object-[64%_45%] lg:object-[50%_42%]"
+          className="zh-hero-zoom zh-parallax object-cover object-center md:object-[64%_45%] lg:object-[50%_42%]"
         />
+        </picture>
 
         {/* Trois dégradés au lieu d'un voile uniforme : le texte repose sur du
             noir, le duo de droite garde ses couleurs et sa lumière. */}
@@ -511,7 +535,7 @@ export default function OrganismesPage() {
       <section className="relative isolate overflow-hidden bg-[#F6F4EF] pt-24 pb-16 sm:pt-32 sm:pb-24">
         <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-10">
           <div className="zh-reveal">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#1f8ba3]">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#166e82]">
               Témoignages
             </p>
             <h2
@@ -744,7 +768,7 @@ export default function OrganismesPage() {
       <section className="bg-[#EFECE3] py-24 sm:py-32">
         <div className="mx-auto grid w-full max-w-7xl gap-14 px-5 sm:gap-20 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24 lg:px-10">
           <div className="zh-reveal max-w-lg lg:self-start">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#1f8ba3]">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.24em] text-[#166e82]">
               Notre approche
             </p>
             <h2

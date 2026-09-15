@@ -111,7 +111,10 @@ export function StreamVideo({
       <video
         ref={videoRef}
         title={title}
-        poster={poster}
+        poster={started ? poster : undefined}
+        hidden={!started}
+        aria-hidden={!started}
+        tabIndex={started ? 0 : -1}
         controls
         playsInline
         preload="none"

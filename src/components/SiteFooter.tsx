@@ -169,6 +169,13 @@ export function SiteFooter({ showCta = true }: Props) {
                   {t("nav.services")}
                 </Link>
               </li>
+              {locale === "fr" && (
+                <li>
+                  <Link href="/organismes" className="hover:text-white">
+                    Vidéos pour organismes
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href={withLocaleHref(locale, "/nouvelles")} className="hover:text-white">
                   {t("footer.news.label")}
@@ -196,10 +203,10 @@ export function SiteFooter({ showCta = true }: Props) {
           <div>
             <div className="text-base font-semibold">{t("footer.contact.label")}</div>
             <div className="mt-4 space-y-2 text-sm text-white/80">
-              <a href="mailto:info@zerohuit.ca" className="hover:text-white">
+              <a href="mailto:info@zerohuit.ca" className="flex min-h-11 items-center justify-center hover:text-white sm:justify-start">
                 info@zerohuit.ca
               </a>
-              <a href="tel:+14503951777" className="block hover:text-white">
+              <a href="tel:+14503951777" className="flex min-h-11 items-center justify-center hover:text-white sm:justify-start">
                 450-395-1777
               </a>
               <div>74 rue St-Laurent</div>

@@ -59,9 +59,9 @@ export function MinimalHeader({ ctaHref, scrollAware = false }: Props) {
       variant="minimal"
       ctaHref={ctaHref}
       /* Logo un cran plus grand et barre plus aérée que la variante d'origine. */
-      logoClassName="h-14 w-auto max-w-[46vw] object-contain sm:h-28 sm:max-w-none"
+      logoClassName="h-10 w-auto max-w-[34vw] object-contain sm:h-28 sm:max-w-none"
       containerClassName="px-5 py-4 sm:px-6 lg:px-10"
-      ctaClassName="inline-flex whitespace-nowrap px-5 py-2.5 text-[0.8rem] sm:px-6 sm:py-3 sm:text-sm"
+      ctaClassName="inline-flex min-h-11 whitespace-nowrap px-3 py-2.5 text-[0.68rem] !text-[#111111] sm:px-6 sm:py-3 sm:text-sm"
     />
   );
 }

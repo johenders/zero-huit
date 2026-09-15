@@ -1,16 +1,16 @@
 @import "tailwindcss";
-@import "@fontsource/montserrat/400.css";
-@import "@fontsource/montserrat/500.css";
-@import "@fontsource/montserrat/600.css";
-@import "@fontsource/montserrat/700.css";
-@import "@fontsource/montserrat/800.css";
-@import "@fontsource/montserrat/900.css";
-@import "@fontsource/montserrat/400-italic.css";
-@import "@fontsource/montserrat/500-italic.css";
-@import "@fontsource/montserrat/600-italic.css";
-@import "@fontsource/montserrat/700-italic.css";
-@import "@fontsource/montserrat/800-italic.css";
-@import "@fontsource/montserrat/900-italic.css";
+@import "@fontsource/montserrat/latin-400.css";
+@import "@fontsource/montserrat/latin-500.css";
+@import "@fontsource/montserrat/latin-600.css";
+@import "@fontsource/montserrat/latin-700.css";
+@import "@fontsource/montserrat/latin-800.css";
+@import "@fontsource/montserrat/latin-900.css";
+@import "@fontsource/montserrat/latin-400-italic.css";
+@import "@fontsource/montserrat/latin-500-italic.css";
+@import "@fontsource/montserrat/latin-600-italic.css";
+@import "@fontsource/montserrat/latin-700-italic.css";
+@import "@fontsource/montserrat/latin-800-italic.css";
+@import "@fontsource/montserrat/latin-900-italic.css";
 
 :root {
   color-scheme: dark;
@@ -726,4 +726,10 @@ body {
   @page {
     margin: 1.5cm;
   }
+}
+
+/* Le contenu initial reste immédiatement visible sur mobile. */
+@media (max-width: 1023px) {
+  .organismes-page .zh-hero-in,
+  .organismes-page .zh-hero-zoom { animation: none; }
 }

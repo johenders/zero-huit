@@ -553,7 +553,7 @@ function MandateVideos({ videos, organisation }: {
           <span>{video.caption ?? "Le projet en vidéo"}</span>
           {videos.length > 1 ? (
             <div className="flex shrink-0 items-center gap-1">
-              <button type="button" aria-label="Vidéo précédente" disabled={activeVideo === 0} onClick={() => setActiveVideo((index) => index - 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#111111] hover:text-[#1f8ba3] disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-[#111111]">←</button>
+              <button type="button" aria-label="Vidéo précédente" disabled={activeVideo === 0} onClick={() => setActiveVideo((index) => index - 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#111111] hover:text-[#166e82] disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-[#111111]">←</button>
               <select
                 aria-label={`Choisir une vidéo — ${organisation}`}
                 value={activeVideo}
@@ -562,7 +562,7 @@ function MandateVideos({ videos, organisation }: {
               >
                 {videos.map((item, index) => <option key={item.uid} value={index}>{index + 1} / {videos.length}{item.caption ? ` — ${item.caption}` : ""}</option>)}
               </select>
-              <button type="button" aria-label="Vidéo suivante" disabled={activeVideo === videos.length - 1} onClick={() => setActiveVideo((index) => index + 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#111111] hover:text-[#1f8ba3] disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-[#111111]">→</button>
+              <button type="button" aria-label="Vidéo suivante" disabled={activeVideo === videos.length - 1} onClick={() => setActiveVideo((index) => index + 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#111111] hover:text-[#166e82] disabled:opacity-25 focus-visible:outline-2 focus-visible:outline-[#111111]">→</button>
             </div>
           ) : null}
         </figcaption>
@@ -621,7 +621,7 @@ export function MandatesExplorer({ mandates }: { mandates: readonly Mandate[] })
         <div key={current.organisation}>
           <div className="grid items-start gap-8 lg:grid-cols-[0.9fr_1.6fr] lg:gap-14">
             <div className="lg:sticky lg:top-44">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#1f8ba3]">{current.category}</p>
+              <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#166e82]">{current.category}</p>
               <h3 className="mt-4 text-2xl font-bold leading-[1.15] tracking-[-0.035em] text-[#111111] sm:text-[2rem]">{current.title}</h3>
               <div className="mt-6 space-y-4 text-base leading-[1.8] text-[#55534f]">
                 <p><Emphasis text={current.body} /></p>

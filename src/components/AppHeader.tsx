@@ -57,6 +57,8 @@ export function AppHeader({
         ? "fixed left-0 right-0"
         : "sticky";
   const normalizedPath = stripLocalePrefix(pathname).pathname;
+  // Cette page n'a pas encore de traduction publiée.
+  const hasLocaleAlternative = normalizedPath !== "/organismes";
   const localeSwitchHref =
     locale === "en"
       ? withLocaleHref("fr", normalizedPath)
@@ -151,7 +153,7 @@ export function AppHeader({
           >
             {t("nav.cta")}
           </Link>
-          <Link
+          {hasLocaleAlternative && <Link
             href={localeSwitchHref}
             onClick={handleLocaleSwitch}
             className={`items-center gap-2 rounded-full border border-white/20 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/10 ${
@@ -160,7 +162,7 @@ export function AppHeader({
             aria-label={`Switch language to ${localeSwitchLabel}`}
           >
             {localeSwitchLabel}
-          </Link>
+          </Link>}
           {!isMinimal && (
             <button
               type="button"
@@ -232,7 +234,7 @@ export function AppHeader({
             >
               {t("nav.cta")}
             </Link>
-            <Link
+            {hasLocaleAlternative && <Link
               href={localeSwitchHref}
               onClick={(event) => {
                 setIsMobileMenuOpen(false);
@@ -242,7 +244,7 @@ export function AppHeader({
               aria-label={`Switch language to ${localeSwitchLabel}`}
             >
               {localeSwitchLabel}
-            </Link>
+            </Link>}
           </nav>
         </div>
       )}

@@ -119,7 +119,7 @@ export function NeedsExplorer({ needs }: { needs: readonly Need[] }) {
                   className={`text-2xl font-extrabold leading-tight tracking-[-0.03em] transition-colors duration-300 motion-reduce:transition-none sm:text-[1.75rem] ${
                     isActive
                       ? "text-white"
-                      : "text-zinc-600 group-hover:text-zinc-400"
+                      : "text-zinc-400 group-hover:text-zinc-200"
                   }`}
                 >
                   {need.title}

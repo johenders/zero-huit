@@ -23,8 +23,8 @@ export const fallbackArticles: ArticleCard[] = [
     dateLabel: "2 décembre 2025",
     author: "Jean-Benoit Monnière",
     image: production,
-    slug: "production-video-montreal",
-    href: "/articles/production-video-montreal",
+    slug: "au-dela-des-slogans-faire-vivre-votre-culture-organisationnelle-en-images",
+    href: "/nouvelles/au-dela-des-slogans-faire-vivre-votre-culture-organisationnelle-en-images",
   },
   {
     title:
@@ -34,8 +34,8 @@ export const fallbackArticles: ArticleCard[] = [
     dateLabel: "25 novembre 2025",
     author: "Jean-Benoit Monnière",
     image: postProduction,
-    slug: "comment-bien-realiser-une-video-corporative",
-    href: "/articles/comment-bien-realiser-une-video-corporative",
+    slug: "miser-sur-l-humain-une-video-rh-transformera-la-retention-de-vos-employes",
+    href: "/nouvelles/miser-sur-l-humain-une-video-rh-transformera-la-retention-de-vos-employes",
   },
   {
     title: "La vidéo corporative : rentable, même pour une PME.",
@@ -44,7 +44,7 @@ export const fallbackArticles: ArticleCard[] = [
     dateLabel: "19 novembre 2025",
     author: "Jean-Benoit Monnière",
     image: batisse,
-    slug: "combien-coute-une-production-video",
-    href: "/articles/combien-coute-une-production-video",
+    slug: "la-video-corporative-rentable-meme-pour-une-pme",
+    href: "/nouvelles/la-video-corporative-rentable-meme-pour-une-pme",
   },
 ];
