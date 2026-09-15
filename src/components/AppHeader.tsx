@@ -13,10 +13,16 @@ type Props = {
   onOpenAuth: () => void;
   logoSrc?: StaticImageData;
   logoAlt?: string;
-  position?: "sticky" | "absolute";
+  position?: "sticky" | "absolute" | "fixed";
   headerClassName?: string;
   variant?: "full" | "minimal";
   ctaHref?: string;
+  /** Remplace le gabarit du logo. Sans valeur, celui de la variante. */
+  logoClassName?: string;
+  /** Remplace le rembourrage du bouton d'appel. Sans valeur, celui de la variante. */
+  ctaClassName?: string;
+  /** Remplace le rembourrage de la barre. Sans valeur, celui d'origine. */
+  containerClassName?: string;
 };
 
 function navItemClass(isActive: boolean) {
@@ -35,13 +41,21 @@ export function AppHeader({
   headerClassName,
   variant = "full",
   ctaHref = "/request",
+  logoClassName,
+  ctaClassName,
+  containerClassName,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { locale, t } = useI18n();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isMinimal = variant === "minimal";
-  const headerPosition = position === "absolute" ? "absolute left-0 right-0" : "sticky";
+  const headerPosition =
+    position === "absolute"
+      ? "absolute left-0 right-0"
+      : position === "fixed"
+        ? "fixed left-0 right-0"
+        : "sticky";
   const normalizedPath = stripLocalePrefix(pathname).pathname;
   const localeSwitchHref =
     locale === "en"
@@ -57,17 +71,23 @@ export function AppHeader({
     router.push(localeSwitchHref);
     router.refresh();
   };
-  const logoImageClass = isMinimal
-    ? "h-11 w-auto max-w-[42vw] object-contain sm:h-24 sm:max-w-none"
-    : "h-16 w-auto object-contain sm:h-24";
+  const logoImageClass =
+    logoClassName ??
+    (isMinimal
+      ? "h-11 w-auto max-w-[42vw] object-contain sm:h-24 sm:max-w-none"
+      : "h-16 w-auto object-contain sm:h-24");
 
   return (
     <header
-      className={`top-0 z-40 bg-transparent ${headerPosition}${
-        headerClassName ? ` ${headerClassName}` : ""
-      }`}
+      className={`top-0 z-40 ${
+        headerClassName?.includes("bg-") ? "" : "bg-transparent "
+      }${headerPosition}${headerClassName ? ` ${headerClassName}` : ""}`}
     >
-      <div className="mx-auto flex w-full max-w-none items-center justify-between gap-3 px-4 py-3 lg:px-6">
+      <div
+        className={`mx-auto flex w-full max-w-none items-center justify-between gap-3 ${
+          containerClassName ?? "px-4 py-3 lg:px-6"
+        }`}
+      >
         {logoSrc ? (
           <Link href={withLocaleHref(locale, "/")} className="flex shrink-0 items-center">
             <Image
@@ -123,9 +143,10 @@ export function AppHeader({
           <Link
             href={withLocaleHref(locale, ctaHref)}
             className={`items-center gap-2 rounded-full bg-gradient-to-r from-[#5cc3d7] to-[#8acd5f] font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:shadow-emerald-500/30 ${
-              isMinimal
+              ctaClassName ??
+              (isMinimal
                 ? "inline-flex whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:text-sm"
-                : "hidden px-4 py-2 text-sm sm:flex"
+                : "hidden px-4 py-2 text-sm sm:flex")
             }`}
           >
             {t("nav.cta")}

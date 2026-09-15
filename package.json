@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "preflight": "bash scripts/preflight.sh",
-    "import:csv": "node scripts/import-csv.mjs"
+    "import:csv": "node scripts/import-csv.mjs",
+    "check:secteurs": "node scripts/check-secteurs.mjs"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "latest",

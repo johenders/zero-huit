@@ -12,27 +12,38 @@ type Props = {
   children: React.ReactNode;
 };
 
+/**
+ * Landing pages sectorielles : en-tête minimal, aucun pied de page, hero
+ * pleine hauteur sans décalage. La valeur est la destination du CTA de
+ * l'en-tête (undefined = pas de CTA).
+ *
+ * Ajouter une nouvelle page sectorielle = ajouter une entrée ici.
+ */
+const minimalLandingCtaHrefs: Record<string, string | undefined> = {
+  "/production-video-rive-sud-mtl": undefined,
+  "/evenements": "/evenements/demande",
+  "/municipal": "/demande",
+  "/recrutement": "/demande",
+  "/production-video-sante": "/demande",
+  "/organismes": "/contact",
+  "/production-video-sante/dossier": "/demande",
+};
+
 export function SiteShell({ children }: Props) {
   const pathname = usePathname();
   const normalizedPath = stripLocalePrefix(pathname).pathname;
-  const minimalLandingPaths = [
-    "/production-video-rive-sud-mtl",
-    "/evenements",
-    "/municipal",
-    "/recrutement",
-  ];
   const isHome = normalizedPath === "/";
   const isRequest =
     normalizedPath.startsWith("/request") ||
     normalizedPath.startsWith("/evenements/demande");
-  const isMinimalHeader = minimalLandingPaths.includes(normalizedPath);
-  const minimalCtaHref =
-    normalizedPath === "/evenements"
-      ? "/evenements/demande"
-      : normalizedPath === "/municipal" || normalizedPath === "/recrutement"
-        ? "/demande"
-        : undefined;
-  const hideFooter = minimalLandingPaths.includes(normalizedPath);
+  const isMinimalHeader = Object.hasOwn(minimalLandingCtaHrefs, normalizedPath);
+  const minimalCtaHref = minimalLandingCtaHrefs[normalizedPath];
+  /**
+   * Les landings sectorielles se passent du pied de page. `/organismes` fait
+   * exception : la page renvoie vers le contact, les coordonnées et les pages
+   * légales du site, qui n'existent que là.
+   */
+  const hideFooter = isMinimalHeader && normalizedPath !== "/organismes";
   const hideShell =
     normalizedPath === "/login" ||
     normalizedPath.startsWith("/auth/callback") ||
@@ -45,11 +56,22 @@ export function SiteShell({ children }: Props) {
 
   return (
     <>
-      {isMinimalHeader ? <MinimalHeader ctaHref={minimalCtaHref} /> : <HomeHeader />}
+      {isMinimalHeader ? (
+        <MinimalHeader
+          ctaHref={minimalCtaHref}
+          scrollAware={normalizedPath === "/organismes"}
+        />
+      ) : (
+        <HomeHeader />
+      )}
       <div style={shouldOffset ? { paddingTop: `${headerOffset}px` } : undefined}>
         {children}
       </div>
-      {!hideFooter ? <SiteFooter /> : null}
+      {/* `/organismes` se termine déjà par son propre appel à l'action :
+          la bande du pied de page ferait doublon. */}
+      {!hideFooter ? (
+        <SiteFooter showCta={normalizedPath !== "/organismes"} />
+      ) : null}
       <CookieBanner />
     </>
   );

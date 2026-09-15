@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { fallbackArticles } from "@/lib/articles";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
-import { useSupabaseClient } from "@/lib/supabase/useClient";
+import { useOptionalSupabaseClient } from "@/lib/supabase/useClient";
 
 const socialLinks = [
   {
@@ -46,9 +46,17 @@ const socialLinks = [
   },
 ];
 
-export function SiteFooter() {
+type Props = {
+  /**
+   * La bande « Laissez-nous raconter votre histoire ». Les pages qui portent
+   * déjà leur propre appel à l'action la désactivent pour ne pas la répéter.
+   */
+  showCta?: boolean;
+};
+
+export function SiteFooter({ showCta = true }: Props) {
   const { locale, t } = useI18n();
-  const supabase = useSupabaseClient();
+  const supabase = useOptionalSupabaseClient();
   const [latestArticles, setLatestArticles] = useState<
     Array<{ title: string; slug: string }> | null
   >(null);
@@ -62,12 +70,9 @@ export function SiteFooter() {
     let isActive = true;
 
     async function loadLatestArticles() {
-      if (
-        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      ) {
-        return;
-      }
+      // Sans configuration Supabase, le pied de page se rend sans sa liste
+      // d'articles plutôt que d'échouer.
+      if (!supabase) return;
 
       const { data, error } = await supabase
         .from("articles")
@@ -79,7 +84,7 @@ export function SiteFooter() {
       if (!isActive || error || !data || data.length === 0) return;
 
       setLatestArticles(
-        data.map((article) => ({
+        data.map((article: { title: string; slug: string }) => ({
           title: article.title,
           slug: article.slug,
         })),
@@ -105,19 +110,29 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-zinc-950 text-white">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-16 pb-24">
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-          <h2 className="text-4xl font-semibold sm:text-5xl lg:text-6xl">
-            {t("footer.cta.label")}
-          </h2>
-          <Link
-            href={withLocaleHref(locale, "/contact")}
-            className="inline-flex items-center justify-center rounded-full bg-[#8acd5f] px-10 py-4 text-base font-semibold text-zinc-950 transition hover:opacity-90"
-          >
-            {t("footer.cta.button")}
-          </Link>
-        </div>
-        <div className="mt-6 border-t border-white/10" />
+      {/* Sans la bande d'appel, plus rien ne justifie une pleine hauteur
+          d'écran : le pied de page se réduit à ses colonnes. */}
+      <div
+        className={`relative mx-auto flex w-full max-w-6xl flex-col px-6 py-16 pb-24${
+          showCta ? " min-h-screen" : ""
+        }`}
+      >
+        {showCta ? (
+          <>
+            <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
+              <h2 className="text-4xl font-semibold sm:text-5xl lg:text-6xl">
+                {t("footer.cta.label")}
+              </h2>
+              <Link
+                href={withLocaleHref(locale, "/contact")}
+                className="inline-flex items-center justify-center rounded-full bg-[#8acd5f] px-10 py-4 text-base font-semibold text-zinc-950 transition hover:opacity-90"
+              >
+                {t("footer.cta.button")}
+              </Link>
+            </div>
+            <div className="mt-6 border-t border-white/10" />
+          </>
+        ) : null}
         <div className="mt-10 grid gap-10 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4">
           <div>
             <div className="text-base font-semibold">{t("footer.social.label")}</div>
