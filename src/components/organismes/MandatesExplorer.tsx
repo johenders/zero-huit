@@ -542,7 +542,6 @@ function MandateVideos({ videos, organisation }: {
               sizes="(min-width: 1024px) 44rem, 100vw"
               className="object-cover transition-transform duration-500 group-hover:scale-[1.025] motion-reduce:transition-none"
             />
-            <span className="absolute inset-0 bg-black/15" />
             <span className="absolute inset-0 flex items-center justify-center">
               <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/70 bg-white/95 text-[#111111] transition-transform group-hover:scale-105 motion-reduce:transition-none">
                 <PlayMark className="ml-1 h-8 w-8" />

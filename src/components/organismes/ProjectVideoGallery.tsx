@@ -66,7 +66,6 @@ export function ProjectVideoGallery({
                       sizes="(min-width: 1024px) 24rem, (min-width: 640px) 50vw, 100vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.025] motion-reduce:transition-none"
                     />
-                    <span className="absolute inset-0 bg-black/5" />
                     <span className="absolute inset-0 flex items-center justify-center">
                       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FAF7EF]/95 text-[#57513F] shadow-sm transition duration-300 group-hover:scale-105 group-hover:bg-[#FAF7EF] sm:h-16 sm:w-16 motion-reduce:transition-none">
                         <svg
