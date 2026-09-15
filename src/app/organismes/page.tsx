@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 
 import {
   MandatesExplorer,
@@ -39,6 +40,7 @@ import ppr8 from "../../../assets/landingpage/Organimes/Photos - Les pas pour ri
 import ppr9 from "../../../assets/landingpage/Organimes/Photos - Les pas pour rire/Web/IMG_9409.jpeg";
 import heroImage from "../../../assets/landingpage/Organimes/hero-organisme-web.webp";
 import heroMobileImage from "../../../assets/landingpage/Organimes/hero-organisme-mobile.webp";
+import heroMobileAvif from "../../../assets/landingpage/Organimes/hero-organisme-mobile.avif";
 import espaceBts1 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7529.jpg .jpg";
 import espaceBts2 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7587.jpg";
 import espaceBts3 from "../../../assets/landingpage/Organimes/Photos - Espace Suroit/DSCF7498.jpg";
@@ -401,6 +403,10 @@ const pageSchema = [
 ];
 
 export default function OrganismesPage() {
+  preload("/fonts/montserrat-latin-variable-normal-06b16db7.woff2", {
+    as: "font", type: "font/woff2", crossOrigin: "anonymous",
+  });
+  preload(heroMobileAvif.src, { as: "image", type: "image/avif", fetchPriority: "high", media: "(max-width: 767px)" });
   return (
     <main id="contenu" className="organismes-page font-['Montserrat'] bg-[#F6F4EF] text-[#111111]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
@@ -415,6 +421,7 @@ export default function OrganismesPage() {
             horizontal : on se recale sur le duo qui discute à droite, la
             scène qui porte le propos. */}
         <picture>
+          <source media="(max-width: 767px)" type="image/avif" srcSet={heroMobileAvif.src} />
           <source media="(max-width: 767px)" srcSet={heroMobileImage.src} />
           <Image
           src={heroImage}
