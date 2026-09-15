@@ -16,6 +16,16 @@
   src: url("/fonts/montserrat-latin-variable-italic-0eb22e3d.woff2") format("woff2");
 }
 
+/* Métriques calculées depuis le fichier Montserrat : stabilise le texte
+   pendant le chargement de la police, sans en retarder l'affichage. */
+@font-face {
+  font-family: "Montserrat Fallback";
+  src: local("Arial");
+  size-adjust: 110.19%;
+  ascent-override: 87.85%;
+  descent-override: 22.78%;
+  line-gap-override: 0%;
+}
 
 :root {
   color-scheme: dark;
@@ -27,6 +37,7 @@ body {
   color: #e4e4e7;
   font-family:
     "Montserrat",
+    "Montserrat Fallback",
     ui-sans-serif,
     system-ui,
     -apple-system,

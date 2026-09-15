@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { fallbackArticles } from "@/lib/articles";
 import { useI18n } from "@/lib/i18n/client";
 import { withLocaleHref } from "@/lib/i18n/shared";
-import { useOptionalSupabaseClient } from "@/lib/supabase/useClient";
+import { readSupabaseEnv } from "@/lib/supabase/env";
 
 const socialLinks = [
   {
@@ -56,7 +56,6 @@ type Props = {
 
 export function SiteFooter({ showCta = true }: Props) {
   const { locale, t } = useI18n();
-  const supabase = useOptionalSupabaseClient();
   const [latestArticles, setLatestArticles] = useState<
     Array<{ title: string; slug: string }> | null
   >(null);
@@ -68,35 +67,47 @@ export function SiteFooter({ showCta = true }: Props) {
 
   useEffect(() => {
     let isActive = true;
+    const controller = new AbortController();
 
     async function loadLatestArticles() {
-      // Sans configuration Supabase, le pied de page se rend sans sa liste
-      // d'articles plutôt que d'échouer.
-      if (!supabase) return;
+      const env = readSupabaseEnv();
+      if (!env) return;
 
-      const { data, error } = await supabase
-        .from("articles")
-        .select("title,slug,published_at,is_published")
-        .eq("is_published", true)
-        .order("published_at", { ascending: false })
-        .limit(4);
+      // Cette lecture publique ne nécessite pas de charger le SDK complet
+      // d'authentification et de temps réel sur chaque page du site.
+      const url = new URL("/rest/v1/articles", env.url);
+      url.search = new URLSearchParams({
+        select: "title,slug",
+        is_published: "eq.true",
+        order: "published_at.desc",
+        limit: "4",
+      }).toString();
 
-      if (!isActive || error || !data || data.length === 0) return;
-
-      setLatestArticles(
-        data.map((article: { title: string; slug: string }) => ({
-          title: article.title,
-          slug: article.slug,
-        })),
-      );
+      try {
+        const response = await fetch(url, {
+          headers: { apikey: env.anonKey },
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const data: unknown = await response.json();
+        if (!isActive || !Array.isArray(data)) return;
+        const articles = data.filter(
+          (article): article is { title: string; slug: string } =>
+            typeof article?.title === "string" && typeof article?.slug === "string",
+        );
+        if (articles.length > 0) setLatestArticles(articles);
+      } catch {
+        // Les liens rendus sur le serveur restent disponibles hors réseau.
+      }
     }
 
     void loadLatestArticles();
 
     return () => {
       isActive = false;
+      controller.abort();
     };
-  }, [locale, supabase]);
+  }, [locale]);
 
   const articleLinks = latestArticles
     ? latestArticles.map((article) => ({

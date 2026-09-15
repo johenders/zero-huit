@@ -96,6 +96,7 @@ export function AppHeader({
               src={logoSrc}
               alt={logoAlt}
               className={logoImageClass}
+              sizes={normalizedPath === "/organismes" ? "(max-width: 639px) 115px, 322px" : "(max-width: 639px) 185px, 276px"}
               priority
             />
           </Link>

@@ -408,7 +408,7 @@ export default function OrganismesPage() {
   });
   preload(heroMobileAvif.src, { as: "image", type: "image/avif", fetchPriority: "high", media: "(max-width: 767px)" });
   return (
-    <main id="contenu" className="organismes-page font-['Montserrat'] bg-[#F6F4EF] text-[#111111]">
+    <main id="contenu" className="organismes-page bg-[#F6F4EF] text-[#111111]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
       {/* ------------------------------------------------------------ */}
       {/* Hero                                                          */}
