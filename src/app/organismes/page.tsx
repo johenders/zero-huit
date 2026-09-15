@@ -429,7 +429,6 @@ export default function OrganismesPage() {
           fill
           loading="eager"
           fetchPriority="high"
-          decoding="auto"
           sizes="100vw"
           className="zh-hero-zoom zh-parallax object-cover object-center md:object-[64%_45%] lg:object-[50%_42%]"
         />
